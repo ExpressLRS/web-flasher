@@ -66,10 +66,7 @@ class Transport {
     write = async (data) => {
         const writer = this.device.writable.getWriter();
         var out_data = this.slip_writer(data);
-        if (this.tracing) {
-            console.log('Write bytes');
-            console.log(this.hexdump(out_data));
-        }
+
         await writer.write(out_data.buffer);
         writer.releaseLock();
     }
@@ -142,31 +139,20 @@ class Transport {
                 do {
                     const {value, done} = await reader.read();
                     if (done) {
-                        reader.releaseLock();
-                        await this.device.close();
-                        await this.device.open({baudRate: this.baudrate});
                         throw("timeout");
                     }
-                    packet = new Uint8Array(this._appendBuffer(packet.buffer, value.buffer));
+                    var p = new Uint8Array(this._appendBuffer(packet.buffer, value.buffer));
+                    packet = p;
                 } while (packet.length < min_data);
-                reader.releaseLock();
             } finally {
                 if (timeout > 0) {
                     clearTimeout(t);
                 }
+                reader.releaseLock();
             }
-        }
-        if (this.tracing) {
-            console.log('Read bytes');
-            console.log(this.hexdump(packet));
         }
         if (this.slip_reader_enabled) {
-            const val_final = this.slip_reader(packet);
-            if (this.tracing) {
-                console.log('Read results');
-                console.log(this.hexdump(val_final));
-            }
-            return val_final;
+            return this.slip_reader(packet);
         }
         return packet;
     }
@@ -187,21 +173,14 @@ class Transport {
             }
             const {value, done} = await reader.read();
             if (done) {
-                reader.releaseLock();
-                await this.device.close();
-                await this.device.open({baudRate: this.baudrate});
                 throw("timeout");
-            }
-            reader.releaseLock();
-            if (this.tracing) {
-                console.log('Read bytes');
-                console.log(value);
             }
             return value;
         } finally {
             if (timeout > 0) {
                 clearTimeout(t);
             }
+            reader.releaseLock();
         }
     }
 
