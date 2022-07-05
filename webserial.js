@@ -139,16 +139,18 @@ class Transport {
                 do {
                     const {value, done} = await reader.read();
                     if (done) {
+                        reader.releaseLock();
+                        await this.device.close();
+                        await this.device.open({baudRate: this.baudrate});
                         throw("timeout");
                     }
-                    var p = new Uint8Array(this._appendBuffer(packet.buffer, value.buffer));
-                    packet = p;
+                    packet = new Uint8Array(this._appendBuffer(packet.buffer, value.buffer));
                 } while (packet.length < min_data);
+                reader.releaseLock();
             } finally {
                 if (timeout > 0) {
                     clearTimeout(t);
                 }
-                reader.releaseLock();
             }
         }
         if (this.slip_reader_enabled) {
@@ -173,14 +175,17 @@ class Transport {
             }
             const {value, done} = await reader.read();
             if (done) {
+                reader.releaseLock();
+                await this.device.close();
+                await this.device.open({baudRate: this.baudrate});
                 throw("timeout");
             }
+            reader.releaseLock();
             return value;
         } finally {
             if (timeout > 0) {
                 clearTimeout(t);
             }
-            reader.releaseLock();
         }
     }
 
