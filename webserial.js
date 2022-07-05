@@ -66,7 +66,10 @@ class Transport {
     write = async (data) => {
         const writer = this.device.writable.getWriter();
         var out_data = this.slip_writer(data);
-
+        if (this.tracing) {
+            console.log('Write bytes');
+            console.log(this.hexdump(out_data));
+        }
         await writer.write(out_data.buffer);
         writer.releaseLock();
     }
@@ -153,8 +156,17 @@ class Transport {
                 }
             }
         }
+        if (this.tracing) {
+            console.log('Read bytes');
+            console.log(this.hexdump(packet));
+        }
         if (this.slip_reader_enabled) {
-            return this.slip_reader(packet);
+            const val_final = this.slip_reader(packet);
+            if (this.tracing) {
+                console.log('Read results');
+                console.log(this.hexdump(val_final));
+            }
+            return val_final;
         }
         return packet;
     }
@@ -181,6 +193,10 @@ class Transport {
                 throw("timeout");
             }
             reader.releaseLock();
+            if (this.tracing) {
+                console.log('Read bytes');
+                console.log(value);
+            }
             return value;
         } finally {
             if (timeout > 0) {
