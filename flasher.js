@@ -29,10 +29,8 @@ class Flasher {
         const loader = this.esploader;
         Promise
         .all(list)
-        .then(files => {
-            console.log(files);
-            return loader.write_flash({ fileArray: files, flash_size: 'keep' });
-        });
+        .then(files => loader.write_flash({ fileArray: files, flash_size: 'keep' }))
+        .then(ignore => loader.soft_reset());
     }
 
     checkStatus = (response) => {
@@ -42,19 +40,17 @@ class Flasher {
         return response;
     }
 
-    fetchFile = (file, addr, transform = (e) => e) => {
-        return fetch(file)
-            .then(response => this.checkStatus(response) && response.blob())
-            .then(blob => {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader()
-                    reader.onload = function found () {
-                      resolve(reader.result)
-                    }
-                    reader.readAsBinaryString(blob);
-                  })
-            })
-            .then(binary => ({ data: transform(binary), address: addr }));
+    fetchFile = async (file, addr, transform = (e) => e) => {
+        const response = await fetch(file);
+        const blob = await this.checkStatus(response).blob();
+        const binary = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = function found() {
+                resolve(reader.result);
+            };
+            reader.readAsBinaryString(blob);
+        });
+        return ({ data: transform(binary), address: addr });
     }
 }
 
