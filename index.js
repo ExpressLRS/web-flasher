@@ -2,16 +2,17 @@ function _(el) {
     return document.getElementById(el);
 }
 
-const connectButton = _("connectButton");
-const disconnectButton = _("disconnectButton");
-const eraseButton = _("eraseButton");
-const programButton = _("programButton");
+const connectButton = _('connectButton');
+const disconnectButton = _('disconnectButton');
+const eraseButton = _('eraseButton');
+const programButton = _('programButton');
 const vendorSelect = _('vendor');
 const typeSelect = _('type');
 const modelSelect = _('model');
-const baudrates = _("baudrates");
-const lblBaudrate = _("lblBaudrate");
-const lblConnTo = _("lblConnTo");
+const baudrates = _('baudrates');
+const lblBaudrate = _('lblBaudrate');
+const lblConnTo = _('lblConnTo');
+const methodSelect = _('method');
 
 import { Transport } from './webserial.js'
 import { ESPLoader } from './ESPLoader.js'
@@ -21,16 +22,16 @@ import { Flasher } from './flasher.js'
 let hardware = null;
 let device = null;
 let transport;
-let chip = "deFault";
+let chip = 'deFault';
 let esploader;
 let connected = false;
 
 let term = new Terminal({ cols: 120, rows: 40 });
 term.open(terminal);
 
-disconnectButton.style.display = "none";
-eraseButton.style.display = "none";
-programButton.style.display = "none";
+disconnectButton.style.display = 'none';
+eraseButton.style.display = 'none';
+programButton.style.display = 'none';
 
 document.addEventListener('DOMContentLoaded', initialise, false);
 
@@ -50,9 +51,9 @@ vendorSelect.onchange = async () => {
         typeSelect.appendChild(opt);
     }
     typeSelect.disabled = false;
-    typeSelect.value = "";
+    typeSelect.value = '';
     modelSelect.disabled = true;
-    modelSelect.value = "";
+    modelSelect.value = '';
     _('options').style.display = 'none';
     _('program').style.display = 'none';
 }
@@ -66,7 +67,7 @@ typeSelect.onchange = async () => {
         modelSelect.appendChild(opt);
     }
     modelSelect.disabled = false;
-    modelSelect.value = "";
+    modelSelect.value = '';
     _('options').style.display = 'none';
     _('program').style.display = 'none';
 }
@@ -84,6 +85,8 @@ modelSelect.onchange = async () => {
     _('options').style.display = 'block';
     setDisplay('.' + typeSelect.value, 'block');
     setDisplay('.' + hardware[vendorSelect.value][typeSelect.value][modelSelect.value]['platform'], 'block');
+
+    //TODO update method with flash methods
 }
 
 _('method').onchange = async () => {
@@ -101,6 +104,8 @@ connectButton.onclick = async () => {
     if (device === null) {
         device = await navigator.serial.requestPort();
         transport = new Transport(device);
+
+        //TODO use _('method').value to start bf or msp flash mode
     }
     try {
         esploader = new ESPLoader(transport, baudrates.value, term);
@@ -110,15 +115,15 @@ connectButton.onclick = async () => {
     } catch(e) {
         console.log(e);
     }
-    console.log("Settings done for :" + chip);
-    lblBaudrate.style.display = "none";
-    lblConnTo.innerHTML = "Connected to device: " + chip;
-    lblConnTo.style.display = "block";
-    baudrates.style.display = "none";
-    connectButton.style.display = "none";
-    disconnectButton.style.display = "initial";
-    eraseButton.style.display = "initial";
-    programButton.style.display = "initial";
+    console.log('Settings done for :' + chip);
+    lblBaudrate.style.display = 'none';
+    lblConnTo.innerHTML = 'Connected to device: ' + chip;
+    lblConnTo.style.display = 'block';
+    baudrates.style.display = 'none';
+    connectButton.style.display = 'none';
+    disconnectButton.style.display = 'initial';
+    eraseButton.style.display = 'initial';
+    programButton.style.display = 'initial';
 }
 
 programButton.onclick = async () => {
@@ -129,16 +134,19 @@ programButton.onclick = async () => {
             return Number(element);
         })
     };
+    let deviceType;
     if (config['platform'] !== 'stm32') {
         options['wifi-on-interval'] = + _('wifi-on-interval').value;
         options['wifi-ssid'] = _('wifi-ssid').value;
         options['wifi-password'] = _('wifi-password').value;
     }
     if (typeSelect.value === 'rx_900' || typeSelect.value === 'rx_2400') {
+        deviceType = 'RX';
         options['rcvr-uart-baud'] = + _('rcvr-uart-baud').value;
         options['rcvr-invert-tx'] = _('rcvr-invert-tx').value === 'on' ? true : false;
         options['lock-on-first-connection'] = _('lock-on-first-connection').value === 'on' ? true : false;
     } else {
+        deviceType = 'TX';
         options['tlm-interval'] = + _('tlm-interval').value;
         options['fan-runtime'] = + _('fan-runtime').value;
         options['uart-inverted'] = _('uart-inverted').value === 'on' ? true : false;
@@ -148,7 +156,7 @@ programButton.onclick = async () => {
         options['domain'] = + _('domain').value;
     }
 
-    const flasher = new Flasher(config, options, esploader);
+    const flasher = new Flasher(deviceType, config, options, esploader);
     await flasher.flash(firmwareUrl);
 }
 
