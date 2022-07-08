@@ -60,9 +60,8 @@ class Bootloader {
 }
 
 class Passthrough {
-    constructor(transport, baudrate, terminal, flash_target, half_duplex=false, uploadforce=false) {
+    constructor(transport, terminal, flash_target, half_duplex=false, uploadforce=false) {
         this.transport = transport;
-        this.baudrate = baudrate;
         this.terminal = terminal;
         this.flash_target = flash_target;
         this.half_duplex = half_duplex;
@@ -90,7 +89,41 @@ class Passthrough {
         this.terminal.writeln(str);
     }
 
-    startBetaflight = async () => {
+
+    edgeTX = async () => {
+        this.log('======== PASSTHROUGH INIT ========');
+
+        expect = (expect, got) => {
+            if (expect.indexOf(got) == -1) {
+                throw('did not get expected response');
+            }
+        };
+        this.transport.set_delimiters(['> ']);
+        await this.transport.write_string('set pulses 0\n');
+        expect('set: ', await this.transport.read_line({timeout: 100}));
+        await this.transport.write_string('set rfmod 0 power off\n');
+        expect('set: ', await this.transport.read_line({timeout: 100}));
+        await this._sleep(500);
+        await this.transport.write_string('set rfmod 0 bootpin 1\n');
+        expect('set: ', await this.transport.read_line({timeout: 100}));
+        await this._sleep(100);
+        await this.transport.write_string('set rfmod 0 power on\n');
+        expect('set: ', await this.transport.read_line({timeout: 100}));
+        await this._sleep(100);
+        await this.transport.write_string('set rfmod 0 bootpin 0\n');
+        expect('set: ', await this.transport.read_line({timeout: 100}));
+
+        cmd = 'serialpassthrough rfmod 0 ' + this.transport.baudrate.toString();
+
+        this.log('Enabling serial passthrough...');
+        this.log(`  CMD: '${cmd}`);
+        await this.transport.write_string(cmd + '\n');
+        await this._sleep(200);
+
+        this.log('======== PASSTHROUGH DONE ========');
+    }
+
+    betaflight = async () => {
         this.log('======== PASSTHROUGH INIT ========');
 
         this.transport.set_delimiters(['# ', 'CCC']);
@@ -157,7 +190,7 @@ class Passthrough {
             throw('not found');
         }
 
-        await this.transport.write_string(`serialpassthrough ${index} ${this.baudrate}\r\n`);
+        await this.transport.write_string(`serialpassthrough ${index} ${this.transport.baudrate}\r\n`);
         await this._sleep(200);
         try {
             for (let i=0 ; i<10 ; i++)

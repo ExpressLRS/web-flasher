@@ -107,15 +107,18 @@ connectButton.onclick = async () => {
     }
 
     try {
+        const config = hardware[vendorSelect.value][typeSelect.value][modelSelect.value];
+
         let baudrate = baudrates.value;
+        if (methodSelect.value == 'betaflight') {
+            baudrate = 420000;
+        }
+
         transport = new Transport(device, true);
         esploader = new ESPLoader(transport, baudrate, term, true);
 
-        const config = hardware[vendorSelect.value][typeSelect.value][modelSelect.value];
-
-        //TODO use methodSelect.value to start bf or msp flash mode
+        const passthrough = new Passthrough(transport, term, config.firmware);
         if (methodSelect.value == 'uart') {
-            const passthrough = new Passthrough(transport, baudrate, term, config.firmware);
             await transport.connect({baud: baudrate});
             const ret = await esploader._connect_attempt();
             if (ret != 'success') {
@@ -125,12 +128,12 @@ connectButton.onclick = async () => {
             }
         } else if (methodSelect.value == 'betaflight') {
             baudrate = 420000;
-            const passthrough = new Passthrough(transport, baudrate, term, config.firmware);
             await transport.connect({baud: baudrate});
-            await passthrough.startBetaflight();
+            await passthrough.betaflight();
         } else if (methodSelect.value == 'etx') {
-            // TODO etx passthrough
+            baudrate = 460800;
             await transport.connect({baud: baudrate});
+            await passthrough.edgeTX();
         }
 
         chip = await esploader.main_fn();
