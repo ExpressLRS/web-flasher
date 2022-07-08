@@ -18,11 +18,12 @@ import { Transport } from './webserial.js'
 import { ESPLoader } from './ESPLoader.js'
 import { initBindingPhraseGen } from './phrase.js'
 import { Flasher } from './flasher.js'
+import { Passthrough, Bootloader } from './serial.js';
 
 let hardware = null;
 let device = null;
 let transport;
-let chip = 'deFault';
+let chip = 'none detected';
 let esploader;
 let connected = false;
 
@@ -86,7 +87,7 @@ modelSelect.onchange = async () => {
     setDisplay('.' + typeSelect.value, 'block');
     setDisplay('.' + hardware[vendorSelect.value][typeSelect.value][modelSelect.value]['platform'], 'block');
 
-    //TODO update method with flash methods
+    //TODO update methodSelect with flash methods
 }
 
 _('method').onchange = async () => {
@@ -103,15 +104,37 @@ function checkStatus(response) {
 connectButton.onclick = async () => {
     if (device === null) {
         device = await navigator.serial.requestPort();
-        transport = new Transport(device);
-
-        //TODO use _('method').value to start bf or msp flash mode
     }
+
     try {
-        esploader = new ESPLoader(transport, baudrates.value, term);
-        connected = true;
+        let baudrate = baudrates.value;
+        transport = new Transport(device, true);
+        esploader = new ESPLoader(transport, baudrate, term, true);
+
+        const config = hardware[vendorSelect.value][typeSelect.value][modelSelect.value];
+
+        //TODO use methodSelect.value to start bf or msp flash mode
+        if (methodSelect.value == 'uart') {
+            const passthrough = new Passthrough(transport, baudrate, term, config.firmware);
+            await transport.connect({baud: baudrate});
+            const ret = await esploader._connect_attempt();
+            if (ret != 'success') {
+                await transport.disconnect();
+                await transport.connect({baud: 420000});
+                await passthrough.reset_to_bootloader();
+            }
+        } else if (methodSelect.value == 'betaflight') {
+            baudrate = 420000;
+            const passthrough = new Passthrough(transport, baudrate, term, config.firmware);
+            await transport.connect({baud: baudrate});
+            await passthrough.startBetaflight();
+        } else if (methodSelect.value == 'etx') {
+            // TODO etx passthrough
+            await transport.connect({baud: baudrate});
+        }
 
         chip = await esploader.main_fn();
+        connected = true;
     } catch(e) {
         console.log(e);
     }

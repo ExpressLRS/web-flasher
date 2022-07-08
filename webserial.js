@@ -1,7 +1,7 @@
 'use strict';
 
 class Transport {
-    constructor(device, tracing=false) {
+    constructor(device, tracing = false) {
         this.device = device;
         this.tracing = tracing;
         this.slip_reader_enabled = false;
@@ -9,7 +9,7 @@ class Transport {
     }
 
     hexdump(buffer) {
-		buffer = String.fromCharCode.apply(String, [].slice.call(buffer));
+        buffer = String.fromCharCode.apply(String, [].slice.call(buffer));
         const blockSize = 16;
         const lines = [];
         const hex = "0123456789ABCDEF";
@@ -22,15 +22,31 @@ class Transport {
             }).join("");
             codes += "   ".repeat(blockSize - block.length);
             let chars = block.replace(/[\x00-\x1F\x20]/g, '.');
-            chars +=  " ".repeat(blockSize - block.length);
+            chars += " ".repeat(blockSize - block.length);
             lines.push(addr + " " + codes + "  " + chars);
         }
         return lines.join("\n");
     }
 
+    ui8ToBstr(u8Array) {
+        var i, len = u8Array.length, b_str = "";
+        for (i=0; i<len; i++) {
+            b_str += String.fromCharCode(u8Array[i]);
+        }
+        return b_str;
+    }
+
+    bstrToUi8(bStr) {
+        var i, len = bStr.length, u8_array = new Uint8Array(len);
+        for (var i = 0; i < len; i++) {
+            u8_array[i] = bStr.charCodeAt(i);
+        }
+        return u8_array;
+    }
+
     get_info() {
         const info = this.device.getInfo();
-        return "WebSerial VendorID 0x"+info.usbVendorId.toString(16)+ " ProductID 0x"+info.usbProductId.toString(16);
+        return "WebSerial VendorID 0x" + info.usbVendorId.toString(16) + " ProductID 0x" + info.usbProductId.toString(16);
     }
 
     slip_writer(data) {
@@ -74,6 +90,27 @@ class Transport {
         writer.releaseLock();
     }
 
+    write_string = async (data) => {
+        const writer = this.device.writable.getWriter();
+        const out_data = this.bstrToUi8(data);
+        if (this.tracing) {
+            console.log('Write bytes');
+            console.log(this.hexdump(out_data));
+        }
+        await writer.write(out_data.buffer);
+        writer.releaseLock();
+    }
+
+    write_array = async (data) => {
+        const writer = this.device.writable.getWriter();
+        if (this.tracing) {
+            console.log('Write bytes');
+            console.log(this.hexdump(data));
+        }
+        await writer.write(data.buffer);
+        writer.releaseLock();
+    }
+
     _appendBuffer(buffer1, buffer2) {
         var tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
         tmp.set(new Uint8Array(buffer1), 0);
@@ -109,12 +146,12 @@ class Transport {
         var temp_pkt = new Uint8Array(data_end - data_start + 1);
         var j = 0;
         for (i = data_start; i <= data_end; i++, j++) {
-            if (data[i] === 0xDB && data[i+1] === 0xDC) {
+            if (data[i] === 0xDB && data[i + 1] === 0xDC) {
                 temp_pkt[j] = 0xC0;
                 i++;
                 continue;
             }
-            if (data[i] === 0xDB && data[i+1] === 0xDD) {
+            if (data[i] === 0xDB && data[i + 1] === 0xDD) {
                 temp_pkt[j] = 0xDB;
                 i++;
                 continue;
@@ -126,7 +163,7 @@ class Transport {
         return packet;
     }
 
-    read = async ({timeout=0, min_data=12} = {}) => {
+    read = async ({ timeout = 0, min_data = 12 } = {}) => {
         console.log("Read with timeout " + timeout);
         let t;
         let packet = this.left_over;
@@ -135,17 +172,17 @@ class Transport {
             const reader = this.device.readable.getReader();
             try {
                 if (timeout > 0) {
-                    t = setTimeout(function() {
+                    t = setTimeout(function () {
                         reader.cancel();
                     }, timeout);
                 }
                 do {
-                    const {value, done} = await reader.read();
+                    const { value, done } = await reader.read();
                     if (done) {
                         reader.releaseLock();
                         await this.device.close();
-                        await this.device.open({baudRate: this.baudrate});
-                        throw("timeout");
+                        await this.device.open({ baudRate: this.baudrate });
+                        throw ("timeout");
                     }
                     packet = new Uint8Array(this._appendBuffer(packet.buffer, value.buffer));
                 } while (packet.length < min_data);
@@ -171,7 +208,70 @@ class Transport {
         return packet;
     }
 
-    rawRead = async ({timeout=0} = {}) => {
+    set_delimiters(delimiters = ['\n', 'CCC']) {
+        this.delimiters = [];
+        for (const d of delimiters) {
+            this.delimiters.push(this.bstrToUi8(d));
+        }
+    }
+
+    read_line = async ({timeout = 0} = {}) => {
+        console.log("Read with timeout " + timeout);
+        let t;
+        let packet = this.left_over;
+        this.left_over = new Uint8Array();
+        const delimiters = this.delimiters;
+        function findDelimeter(packet) {
+            const index = packet.findIndex((_, i, a) => {
+                for (const d of delimiters) {
+                    if (d.every((v, j) => a[i + j] === v)) return true;
+                }
+                return false;
+            });
+            if (index != -1) {
+                for (const d of delimiters) {
+                    if (d.every((v, j) => packet[index + j] === v)) return index + d.length;
+                }
+            }
+            return -1;
+        }
+        let index = findDelimeter(packet);
+        if (index == -1) {
+            const reader = this.device.readable.getReader();
+            try {
+                if (timeout > 0) {
+                    t = setTimeout(function () {
+                        reader.cancel();
+                    }, timeout);
+                }
+                do {
+                    const { value, done } = await reader.read();
+                    if (done) {
+                        reader.releaseLock();
+                        // await this.device.close();
+                        // await this.device.open({ baudRate: this.baudrate });
+                        return '';
+                    }
+                    packet = new Uint8Array(this._appendBuffer(packet.buffer, value.buffer));
+                    index = findDelimeter(packet);
+                } while (index == -1);
+                reader.releaseLock();
+            } finally {
+                if (timeout > 0) {
+                    clearTimeout(t);
+                }
+            }
+        }
+        this.left_over = packet.slice(index);
+        packet = packet.slice(0, index);
+        if (this.tracing) {
+            console.log('Read bytes');
+            console.log(this.hexdump(packet));
+        }
+        return this.ui8ToBstr(packet);
+    }
+
+    rawRead = async ({ timeout = 0 } = {}) => {
         if (this.left_over.length != 0) {
             const p = this.left_over;
             this.left_over = new Uint8Array(0);
@@ -181,16 +281,16 @@ class Transport {
         let t;
         try {
             if (timeout > 0) {
-                t = setTimeout(function() {
+                t = setTimeout(function () {
                     reader.cancel();
                 }, timeout);
             }
-            const {value, done} = await reader.read();
+            const { value, done } = await reader.read();
             if (done) {
                 reader.releaseLock();
-                await this.device.close();
-                await this.device.open({baudRate: this.baudrate});
-                throw("timeout");
+                // await this.device.close();
+                // await this.device.open({ baudRate: this.baudrate });
+                throw ("timeout");
             }
             reader.releaseLock();
             if (this.tracing) {
@@ -206,15 +306,15 @@ class Transport {
     }
 
     setRTS = async (state) => {
-        await this.device.setSignals({requestToSend:state});
+        await this.device.setSignals({ requestToSend: state });
     }
 
     setDTR = async (state) => {
-        await this.device.setSignals({dataTerminalReady:state});
+        await this.device.setSignals({ dataTerminalReady: state });
     }
 
-    connect = async ({baud=115200} = {}) => {
-        await this.device.open({baudRate: baud});
+    connect = async ({ baud = 115200 } = {}) => {
+        await this.device.open({ baudRate: baud });
         this.baudrate = baud;
         this.left_over = new Uint8Array(0);
     }

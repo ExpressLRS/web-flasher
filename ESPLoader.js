@@ -8,7 +8,7 @@ class ESP8266ROM {
     static UART_CLKDIV_MASK = 0xFFFFF;
     static XTAL_CLK_DIVIDER = 2;
 
-    static FLASH_WRITE_SIZE = 0x4000;
+    static FLASH_WRITE_SIZE = 0x400;
     static BOOTLOADER_FLASH_OFFSET = 0;
 
     static FLASH_SIZES = {'512KB': 0x00, '256KB': 0x10, '1MB': 0x20, '2MB': 0x30, '4MB': 0x40, '2MB-c1': 0x50, '4MB-c1': 0x60, '8MB': 0x80, '16MB': 0x90};
@@ -972,7 +972,7 @@ class ESP32C3ROM {
 }
 
 class ESPLoader {
-    ESP_RAM_BLOCK = 0x1800;
+    ESP_RAM_BLOCK = 0x0800;
     ESP_FLASH_BEGIN = 0x02;
     ESP_FLASH_DATA = 0x03;
     ESP_FLASH_END = 0x04;
@@ -1010,10 +1010,11 @@ class ESPLoader {
 
     DETECTED_FLASH_SIZES = {0x12: '256KB', 0x13: '512KB', 0x14: '1MB', 0x15: '2MB', 0x16: '4MB', 0x17: '8MB', 0x18: '16MB'};
 
-    constructor(transport, baudrate, terminal) {
+    constructor(transport, baudrate, terminal, connected) {
         this.transport = transport;
         this.baudrate = baudrate;
         this.terminal = terminal;
+        this.connected = connected;
         this.IS_STUB = false;
         this.chip = null;
 
@@ -1248,7 +1249,7 @@ class ESPLoader {
         var resp;
         this.chip = null;
         this.write_char('Connecting...');
-        await this.transport.connect();
+        if (!this.connected) await this.transport.connect();
         for (i = 0 ; i < attempts; i++) {
             resp = await this._connect_attempt({esp32r0_delay:false});
             if (resp === "success") {
@@ -1612,7 +1613,8 @@ class ESPLoader {
                 if (res[0] === 79 && res[1] === 72 && res[2] === 65 && res[3] === 73) {
                     this.log("Stub running...");
                     this.IS_STUB = true;
-                    this.FLASH_WRITE_SIZE = 0x4000;
+                    // PAK we shoukd think about how to set this externally
+                    this.FLASH_WRITE_SIZE = 0x400;
                     return this.chip;
                 }
             }
