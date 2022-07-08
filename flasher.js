@@ -17,7 +17,7 @@ class Flasher {
         if (this.config.platform === 'esp8285') pos = 0x1000;
         if (binary.charCodeAt(pos) != 0xE9) throw 'The file provided does not the right magic for a firmware file!';
         let segments = binary.charCodeAt(pos + 1);
-        if (this.config.platform === 'esp32') pos = 32;
+        if (this.config.platform === 'esp32') pos = 24;
         else pos = 0x1008;
         while (segments--) {
             const size = binary.charCodeAt(pos + 4) + (binary.charCodeAt(pos + 5) << 8) + (binary.charCodeAt(pos + 6) << 16) + (binary.charCodeAt(pos + 7) << 24);

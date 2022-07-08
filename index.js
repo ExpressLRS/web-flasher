@@ -9,8 +9,6 @@ const programButton = _('programButton');
 const vendorSelect = _('vendor');
 const typeSelect = _('type');
 const modelSelect = _('model');
-const baudrates = _('baudrates');
-const lblBaudrate = _('lblBaudrate');
 const lblConnTo = _('lblConnTo');
 const methodSelect = _('method');
 
@@ -18,7 +16,7 @@ import { Transport } from './webserial.js'
 import { ESPLoader } from './ESPLoader.js'
 import { initBindingPhraseGen } from './phrase.js'
 import { Flasher } from './flasher.js'
-import { Passthrough, Bootloader } from './serial.js';
+import { Passthrough, Bootloader } from './passthrough.js';
 
 let hardware = null;
 let device = null;
@@ -109,7 +107,8 @@ connectButton.onclick = async () => {
     try {
         const config = hardware[vendorSelect.value][typeSelect.value][modelSelect.value];
 
-        let baudrate = baudrates.value;
+        let mode = 'default_reset';
+        let baudrate = 460800;
         if (methodSelect.value == 'betaflight') {
             baudrate = 420000;
         }
@@ -119,33 +118,37 @@ connectButton.onclick = async () => {
 
         const passthrough = new Passthrough(transport, term, config.firmware);
         if (methodSelect.value == 'uart') {
-            await transport.connect({baud: baudrate});
-            const ret = await esploader._connect_attempt();
-            if (ret != 'success') {
-                await transport.disconnect();
-                await transport.connect({baud: 420000});
-                await passthrough.reset_to_bootloader();
+            if (typeSelect.value.startsWith('rx_')) {
+                await transport.connect({baud: baudrate});
+                const ret = await esploader._connect_attempt();
+                if (ret != 'success') {
+                    await transport.disconnect();
+                    await transport.connect({baud: 420000});
+                    await passthrough.reset_to_bootloader();
+                }
+            } else {
+                await transport.connect({baud: 230400});
             }
         } else if (methodSelect.value == 'betaflight') {
             baudrate = 420000;
+            mode = 'no_reset';
             await transport.connect({baud: baudrate});
             await passthrough.betaflight();
         } else if (methodSelect.value == 'etx') {
-            baudrate = 460800;
+            baudrate = 230400;
+            mode = 'no_reset';
             await transport.connect({baud: baudrate});
             await passthrough.edgeTX();
         }
 
-        chip = await esploader.main_fn();
+        chip = await esploader.main_fn({mode:mode});
         connected = true;
     } catch(e) {
         console.log(e);
     }
     console.log('Settings done for :' + chip);
-    lblBaudrate.style.display = 'none';
     lblConnTo.innerHTML = 'Connected to device: ' + chip;
     lblConnTo.style.display = 'block';
-    baudrates.style.display = 'none';
     connectButton.style.display = 'none';
     disconnectButton.style.display = 'initial';
     eraseButton.style.display = 'initial';

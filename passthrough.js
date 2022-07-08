@@ -93,9 +93,9 @@ class Passthrough {
     edgeTX = async () => {
         this.log('======== PASSTHROUGH INIT ========');
 
-        expect = (expect, got) => {
-            if (expect.indexOf(got) == -1) {
-                throw('did not get expected response');
+        let expect = (want, got) => {
+            if (got.indexOf(want) == -1) {
+                throw('Did not get expected response');
             }
         };
         this.transport.set_delimiters(['> ']);
@@ -113,12 +113,12 @@ class Passthrough {
         await this.transport.write_string('set rfmod 0 bootpin 0\n');
         expect('set: ', await this.transport.read_line({timeout: 100}));
 
-        cmd = 'serialpassthrough rfmod 0 ' + this.transport.baudrate.toString();
-
         this.log('Enabling serial passthrough...');
+        this.transport.set_delimiters(['\n']);
+        let cmd = 'serialpassthrough rfmod 0 ' + this.transport.baudrate.toString();
         this.log(`  CMD: '${cmd}`);
         await this.transport.write_string(cmd + '\n');
-        await this._sleep(200);
+        await this.transport.read_line({timeout: 200});
 
         this.log('======== PASSTHROUGH DONE ========');
     }
