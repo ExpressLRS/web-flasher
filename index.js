@@ -85,7 +85,12 @@ modelSelect.onchange = async () => {
     setDisplay('.' + typeSelect.value, 'block');
     setDisplay('.' + hardware[vendorSelect.value][typeSelect.value][modelSelect.value]['platform'], 'block');
 
-    //TODO update methodSelect with flash methods
+    _('uart').disabled = true;
+    _('betaflight').disabled = true;
+    _('etx').disabled = true;
+    _('wifi').disabled = true;
+    _('stlink').disabled = true;
+    hardware[vendorSelect.value][typeSelect.value][modelSelect.value].upload_methods.forEach((k) =>_(k).disabled = false);
 }
 
 _('method').onchange = async () => {
