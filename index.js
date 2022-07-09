@@ -42,12 +42,12 @@ function setDisplay(type, disp) {
 }
 
 vendorSelect.onchange = async () => {
-    typeSelect.options.length = 1;
+    _('tx_2400').disabled = true;
+    _('tx_900').disabled = true;
+    _('rx_2400').disabled = true;
+    _('rx_900').disabled = true;
     for (const k in hardware[vendorSelect.value]) {
-        let opt = document.createElement('option');
-        opt.value = k;
-        opt.innerHTML = k;
-        typeSelect.appendChild(opt);
+        if (_(k) !== null) _(k).disabled = false;
     }
     typeSelect.disabled = false;
     typeSelect.value = '';
@@ -198,7 +198,7 @@ function initialise() {
             for (const k in json) {
                 let opt = document.createElement('option');
                 opt.value = k;
-                opt.innerHTML = k;
+                opt.innerHTML = json[k].name === undefined ? k : json[k].name;
                 vendorSelect.appendChild(opt);
             }
             vendorSelect.disabled = false;
