@@ -89,7 +89,6 @@ class Passthrough {
         this.terminal.writeln(str);
     }
 
-
     edgeTX = async () => {
         this.log('======== PASSTHROUGH INIT ========');
 

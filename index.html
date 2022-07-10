@@ -131,20 +131,35 @@
                 </div>
             </div>
 
-            <div class="mui-panel" id="program" style="display: none;">
+            <div class="mui-panel uart betaflight etx" id="program" style="display: none;">
                 <h3> Program </h3>
                 <form class="mui-form">
                     <label style="display:none" id="lblConnTo">Connected to device: </label>
 
-                    <input class="mui-btn mui-btn--primary mui-btn--small" type="button" id="connectButton" value="Connect" />
+                    <input class="mui-btn mui-btn--primary mui-btn--small" type="button" id="connectUartButton" value="Connect" />
                     <input class="mui-btn mui-btn--primary mui-btn--small" type="button" id="disconnectButton" value="Disconnect" />
                     <input class="mui-btn mui-btn--danger mui-btn--small" type="button" id="eraseButton" value="Erase Flash" />
                     <br>
 
-                    <input class="mui-btn mui-btn--primary" type="button" id="programButton" value="Program" />
+                    <input class="mui-btn mui-btn--primary" type="button" id="programUartButton" value="Program" />
                 </form>
-                <div class="mui-panel" id="terminal"></div>
             </div>
+            <div class="mui-panel stlink" style="display: none;">
+                <h3> Program </h3>
+                <form class="mui-form">
+                    <label style="display:none" id="lblConnTo">Connected to device: </label>
+
+                    <input class="mui-btn mui-btn--primary mui-btn--small" type="button" id="connectStlinkButton" value="Connect" />
+                    <br>
+
+                    <div class="mui-checkbox">
+                        <input id='flash-bootloader' type='checkbox'/>
+                        <label>Also flash bootloader?</label>
+                    </div>
+                    <input class="mui-btn mui-btn--primary" type="button" id="programStlinkButton" value="Program" />
+                </form>
+            </div>
+            <div class="mui-panel" id="terminal" style="display: none;"></div>
         </div>
 
 

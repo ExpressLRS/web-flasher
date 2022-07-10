@@ -2,10 +2,12 @@ function _(el) {
     return document.getElementById(el);
 }
 
-const connectButton = _('connectButton');
+const connectUartButton = _('connectUartButton');
+const connectStlinkButton = _('connectStlinkButton');
 const disconnectButton = _('disconnectButton');
 const eraseButton = _('eraseButton');
-const programButton = _('programButton');
+const programUartButton = _('programUartButton');
+const programStlinkButton = _('programStlinkButton');
 const vendorSelect = _('vendor');
 const typeSelect = _('type');
 const modelSelect = _('model');
@@ -17,6 +19,7 @@ import { ESPLoader } from './ESPLoader.js'
 import { initBindingPhraseGen } from './phrase.js'
 import { Flasher } from './flasher.js'
 import { Passthrough, Bootloader } from './passthrough.js';
+import { STLink } from './stlink.js';
 
 let hardware = null;
 let device = null;
@@ -28,9 +31,12 @@ let connected = false;
 let term = new Terminal({ cols: 120, rows: 40 });
 term.open(terminal);
 
+let stlink = new STLink(term);
+
 disconnectButton.style.display = 'none';
 eraseButton.style.display = 'none';
-programButton.style.display = 'none';
+programUartButton.style.display = 'none';
+programStlinkButton.style.display = 'none';
 
 document.addEventListener('DOMContentLoaded', initialise, false);
 
@@ -54,7 +60,9 @@ vendorSelect.onchange = async () => {
     modelSelect.disabled = true;
     modelSelect.value = '';
     _('options').style.display = 'none';
-    _('program').style.display = 'none';
+    setDisplay('.uart', 'none');
+    setDisplay('.stlink', 'none');
+    setDisplay('.wifi', 'none');
 }
 
 typeSelect.onchange = async () => {
@@ -68,7 +76,9 @@ typeSelect.onchange = async () => {
     modelSelect.disabled = false;
     modelSelect.value = '';
     _('options').style.display = 'none';
-    _('program').style.display = 'none';
+    setDisplay('.uart', 'none');
+    setDisplay('.stlink', 'none');
+    setDisplay('.wifi', 'none');
 }
 
 modelSelect.onchange = async () => {
@@ -94,7 +104,8 @@ modelSelect.onchange = async () => {
 }
 
 _('method').onchange = async () => {
-    _('program').style.display = 'block';
+    setDisplay('.' + _('method').value, 'block');
+    _('terminal').style.display = 'block';
 }
 
 function checkStatus(response) {
@@ -104,7 +115,7 @@ function checkStatus(response) {
     return response;
 }
 
-connectButton.onclick = async () => {
+connectUartButton.onclick = async () => {
     if (device === null) {
         device = await navigator.serial.requestPort();
     }
@@ -154,13 +165,13 @@ connectButton.onclick = async () => {
     console.log('Settings done for :' + chip);
     lblConnTo.innerHTML = 'Connected to device: ' + chip;
     lblConnTo.style.display = 'block';
-    connectButton.style.display = 'none';
+    connectUartButton.style.display = 'none';
     disconnectButton.style.display = 'initial';
     eraseButton.style.display = 'initial';
-    programButton.style.display = 'initial';
+    programUartButton.style.display = 'initial';
 }
 
-programButton.onclick = async () => {
+function get_settings() {
     const config = hardware[vendorSelect.value][typeSelect.value][modelSelect.value];
     const firmwareUrl = 'firmware/' + _('fcclbt').value + '/' + config['firmware'] + '/firmware.bin';
     const options = {
@@ -177,21 +188,35 @@ programButton.onclick = async () => {
     if (typeSelect.value === 'rx_900' || typeSelect.value === 'rx_2400') {
         deviceType = 'RX';
         options['rcvr-uart-baud'] = + _('rcvr-uart-baud').value;
-        options['rcvr-invert-tx'] = _('rcvr-invert-tx').value === 'on' ? true : false;
-        options['lock-on-first-connection'] = _('lock-on-first-connection').value === 'on' ? true : false;
+        options['rcvr-invert-tx'] = _('rcvr-invert-tx').checked;
+        options['lock-on-first-connection'] = _('lock-on-first-connection').checked;
     } else {
         deviceType = 'TX';
         options['tlm-interval'] = + _('tlm-interval').value;
         options['fan-runtime'] = + _('fan-runtime').value;
-        options['uart-inverted'] = _('uart-inverted').value === 'on' ? true : false;
-        options['unlock-higher-power'] = _('unlock-higher-power').value === 'on' ? true : false;
+        options['uart-inverted'] = _('uart-inverted').checked;
+        options['unlock-higher-power'] = _('unlock-higher-power').checked;
     }
     if (typeSelect.value === 'rx_900' || typeSelect.value === 'tx_900') {
         options['domain'] = + _('domain').value;
     }
-
+    return {config: config, firmwareUrl: firmwareUrl, options: options};
+}
+programUartButton.onclick = async () => {
+    let {config, firmwareUrl, options} = get_settings();
     const flasher = new Flasher(deviceType, config, options, esploader);
     await flasher.flash(firmwareUrl);
+}
+
+connectStlinkButton.onclick = async () => {
+    connectStlinkButton.disabled = true;
+    let {config, firmwareUrl, options} = get_settings();
+    await stlink.connect(config, firmwareUrl, options);
+    programStlinkButton.style.display = 'initial';
+}
+
+programStlinkButton.onclick = async () => {
+    await stlink.flash(_('flash-bootloader').checked);
 }
 
 function initialise() {
@@ -208,6 +233,8 @@ function initialise() {
             }
             vendorSelect.disabled = false;
             _('options').style.display = 'none';
-            _('program').style.display = 'none';
+            setDisplay('.uart', 'none');
+            setDisplay('.stlink', 'none');
+            setDisplay('.wifi', 'none');
         });
 }

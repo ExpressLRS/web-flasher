@@ -229,7 +229,7 @@ export default class WebStlink {
             this._mcus_by_core = mcus;
             return;
         }
-        
+
         throw new libstlink.exceptions.Exception(`PART_NO: 0x${H24(partno)} is not supported`);
     }
 
@@ -259,9 +259,9 @@ export default class WebStlink {
         cpu_type = cpu_type.toUpperCase();
         // now support only STM32
         if (cpu_type.startsWith("STM32")) {
-            // change character on 10 position to 'x' where is package size code
+            // change character on 9 position to 'x' where is package size code
             if (cpu_type.length > 9) {
-                return cpu_type.substring(0, 10) + "x" + cpu_type.substring(11);
+                return cpu_type.substring(0, 9) + "x" + cpu_type.substring(10);
             }
             return cpu_type;
         }
@@ -273,8 +273,8 @@ export default class WebStlink {
         for (let detected_cpu of this._mcus) {
             for (let expected_cpu of expected_cpus) {
                 expected_cpu = this.fix_cpu_type(expected_cpu);
-                if (detected_cpu.type.startsWith(expected_cpu)) {
-                    cpus.append(detected_cpu);
+                if (expected_cpu.startsWith(detected_cpu.type)) {
+                    cpus.push(detected_cpu);
                     break;
                 }
             }
@@ -366,7 +366,7 @@ export default class WebStlink {
             this._dbg.info("CORE:   " + this._mcus_by_core.core);
             await this.find_mcus_by_devid();
             await this.find_mcus_by_flash_size();
-            if (expected_cpus.count > 0) {
+            if (expected_cpus.length > 0) {
                 // filter detected MCUs by selected MCU type
                 this.filter_detected_cpu(expected_cpus);
             }
