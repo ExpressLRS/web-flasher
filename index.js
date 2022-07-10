@@ -14,19 +14,13 @@ const modelSelect = _('model');
 const lblConnTo = _('lblConnTo');
 const methodSelect = _('method');
 
-import { Transport } from './webserial.js'
-import { ESPLoader } from './ESPLoader.js'
 import { initBindingPhraseGen } from './phrase.js'
 import { Flasher } from './flasher.js'
-import { Passthrough, Bootloader } from './passthrough.js';
 import { STLink } from './stlink.js';
 
 let hardware = null;
 let device = null;
-let transport;
-let chip = 'none detected';
-let esploader;
-let connected = false;
+let flasher = null;
 
 let term = new Terminal({ cols: 120, rows: 40 });
 term.open(terminal);
@@ -120,58 +114,28 @@ connectUartButton.onclick = async () => {
         device = await navigator.serial.requestPort();
     }
 
+    let deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX';
+    let method = methodSelect.value;
+
+    // This is all Espressif
+    // PAK what about STM32!
+    let {config, firmwareUrl, options} = get_settings(deviceType);
+    flasher = new Flasher(device, deviceType, method, config, options, firmwareUrl, term);
     try {
-        const config = hardware[vendorSelect.value][typeSelect.value][modelSelect.value];
-
-        let mode = 'default_reset';
-        let baudrate = 460800;
-        if (methodSelect.value == 'betaflight') {
-            baudrate = 420000;
-        }
-
-        transport = new Transport(device, true);
-        esploader = new ESPLoader(transport, baudrate, term, true);
-
-        const passthrough = new Passthrough(transport, term, config.firmware);
-        if (methodSelect.value == 'uart') {
-            if (typeSelect.value.startsWith('rx_')) {
-                await transport.connect({baud: baudrate});
-                const ret = await esploader._connect_attempt();
-                if (ret != 'success') {
-                    await transport.disconnect();
-                    await transport.connect({baud: 420000});
-                    await passthrough.reset_to_bootloader();
-                }
-            } else {
-                await transport.connect({baud: 230400});
-            }
-        } else if (methodSelect.value == 'betaflight') {
-            baudrate = 420000;
-            mode = 'no_reset';
-            await transport.connect({baud: baudrate});
-            await passthrough.betaflight();
-        } else if (methodSelect.value == 'etx') {
-            baudrate = 230400;
-            mode = 'no_reset';
-            await transport.connect({baud: baudrate});
-            await passthrough.edgeTX();
-        }
-
-        chip = await esploader.main_fn({mode:mode});
-        connected = true;
+        let chip = await flasher.connect();
+        lblConnTo.innerHTML = 'Connected to device: ' + chip;
+        lblConnTo.style.display = 'block';
+        connectUartButton.style.display = 'none';
+        disconnectButton.style.display = 'initial';
+        eraseButton.style.display = 'initial';
+        programUartButton.style.display = 'initial';
     } catch(e) {
-        console.log(e);
+        lblConnTo.innerHTML = 'Failed to connect to device, restart device and try again';
+        lblConnTo.style.display = 'block';
     }
-    console.log('Settings done for :' + chip);
-    lblConnTo.innerHTML = 'Connected to device: ' + chip;
-    lblConnTo.style.display = 'block';
-    connectUartButton.style.display = 'none';
-    disconnectButton.style.display = 'initial';
-    eraseButton.style.display = 'initial';
-    programUartButton.style.display = 'initial';
 }
 
-function get_settings() {
+function get_settings(deviceType) {
     const config = hardware[vendorSelect.value][typeSelect.value][modelSelect.value];
     const firmwareUrl = 'firmware/' + _('fcclbt').value + '/' + config['firmware'] + '/firmware.bin';
     const options = {
@@ -179,19 +143,16 @@ function get_settings() {
             return Number(element);
         })
     };
-    let deviceType;
     if (config['platform'] !== 'stm32') {
         options['wifi-on-interval'] = + _('wifi-on-interval').value;
         options['wifi-ssid'] = _('wifi-ssid').value;
         options['wifi-password'] = _('wifi-password').value;
     }
-    if (typeSelect.value === 'rx_900' || typeSelect.value === 'rx_2400') {
-        deviceType = 'RX';
+    if (deviceType === 'RX') {
         options['rcvr-uart-baud'] = + _('rcvr-uart-baud').value;
         options['rcvr-invert-tx'] = _('rcvr-invert-tx').checked;
         options['lock-on-first-connection'] = _('lock-on-first-connection').checked;
     } else {
-        deviceType = 'TX';
         options['tlm-interval'] = + _('tlm-interval').value;
         options['fan-runtime'] = + _('fan-runtime').value;
         options['uart-inverted'] = _('uart-inverted').checked;
@@ -203,14 +164,13 @@ function get_settings() {
     return {config: config, firmwareUrl: firmwareUrl, options: options};
 }
 programUartButton.onclick = async () => {
-    let {config, firmwareUrl, options} = get_settings();
-    const flasher = new Flasher(deviceType, config, options, esploader);
-    await flasher.flash(firmwareUrl);
+    await flasher.flash();
 }
 
 connectStlinkButton.onclick = async () => {
     connectStlinkButton.disabled = true;
-    let {config, firmwareUrl, options} = get_settings();
+    let deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX';
+    let {config, firmwareUrl, options} = get_settings(deviceType);
     await stlink.connect(config, firmwareUrl, options);
     programStlinkButton.style.display = 'initial';
 }
