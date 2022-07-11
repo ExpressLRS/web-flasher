@@ -1,36 +1,34 @@
 class Bootloader {
 
-    constructor() {
-        this.INIT_SEQ = {
-            'CRSF': [0xEC, 0x04, 0x32, this.ord('b'), this.ord('l')],
-            'GHST': [0x89, 0x04, 0x32, this.ord('b'), this.ord('l')]
-        };
-        this.BIND_SEQ = {
-            'CRSF': [0xEC, 0x04, 0x32, this.ord('b'), this.ord('d')],
-            'GHST': [0x89, 0x04, 0x32, this.ord('b'), this.ord('d')]
-        };
-    }
+    static INIT_SEQ = {
+        'CRSF': [0xEC, 0x04, 0x32, this.ord('b'), this.ord('l')],
+        'GHST': [0x89, 0x04, 0x32, this.ord('b'), this.ord('l')]
+    };
+    static BIND_SEQ = {
+        'CRSF': [0xEC, 0x04, 0x32, this.ord('b'), this.ord('d')],
+        'GHST': [0x89, 0x04, 0x32, this.ord('b'), this.ord('d')]
+    };
 
-    ord(s) {
+    static ord(s) {
         return s.charCodeAt(0);
     }
 
-    calc_crc8(payload, poly=0xD5) {
+    static calc_crc8(payload, poly = 0xD5) {
         let crc = 0;
-        for(let pos=0 ; pos<payload.byteLength ; pos++) {
+        for (let pos = 0; pos < payload.byteLength; pos++) {
             crc ^= payload[pos];
-            for ( var j = 0; j < 8; ++j ) {
+            for (var j = 0; j < 8; ++j) {
                 if ((crc & 0x80) !== 0) {
-                     crc = ((crc << 1) ^ poly) % 256
+                    crc = ((crc << 1) ^ poly) % 256
                 } else {
-                     crc = (crc << 1) % 256
+                    crc = (crc << 1) % 256
                 }
             }
         }
         return crc;
     }
 
-    get_telemetry_seq(seq, key = null) {
+    static get_telemetry_seq(seq, key = null) {
         let payload = new Uint8Array(seq);
         let u8_array = new Uint8Array();
         if (key != null) {
@@ -45,22 +43,22 @@ class Bootloader {
         tmp.set(payload, 0);
         tmp.set([payload[1] + u8_array.byteLength], 1);
         tmp.set(u8_array, payload.byteLength);
-        const crc = this.calc_crc8(tmp.slice(2, tmp.byteLength-1));
+        const crc = this.calc_crc8(tmp.slice(2, tmp.byteLength - 1));
         tmp.set([crc], payload.byteLength + u8_array.byteLength);
         return tmp;
     }
 
-    get_init_seq(module, key = null) {
-      return this.get_telemetry_seq(this.INIT_SEQ[module], key);
+    static get_init_seq(module, key = null) {
+        return this.get_telemetry_seq(this.INIT_SEQ[module], key);
     }
 
-    get_bind_seq(module, key = null) {
-      return this.get_telemetry_seq(this.BIND_SEQ[module], key);
+    static get_bind_seq(module, key = null) {
+        return this.get_telemetry_seq(this.BIND_SEQ[module], key);
     }
 }
 
 class Passthrough {
-    constructor(transport, terminal, flash_target, half_duplex=false, uploadforce=false) {
+    constructor(transport, terminal, flash_target, half_duplex = false, uploadforce = false) {
         this.transport = transport;
         this.terminal = terminal;
         this.flash_target = flash_target;
@@ -71,7 +69,7 @@ class Passthrough {
     _validate_serialrx = async (config, expected) => {
         let found = false;
         await this.transport.write_string('get ' + config + '\r\n');
-        let line = await this.transport.read_line({timeout:100});
+        let line = await this.transport.read_line({ timeout: 100 });
         for (const key of expected) {
             if (line.trim().indexOf(' = ' + key)) {
                 found = true;
@@ -94,30 +92,30 @@ class Passthrough {
 
         let expect = (want, got) => {
             if (got.indexOf(want) == -1) {
-                throw('Did not get expected response');
+                throw ('Did not get expected response');
             }
         };
         this.transport.set_delimiters(['> ']);
         await this.transport.write_string('set pulses 0\n');
-        expect('set: ', await this.transport.read_line({timeout: 100}));
+        expect('set: ', await this.transport.read_line({ timeout: 100 }));
         await this.transport.write_string('set rfmod 0 power off\n');
-        expect('set: ', await this.transport.read_line({timeout: 100}));
+        expect('set: ', await this.transport.read_line({ timeout: 100 }));
         await this._sleep(500);
         await this.transport.write_string('set rfmod 0 bootpin 1\n');
-        expect('set: ', await this.transport.read_line({timeout: 100}));
+        expect('set: ', await this.transport.read_line({ timeout: 100 }));
         await this._sleep(100);
         await this.transport.write_string('set rfmod 0 power on\n');
-        expect('set: ', await this.transport.read_line({timeout: 100}));
+        expect('set: ', await this.transport.read_line({ timeout: 100 }));
         await this._sleep(100);
         await this.transport.write_string('set rfmod 0 bootpin 0\n');
-        expect('set: ', await this.transport.read_line({timeout: 100}));
+        expect('set: ', await this.transport.read_line({ timeout: 100 }));
 
         this.log('Enabling serial passthrough...');
         this.transport.set_delimiters(['\n']);
         let cmd = 'serialpassthrough rfmod 0 ' + this.transport.baudrate.toString();
         this.log(`  CMD: '${cmd}`);
         await this.transport.write_string(cmd + '\n');
-        await this.transport.read_line({timeout: 200});
+        await this.transport.read_line({ timeout: 200 });
 
         this.log('======== PASSTHROUGH DONE ========');
     }
@@ -127,12 +125,12 @@ class Passthrough {
 
         this.transport.set_delimiters(['# ', 'CCC']);
         await this.transport.write_string('#\r\n');
-        const line = await this.transport.read_line({timeout:200});
+        const line = await this.transport.read_line({ timeout: 200 });
         if (line.indexOf('CCC') != -1) {
             this.log('Passthrough already enabled and bootloader active');
             return;
         }
-        if(!line.trim().endsWith('#')) {
+        if (!line.trim().endsWith('#')) {
             this.log('No CLI available. Already in passthrough mode?, If this fails reboot FC and try again!');
             return;
         }
@@ -161,7 +159,7 @@ class Passthrough {
                 this.log('    !!! ' + err + ' !!!');
             }
             this.log('\n    Please change the configuration and try again!');
-            throw('Passthrough failed');
+            throw ('Passthrough failed');
         }
 
         this.log('\nAttempting to detect FC UART configuration...');
@@ -170,8 +168,8 @@ class Passthrough {
         await this.transport.write_string('serial\r\n');
 
         let index = false;
-        while(true) {
-            const line = await this.transport.read_line({timeout:200});
+        while (true) {
+            const line = await this.transport.read_line({ timeout: 200 });
             if (line.indexOf('#') != -1) {
                 break;
             }
@@ -186,28 +184,25 @@ class Passthrough {
         }
         if (!index) {
             this.log('!!! RX Serial not found !!!!\n  Check configuration and try again...');
-            throw('not found');
+            throw ('not found');
         }
 
         await this.transport.write_string(`serialpassthrough ${index} ${this.transport.baudrate}\r\n`);
         await this._sleep(200);
         try {
-            for (let i=0 ; i<10 ; i++)
-                await this.transport.read_line({timeout:200});
+            for (let i = 0; i < 10; i++)
+                await this.transport.read_line({ timeout: 200 });
         } catch (e) {
         }
 
         this.log('======== PASSTHROUGH DONE ========');
-
-        await this.reset_to_bootloader();
     }
 
     reset_to_bootloader = async () => {
         this.log('======== RESET TO BOOTLOADER ========');
-        const bootloader = new Bootloader();
         if (this.half_duplex) {
             this.log('Using half duplex (GHST)');
-            await this.transport.write_array(bootloader.get_init_seq('GHST'));
+            await this.transport.write_array(Bootloader.get_init_seq('GHST'));
         } else {
             this.log('Using full duplex (CRSF)');
             const train = new Uint8Array(32);
@@ -215,16 +210,28 @@ class Passthrough {
             await this.transport.write_array(new Uint8Array([0x07, 0x07, 0x12, 0x20]));
             await this.transport.write_array(train);
             await this._sleep(200);
-            await this.transport.write_array(bootloader.get_init_seq('CRSF'));
+            try {
+                await this.transport.rawRead({ timeout: 1 });
+            } catch (e) {
+            }
+            await this.transport.write_array(Bootloader.get_init_seq('CRSF'));
             await this._sleep(200);
         }
         let rx_target = "";
         try {
             this.transport.set_delimiters('\n');
-            for (let i=0 ; i<10 ; i++) {
-                let line = await this.transport.read_line({timeout:200});
-                if (line !== undefined) rx_target += line.trim();
-            }
+            rx_target = (await this.transport.read_line({ timeout: 200 })).trim();
+            // for (let i=0 ; i<10 ; i++) {
+            //     let line = await this.transport.read_line({timeout:200});
+            //     if (line !== undefined) {
+            //         const pos = line.toUpperCase().indexOf(this.flash_target.toUpperCase());
+            //         if (pos != -1) {
+            //             rx_target = line.substring(pos).trim();
+            //             break;
+            //         }
+            //         rx_target += line;
+            //     }
+            // }
         } catch (e) {
             console.log(e);
         }
@@ -237,8 +244,8 @@ class Passthrough {
             // if query_yes_no('\n\n\nWrong target selected! your RX is '%s', trying to flash '%s', continue? Y/N\n' % (rx_target, this.flash_target)):
             //     this.log('Ok, flashing anyway!');
             // else:
-                this.log(`Wrong target selected your RX is '${rx_target}', trying to flash '${this.flash_target}'`);
-                throw('mismatch');
+            this.log(`Wrong target selected your RX is '${rx_target}', trying to flash '${this.flash_target}'`);
+            throw ('mismatch');
         }
         else if (this.flash_target != '')
             this.log(`Verified RX target '${this.flash_target}'`);

@@ -78,8 +78,12 @@ function initBindingPhraseGen() {
     const uid = document.getElementById('uid');
 
     function setOutput(text) {
-        const uidBytes = uidBytesFromText(text);
-        uid.value = uidBytes;
+        if (text === '') {
+            uid.value  ='';
+        } else {
+            const uidBytes = uidBytesFromText(text);
+            uid.value = uidBytes;
+        }
     }
 
     function updateValue(e) {

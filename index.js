@@ -15,7 +15,8 @@ const lblConnTo = _('lblConnTo');
 const methodSelect = _('method');
 
 import { initBindingPhraseGen } from './phrase.js'
-import { Flasher } from './flasher.js'
+import { ESPFlasher } from './espflasher.js'
+import { XmodemFlasher } from './xmodem.js'
 import { STLink } from './stlink.js';
 
 let hardware = null;
@@ -109,40 +110,16 @@ function checkStatus(response) {
     return response;
 }
 
-connectUartButton.onclick = async () => {
-    if (device === null) {
-        device = await navigator.serial.requestPort();
-    }
-
-    let deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX';
-    let method = methodSelect.value;
-
-    // This is all Espressif
-    // PAK what about STM32!
-    let {config, firmwareUrl, options} = get_settings(deviceType);
-    flasher = new Flasher(device, deviceType, method, config, options, firmwareUrl, term);
-    try {
-        let chip = await flasher.connect();
-        lblConnTo.innerHTML = 'Connected to device: ' + chip;
-        lblConnTo.style.display = 'block';
-        connectUartButton.style.display = 'none';
-        disconnectButton.style.display = 'initial';
-        eraseButton.style.display = 'initial';
-        programUartButton.style.display = 'initial';
-    } catch(e) {
-        lblConnTo.innerHTML = 'Failed to connect to device, restart device and try again';
-        lblConnTo.style.display = 'block';
-    }
-}
-
 function get_settings(deviceType) {
     const config = hardware[vendorSelect.value][typeSelect.value][modelSelect.value];
     const firmwareUrl = 'firmware/' + _('fcclbt').value + '/' + config['firmware'] + '/firmware.bin';
-    const options = {
-        'uid': _('uid').value.split(',').map((element) => {
+    const options = {};
+
+    if (_('uid').value !== '') {
+        options['uid'] = _('uid').value.split(',').map((element) => {
             return Number(element);
-        })
-    };
+        });
+    }
     if (config['platform'] !== 'stm32') {
         options['wifi-on-interval'] = + _('wifi-on-interval').value;
         options['wifi-ssid'] = _('wifi-ssid').value;
@@ -163,6 +140,39 @@ function get_settings(deviceType) {
     }
     return {config: config, firmwareUrl: firmwareUrl, options: options};
 }
+
+connectUartButton.onclick = async () => {
+    if (device === null) {
+        device = await navigator.serial.requestPort();
+    }
+
+    let deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX';
+    let method = methodSelect.value;
+    let {config, firmwareUrl, options} = get_settings(deviceType);
+
+    // This is all Espressif
+    // PAK what about STM32!
+    let chip = '';
+    if (config.platform === 'stm32') {
+        flasher = new XmodemFlasher(device, deviceType, method, config, options, firmwareUrl, term);
+        chip = await flasher.connect();
+    } else {
+        flasher = new ESPFlasher(device, deviceType, method, config, options, firmwareUrl, term);
+        chip = await flasher.connect();
+    }
+    try {
+        lblConnTo.innerHTML = 'Connected to device: ' + chip;
+        lblConnTo.style.display = 'block';
+        connectUartButton.style.display = 'none';
+        disconnectButton.style.display = 'initial';
+        eraseButton.style.display = 'initial';
+        programUartButton.style.display = 'initial';
+    } catch(e) {
+        lblConnTo.innerHTML = 'Failed to connect to device, restart device and try again';
+        lblConnTo.style.display = 'block';
+    }
+}
+
 programUartButton.onclick = async () => {
     await flasher.flash();
 }

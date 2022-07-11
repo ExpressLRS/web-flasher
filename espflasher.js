@@ -4,11 +4,7 @@ import { Transport } from './webserial.js'
 import { ESPLoader } from './ESPLoader.js'
 import { Passthrough } from './passthrough.js';
 
-function _(el) {
-    return document.getElementById(el);
-}
-
-class Flasher {
+class ESPFlasher {
     constructor(device, type, method, config, options, firmwareUrl, term) {
         this.device = device;
         this.type = type;
@@ -47,6 +43,7 @@ class Flasher {
             mode = 'no_reset';
             await transport.connect({baud: baudrate});
             await passthrough.betaflight();
+            await passthrough.reset_to_bootloader();
         } else if (this.method == 'etx') {
             baudrate = 230400;
             mode = 'no_reset';
@@ -129,4 +126,4 @@ class Flasher {
     }
 }
 
-export { Flasher };
+export { ESPFlasher };
