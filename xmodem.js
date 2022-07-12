@@ -1,5 +1,8 @@
+'use strict';
+
 import { Transport } from './webserial.js'
 import { Bootloader, Passthrough } from './passthrough.js';
+import { Configure } from './configure.js';
 
 const log = { info: function() {}, warn: function() {}, error: function() {}, debug: function() {} };
 
@@ -239,13 +242,8 @@ class XmodemFlasher {
         this.terminal.writeln(str);
     }
 
-    configure = (buf) => {
-
-        return buf;
-    }
-
     connect = async () => {
-        this.file = await this.fetchFile(this.firmwareUrl, this.configure);
+        this.file = await this.fetchFile(this.firmwareUrl, (bin) => Configure.stm32(bin, this.options));
 
         if (this.config.firmware.startsWith('GHOST')) {
             this.init_seq1 = Bootloader.get_init_seq('GHST');

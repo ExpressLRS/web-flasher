@@ -133,12 +133,12 @@ class STLink {
         this.config = config;
         this.firmwareUrl = firmwareUrl;
         this.options = options;
+
         if (this.stlink !== null) {
             await this.stlink.detach();
             this.on_disconnect();
             return;
         }
-
         try {
             let device = await navigator.usb.requestDevice({
                 filters: libstlink.usb.filters
@@ -150,7 +150,6 @@ class STLink {
         } catch (err) {
             this.error(err);
         }
-
         if (this.stlink !== null) {
             await this.on_successful_attach(this.stlink, this.device);
         }
@@ -200,7 +199,7 @@ class STLink {
 
             this.log('\nFlash ExpressLRS');
             this.log('================');
-            const data = await this.fetch_file(this.firmwareUrl);
+            const data = await this.fetch_file(this.firmwareUrl, (bin) => Configure.stm32(bin, this.options));
             try {
                 await this.stlink.halt();
                 await this.stlink.flash(this.target.flash_start + addr, data);
