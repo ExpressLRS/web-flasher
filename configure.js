@@ -131,9 +131,9 @@ export class Configure {
         const binary = await new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = function found() {
-                resolve(reader.result);
+                resolve(new Uint8Array(reader.result));
             };
-            reader.readAsBinaryString(blob);
+            reader.readAsArrayBuffer(blob);
         });
         return { data: transform(binary), address: addr };
     }
@@ -141,12 +141,12 @@ export class Configure {
     static #findFirmwareEnd = (binary, config) => {
         let pos = 0x0;
         if (config.platform === 'esp8285') pos = 0x1000;
-        if (binary.charCodeAt(pos) != 0xE9) throw 'The file provided does not the right magic for a firmware file!';
-        let segments = binary.charCodeAt(pos + 1);
+        if (binary[pos] != 0xE9) throw 'The file provided does not the right magic for a firmware file!';
+        let segments = binary[pos + 1];
         if (config.platform === 'esp32') pos = 24;
         else pos = 0x1008;
         while (segments--) {
-            const size = binary.charCodeAt(pos + 4) + (binary.charCodeAt(pos + 5) << 8) + (binary.charCodeAt(pos + 6) << 16) + (binary.charCodeAt(pos + 7) << 24);
+            const size = binary[pos + 4] + (binary[pos + 5] << 8) + (binary[pos + 6] << 16) + (binary[pos + 7] << 24);
             pos += 8 + size;
         }
         pos = (pos + 16) & ~15
@@ -155,25 +155,32 @@ export class Configure {
         return pos
     }
 
+    static #appendArray = (arr1, arr2) => {
+        var c = new Uint8Array(arr1.length + arr2.length);
+        c.set(arr1, 0);
+        c.set(arr2, arr1.length);
+        return c;
+    }
+
     static #configureESP = (binary, config, options) => {
+        function bstrToUi8(bStr) {
+            var i, len = bStr.length, u8_array = new Uint8Array(len);
+            for (var i = 0; i < len; i++) {
+                u8_array[i] = bStr.charCodeAt(i);
+            }
+            return u8_array;
+        }
         let end = this.#findFirmwareEnd(binary, config);
-        binary = binary.substring(0, end);
-        binary += config.product_name.padEnd(128, '\x00');
-        binary += config.lua_name.padEnd(16, '\x00');
-        binary += JSON.stringify(options).padEnd(512, '\x00');
+        binary = binary.slice(0, end);
+        binary = this.#appendArray(binary, bstrToUi8(config.product_name.padEnd(128, '\x00')));
+        binary = this.#appendArray(binary, bstrToUi8(config.lua_name.padEnd(16, '\x00')));
+        binary = this.#appendArray(binary, bstrToUi8(JSON.stringify(options).padEnd(512, '\x00')));
         return binary;
     }
 
     static download = async (deviceType, config, firmwareUrl, options) => {
         if (config.platform === 'stm32') {
-            function bstrToUi8(bStr) {
-                var i, len = bStr.length, u8_array = new Uint8Array(len);
-                for (var i = 0; i < len; i++) {
-                    u8_array[i] = bStr.charCodeAt(i);
-                }
-                return u8_array;
-            }
-            const entry = await this.#fetch_file(firmwareUrl, 0, (bin) => this.#configureSTM32(bstrToUi8(bin), options))
+            const entry = await this.#fetch_file(firmwareUrl, 0, (bin) => this.#configureSTM32(bin, options))
             return entry.data;
         } else {
             var list = [];
@@ -190,7 +197,7 @@ export class Configure {
             return await Promise
                 .all(list)
                 .then(files => {
-                    files[files.length - 1].data += files[0].data + '\x00';
+                    files[files.length - 1].data = this.#appendArray(files[files.length - 1].data, this.#appendArray(files[0].data, new Uint8Array([0])));
                     return files.splice(1);
                 });
         }

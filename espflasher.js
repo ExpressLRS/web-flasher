@@ -58,7 +58,8 @@ class ESPFlasher {
 
     flash = async (files) => {
         const loader = this.esploader;
-        await loader.write_flash({ fileArray: files, flash_size: 'keep' })
+        const fileArray = files.map(v => ({data: loader.ui8ToBstr(v.data), address: v.address}));
+        await loader.write_flash({ fileArray: fileArray, flash_size: 'keep' })
             .then(_ => loader.soft_reset());
     }
 }

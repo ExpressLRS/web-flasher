@@ -221,14 +221,7 @@ downloadButton.onclick = async () => {
         if (config.platform === 'stm32') {
             bin = binary.buffer
         } else {
-            function bstrToUi8(bStr) {
-                var i, len = bStr.length, u8_array = new Uint8Array(len);
-                for (var i = 0; i < len; i++) {
-                    u8_array[i] = bStr.charCodeAt(i);
-                }
-                return u8_array;
-            }
-            bin = bstrToUi8(binary[binary.length-1].data).buffer;
+            bin = binary[binary.length-1].data.buffer;
         }
         const data = new Blob([bin], {type: 'application/octet-stream'});
         if (file !== null) {
