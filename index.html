@@ -91,17 +91,33 @@
                         <input size='5' id='tlm-interval' name='tlm-interval' type='text' value="240"/>
                         <label>TLM report interval (ms)</label>
                     </div>
-                    <div class="mui-checkbox">
+                    <div class="mui-checkbox esp32">
                         <input id='uart-inverted' name='uart-inverted' type='checkbox' checked/>
                         <label>UART inverted</label>
                     </div>
-                    <div class="mui-textfield">
+                    <div class="mui-textfield feature-fan">
                         <input size='3' id='fan-runtime' name='fan-runtime' type='text' value="30"/>
                         <label>Fan runtime (s)</label>
                     </div>
-                    <div class="mui-checkbox">
+                    <div class="mui-checkbox feature-unlock-higher-power">
                         <input id='unlock-higher-power' name='unlock-higher-power' type='checkbox'/>
                         <label>Unlock higher power</label>
+                    </div>
+                    <div class="feature-buzzer">
+                        <div class="mui-select">
+                            <select id="melody-type">
+                                <option value="" disabled selected>Select melody</option>
+                                <option value="0">Quiet, no beeps</option>
+                                <option value="1">Just one beep</option>
+                                <option value="2">No tune, just beeps</option>
+                                <option value="3">Default tune</option>
+                                <option value="4">Custom tune</option>
+                            </select>
+                        </div>
+                        <div class="mui-textfield">
+                            <input id='melody' name='melody' type='text' value=""/>
+                            <label>Melody</label>
+                        </div>
                     </div>
                 </div>
                 <div class="rx_900 rx_2400" style="display: none;">
@@ -109,7 +125,11 @@
                         <input size='7' id='rcvr-uart-baud' name='rcvr-uart-baud' type='text' value="420000"/>
                         <label>UART baud</label>
                     </div>
-                    <div class="mui-checkbox">
+                    <div class="mui-checkbox feature-sbus-uart">
+                        <input id='r9mm-mini-sbus' name='r9mm-mini-sbus' type='checkbox'/>
+                        <label>Use SBUS Pins as UART</label>
+                    </div>
+                    <div class="mui-checkbox esp8285 esp32">
                         <input id='rcvr-invert-tx' name='rcvr-invert-tx' type='checkbox'/>
                         <label>Invert TX pin</label>
                     </div>

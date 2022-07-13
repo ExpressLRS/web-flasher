@@ -18,6 +18,7 @@ import { initBindingPhraseGen } from './phrase.js'
 import { ESPFlasher } from './espflasher.js'
 import { XmodemFlasher } from './xmodem.js'
 import { STLink } from './stlink.js';
+import { MelodyParser } from './melody.js';
 
 let hardware = null;
 let device = null;
@@ -84,6 +85,13 @@ modelSelect.onchange = async () => {
     setDisplay('.esp8285', 'none');
     setDisplay('.esp32', 'none');
     setDisplay('.stm32', 'none');
+    setDisplay('.feature-fan', 'none');
+    setDisplay('.feature-unlock-higher-power', 'none');
+    setDisplay('.feature-sbus-uart', 'none');
+    setDisplay('.feature-buzzer', 'none');
+
+    const features = hardware[vendorSelect.value][typeSelect.value][modelSelect.value]['features'];
+    if (features) features.forEach(f => setDisplay('.feature-' + f, 'block'));
 
     _('fcclbt').value = 'FCC';
     _('options').style.display = 'block';
@@ -138,6 +146,15 @@ function get_settings(deviceType) {
     if (typeSelect.value === 'rx_900' || typeSelect.value === 'tx_900') {
         options['domain'] = + _('domain').value;
     }
+    const beeptype = Number(_('melody-type').value);
+    options['beeptype'] = beeptype > 2 ? 2 : beeptype;
+    if (beeptype == 2) {
+        options['melody'] = MelodyParser.parseToArray('A4 20 B4 20|60|0');
+    } else if (beeptype == 3) {
+        options['melody'] = MelodyParser.parseToArray('E5 40 E5 40 C5 120 E5 40 G5 22 G4 21|20|0');
+    } else if (beeptype == 4) {
+        options['melody'] = MelodyParser.parseToArray(_('melody').value);
+    }
     return {config: config, firmwareUrl: firmwareUrl, options: options};
 }
 
@@ -150,8 +167,6 @@ connectUartButton.onclick = async () => {
     let method = methodSelect.value;
     let {config, firmwareUrl, options} = get_settings(deviceType);
 
-    // This is all Espressif
-    // PAK what about STM32!
     let chip = '';
     if (config.platform === 'stm32') {
         flasher = new XmodemFlasher(device, deviceType, method, config, options, firmwareUrl, term);

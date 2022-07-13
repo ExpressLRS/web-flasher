@@ -1,5 +1,3 @@
-'use strict';
-
 export class Configure {
     static #MAGIC =  new Uint8Array([0xBE, 0xEF, 0xBA, 0xBE, 0xCA, 0xFE, 0xF0, 0x0D]);
 
@@ -25,8 +23,21 @@ export class Configure {
     }
 
     static #patch_buzzer(binary, pos, options) {
+        binary[pos] = options['beeptype'];
         pos += 1;
-        pos += 32*64;
+        for (let i=0 ; i<32*4 ; i++) {
+            binary[pos+i] = 0;
+        }
+        const melody = options['melody'];
+        if (melody) {
+            for (let i=0 ; i<melody.length ; i++) {
+                binary[pos+i*4+0] = melody[i][0] & 0xFF;
+                binary[pos+i*4+1] = (melody[i][0] >> 8) & 0xFF;
+                binary[pos+i*4+2] = melody[i][1] & 0xFF;
+                binary[pos+i*4+3] = (melody[i][1] >> 8) & 0xFF;
+            }
+        }
+        pos += 32*4;
         return pos;
     }
 
