@@ -8,6 +8,7 @@ const disconnectButton = _('disconnectButton');
 const eraseButton = _('eraseButton');
 const programUartButton = _('programUartButton');
 const programStlinkButton = _('programStlinkButton');
+const downloadButton = _('downloadButton');
 const vendorSelect = _('vendor');
 const typeSelect = _('type');
 const modelSelect = _('model');
@@ -19,10 +20,12 @@ import { ESPFlasher } from './espflasher.js'
 import { XmodemFlasher } from './xmodem.js'
 import { STLink } from './stlink.js';
 import { MelodyParser } from './melody.js';
+import { Configure } from './configure.js';
 
 let hardware = null;
 let device = null;
 let flasher = null;
+let binary = null;
 
 let term = new Terminal({ cols: 120, rows: 40 });
 term.open(terminal);
@@ -107,6 +110,7 @@ modelSelect.onchange = async () => {
 }
 
 _('method').onchange = async () => {
+    setDisplay('._method', 'none');
     setDisplay('.' + _('method').value, 'block');
     _('terminal').style.display = 'block';
 }
@@ -166,6 +170,7 @@ connectUartButton.onclick = async () => {
     let deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX';
     let method = methodSelect.value;
     let {config, firmwareUrl, options} = get_settings(deviceType);
+    binary = await Configure.download(deviceType, config, firmwareUrl, options);
 
     let chip = '';
     if (config.platform === 'stm32') {
@@ -189,7 +194,7 @@ connectUartButton.onclick = async () => {
 }
 
 programUartButton.onclick = async () => {
-    await flasher.flash();
+    await flasher.flash(binary);
 }
 
 connectStlinkButton.onclick = async () => {
@@ -197,11 +202,53 @@ connectStlinkButton.onclick = async () => {
     let deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX';
     let {config, firmwareUrl, options} = get_settings(deviceType);
     await stlink.connect(config, firmwareUrl, options);
+    binary = await Configure.download(deviceType, config, firmwareUrl, options);
     programStlinkButton.style.display = 'initial';
 }
 
 programStlinkButton.onclick = async () => {
-    await stlink.flash(_('flash-bootloader').checked);
+    await stlink.flash(binary, _('flash-bootloader').checked);
+}
+
+downloadButton.onclick = async () => {
+    let deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX';
+    let {config, firmwareUrl, options} = get_settings(deviceType);
+    let binary = await Configure.download(deviceType, config, firmwareUrl, options);
+
+    let file = null,
+    makeFile = function () {
+        let bin;
+        if (config.platform === 'stm32') {
+            bin = binary.buffer
+        } else {
+            function bstrToUi8(bStr) {
+                var i, len = bStr.length, u8_array = new Uint8Array(len);
+                for (var i = 0; i < len; i++) {
+                    u8_array[i] = bStr.charCodeAt(i);
+                }
+                return u8_array;
+            }
+            bin = bstrToUi8(binary[binary.length-1].data).buffer;
+        }
+        const data = new Blob([bin], {type: 'application/octet-stream'});
+        if (file !== null) {
+            window.URL.revokeObjectURL(file);
+        }
+        file = window.URL.createObjectURL(data);
+        return file;
+    };
+
+    var link = document.createElement('a');
+    link.setAttribute('download', 'firmware.bin');
+    link.href = makeFile();
+    document.body.appendChild(link);
+
+    // wait for the link to be added to the document
+    window.requestAnimationFrame(function () {
+        var event = new MouseEvent('click');
+        link.dispatchEvent(event);
+        document.body.removeChild(link);
+    });
 }
 
 function initialise() {

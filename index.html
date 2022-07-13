@@ -142,6 +142,7 @@
                 <div class="mui-select">
                     <select id="method">
                         <option value="" disabled selected>Select flashing method</option>
+                        <option value="download" id="download">Save to local disk</option>
                         <option value="uart" id="uart">Serial UART</option>
                         <option value="betaflight" id="betaflight">Betaflight Passthrough</option>
                         <option value="etx" id="etx">EdgeTX Passthrough</option>
@@ -151,7 +152,13 @@
                 </div>
             </div>
 
-            <div class="mui-panel uart betaflight etx" id="program" style="display: none;">
+            <div class="mui-panel download _method" id="program" style="display: none;">
+                <h3> Program </h3>
+                <form class="mui-form">
+                    <input class="mui-btn mui-btn--primary" type="button" id="downloadButton" value="Download" />
+                </form>
+            </div>
+            <div class="mui-panel uart betaflight etx _method" id="program" style="display: none;">
                 <h3> Program </h3>
                 <form class="mui-form">
                     <label style="display:none" id="lblConnTo">Connected to device: </label>
@@ -164,7 +171,7 @@
                     <input class="mui-btn mui-btn--primary" type="button" id="programUartButton" value="Program" />
                 </form>
             </div>
-            <div class="mui-panel stlink" style="display: none;">
+            <div class="mui-panel stlink _method" style="display: none;">
                 <h3> Program </h3>
                 <form class="mui-form">
                     <label style="display:none" id="lblConnTo">Connected to device: </label>

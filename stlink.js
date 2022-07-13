@@ -175,7 +175,7 @@ class STLink {
         return transform(binary);
     }
 
-    flash = async (flash_bootloader) => {
+    flash = async (binary, flash_bootloader) => {
         if (this.stlink !== null && this.stlink.connected) {
             if (flash_bootloader) {
                 this.log('\nFlash bootloader');
@@ -199,10 +199,9 @@ class STLink {
 
             this.log('\nFlash ExpressLRS');
             this.log('================');
-            const data = await this.fetch_file(this.firmwareUrl, (bin) => Configure.stm32(bin, this.options));
             try {
                 await this.stlink.halt();
-                await this.stlink.flash(this.target.flash_start + addr, data);
+                await this.stlink.flash(this.target.flash_start + addr, binary);
             } catch (err) {
                 this.error(err);
             }

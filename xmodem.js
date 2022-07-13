@@ -243,8 +243,6 @@ class XmodemFlasher {
     }
 
     connect = async () => {
-        this.file = await this.fetchFile(this.firmwareUrl, (bin) => Configure.stm32(bin, this.options));
-
         if (this.config.firmware.startsWith('GHOST')) {
             this.init_seq1 = Bootloader.get_init_seq('GHST');
         } else {
@@ -257,7 +255,7 @@ class XmodemFlasher {
         return 'XModem Flasher';
     }
 
-    flash = async (force = false) => {
+    flash = async (binary, force = false) => {
         this.log("Beginning flash...");
         this.transport.set_delimiters(['CCC']);
         const data = await this.transport.read_line({timeout:2000});
@@ -339,7 +337,7 @@ class XmodemFlasher {
         } else {
             this.log('\nWe were already in bootloader\n')
         }
-        await this.xmodem.send(this.file);
+        await this.xmodem.send(binary);
     }
 
     checkStatus = (response) => {
