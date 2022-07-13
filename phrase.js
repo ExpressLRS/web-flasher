@@ -1,5 +1,3 @@
-'use strict';
-
 let md5 = function () {
     const k = [];
     let i = 0;

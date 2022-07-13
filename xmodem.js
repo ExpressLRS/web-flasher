@@ -1,8 +1,5 @@
-'use strict';
-
 import { Transport } from './webserial.js'
 import { Bootloader, Passthrough } from './passthrough.js';
-import { Configure } from './configure.js';
 
 const log = { info: function() {}, warn: function() {}, error: function() {}, debug: function() {} };
 

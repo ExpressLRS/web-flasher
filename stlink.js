@@ -1,5 +1,3 @@
-'use strict';
-
 import * as libstlink from './lib/package.js';
 import WebStlink from './webstlink.js';
 

@@ -1,5 +1,3 @@
-'use strict';
-
 class Transport {
     constructor(device, tracing = false) {
         this.device = device;

@@ -1,5 +1,3 @@
-'use strict';
-
 import { Transport } from './webserial.js'
 import { ESPLoader } from './ESPLoader.js'
 import { Passthrough } from './passthrough.js';
