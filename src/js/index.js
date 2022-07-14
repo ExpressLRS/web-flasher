@@ -16,6 +16,7 @@ import { XmodemFlasher } from './xmodem.js'
 import { STLink } from './stlink.js';
 import { MelodyParser } from './melody.js';
 import { Configure } from './configure.js';
+import { Terminal } from 'xterm';
 
 let hardware = null;
 let device = null;

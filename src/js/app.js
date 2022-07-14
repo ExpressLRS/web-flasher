@@ -1,5 +1,5 @@
 // CSS
-import '../css/elrs.css';
+import '../css/app.css';
 
 // JavaScript
 import './index.js';

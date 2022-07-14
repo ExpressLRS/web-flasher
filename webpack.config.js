@@ -9,6 +9,9 @@ module.exports = {
     resolve: {
         alias: {
             'node_modules': path.join(__dirname, 'node_modules'),
+        },
+        fallback: {
+            'crypto': false,
         }
     },
     module: {
