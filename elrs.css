@@ -1,0 +1,27 @@
+.elrs-header {
+    padding: 3em 0 3em 0 ;
+    background-color: #4686a0;
+    color: rgba(255, 255, 255, 0.75);
+    background-attachment: fixed, fixed, fixed;
+    background-image: linear-gradient(45deg, #9dc66b 5%, #4fa49a 30%, #4361c2);
+    background-position: top left, center center, center center;
+    background-size: auto, cover, cover;
+    overflow: hidden;
+    position: relative;
+    text-align: center;
+}
+
+body, input, select, textarea {
+    color: #666;
+    font-family: "Source Sans Pro", Helvetica, sans-serif;
+    font-size: 12pt;
+    font-weight: 300;
+    line-height: 1.65em;
+}
+
+@media screen and (max-width: 800px) {
+    .logo {
+        width:25%;
+		height:25%;
+    }
+}
