@@ -1,2 +1,4 @@
-@import './elrs.css';
+@import 'muicss/dist/css/mui.css';
 @import 'xterm';
+@import './stepper.css';
+@import './elrs.css';
