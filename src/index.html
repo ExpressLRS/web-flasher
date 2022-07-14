@@ -7,6 +7,7 @@
         <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
         <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,300,400italic,600" rel="stylesheet" type="text/css" />
         <link href="https://fonts.googleapis.com/css?family=Orbitron" rel="stylesheet" />
+        <link href="main.css" rel="stylesheet" />
     </head>
     <body>
         <div id="safariErr" style="display:none"><p align="center" style="color:red">This tool is not supported on Safari browser!</p>
@@ -208,7 +209,7 @@
         </div>
 
 
-        <script src="./dist/bundle.js" type="module"></script>
+        <script src="bundle.js" type="module"></script>
         <script>
             // Safari 3.0+ "[object HTMLElementConstructor]"
             var isSafari = /constructor/i.test(window.HTMLElement) || (function (p) { return p.toString() === "[object SafariRemoteNotification]"; })(!window['safari'] || (typeof safari !== 'undefined' && window['safari'].pushNotification));
