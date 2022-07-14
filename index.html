@@ -3,17 +3,16 @@
     <head>
         <meta charset="utf-8" />
         <title>ESP Tool</title>
-        <link href="elrs.css" rel="stylesheet" type="text/css" />
+        <link rel="icon" href="favicon.ico" />
         <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
         <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,300,400italic,600" rel="stylesheet" type="text/css" />
-        <link href="//cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css" />
-        <link href="node_modules/xterm/css/xterm.css" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css?family=Orbitron" rel="stylesheet" />
-        <link rel="icon" href="favicon.ico" />
+        <link href="node_modules/muicss/dist/css/mui.min.css" rel="stylesheet" type="text/css" />
+        <link href="node_modules/xterm/css/xterm.css" rel="stylesheet" />
         <script src="node_modules/xterm/lib/xterm.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.3/pako.js"></script>
+        <script src="node_modules/pako/dist/pako.min.js"></script>
         <script src="node_modules/crypto-js/crypto-js.js"></script>
-        <script src="//cdn.muicss.com/mui-0.10.3/js/mui.min.js"></script>
+        <script src="node_modules/muicss/dist/js/mui.min.js"></script>
     </head>
     <body>
         <div id="safariErr" style="display:none"><p align="center" style="color:red">This tool is not supported on Safari browser!</p>
@@ -221,8 +220,7 @@
         </div>
 
 
-        <script src="phrase.js" type="module"></script>
-        <script src="index.js" type="module"></script>
+        <script src="./dist/bundle.js" type="module"></script>
         <script>
             // Safari 3.0+ "[object HTMLElementConstructor]"
             var isSafari = /constructor/i.test(window.HTMLElement) || (function (p) { return p.toString() === "[object SafariRemoteNotification]"; })(!window['safari'] || (typeof safari !== 'undefined' && window['safari'].pushNotification));

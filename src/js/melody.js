@@ -1,4 +1,4 @@
-import Rtttl from "./node_modules/bluejay-rtttl-parse/src/index.js";
+import Rtttl from "bluejay-rtttl-parse";
 
 export class MelodyParser {
     static #NOTES = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#'];

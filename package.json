@@ -1,8 +1,24 @@
 {
-  "name": "esptool-js",
+  "name": "flasher",
+  "main": "index.js",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack"
+  },
+  "license": "GPL",
   "dependencies": {
     "bluejay-rtttl-parse": "^2.0.2",
     "crypto-js": "^4.0.0",
+    "muicss": "^0.10.3",
+    "pako": "^2.0.4",
     "xterm": "^4.19.0"
+  },
+  "devDependencies": {
+    "css-loader": "^6.7.1",
+    "style-loader": "^3.3.1",
+    "webpack": "^5.73.0",
+    "webpack-cli": "^4.10.0"
   }
 }

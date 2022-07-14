@@ -23,7 +23,7 @@ let flasher = null;
 let binary = null;
 
 let term = new Terminal({ cols: 120, rows: 40 });
-term.open(terminal);
+term.open(_('terminal'));
 
 let stlink = new STLink(term);
 
