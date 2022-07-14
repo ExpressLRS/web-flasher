@@ -188,7 +188,7 @@
             </div>
 
             <div class="mui-panel" id="step-flash" style="display: none;">
-                <div class="mui-panel uart betaflight etx _method" id="program" style="display: none;">
+                <div class="mui-panel uart betaflight etx stlink _method" id="program" style="display: none;">
                     <h3>Flash</h3>
                     <form class="mui-form">
                         <label style="display:none" id="lblConnTo">Connected to device: </label>
@@ -197,21 +197,13 @@
                             <input id='erase-flash' type='checkbox'/>
                             <label>Erase flash first?</label>
                         </div>
-
-                        <input class="mui-btn mui-btn--primary" type="button" id="programUartButton" value="Flash" />
-                    </form>
-                </div>
-
-                <div class="mui-panel stlink _method" style="display: none;">
-                    <h3>Flash</h3>
-                    <form class="mui-form">
-                        <label style="display:none" id="lblConnTo">Connected to device: </label>
-
-                        <div class="mui-checkbox">
+                        <div class="mui-checkbox stlink">
                             <input id='flash-bootloader' type='checkbox'/>
                             <label>Also flash bootloader?</label>
                         </div>
-                        <input class="mui-btn mui-btn--primary" type="button" id="programStlinkButton" value="Flash" />
+
+                        <input class="mui-btn mui-btn--primary" type="button" id="connectButton" value="Connect" style="display: none;"/>
+                        <input class="mui-btn mui-btn--primary" type="button" id="flashButton" value="Flash" />
                     </form>
                 </div>
 

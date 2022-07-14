@@ -2,8 +2,8 @@ function _(el) {
     return document.getElementById(el);
 }
 
-const programUartButton = _('programUartButton');
-const programStlinkButton = _('programStlinkButton');
+const flashButton = _('flashButton');
+const connectButton = _('connectButton');
 const vendorSelect = _('vendor');
 const typeSelect = _('type');
 const modelSelect = _('model');
@@ -27,8 +27,7 @@ term.open(_('terminal'));
 
 let stlink = new STLink(term);
 
-programUartButton.style.display = 'none';
-programStlinkButton.style.display = 'none';
+flashButton.style.display = 'none';
 
 document.addEventListener('DOMContentLoaded', initialise, false);
 
@@ -114,6 +113,33 @@ _('method').onchange = async () => {
     }
 }
 
+let handleConnection = async () => {
+    if (device !== null) {
+        if(transport)
+            await transport.disconnect();
+    }
+    try {
+        device = await navigator.serial.requestPort();
+        if (device != null) {
+            device.addEventListener('disconnect', async (e) => {
+                device = null;
+                flashButton.style.display = 'none';
+                connectButton.style.display = 'block';
+            });
+            connectButton.style.display = 'none';
+            if (_('method').value === 'stlink') {
+                await connectSTLink();
+            } else {
+                await connectUART();
+            }
+        }
+    } catch(e) {
+        device = null;
+        flashButton.style.display = 'none';
+        connectButton.style.display = 'block';
+    }
+}
+
 _('options-next').onclick = async () => {
     const method = _('method').value;
     if (method === 'download') {
@@ -131,19 +157,12 @@ _('options-next').onclick = async () => {
         _('terminal').style.display = 'block';
 
         if (method != 'wifi') {
-            if (device !== null) {
-                if(transport)
-                    await transport.disconnect();
-            }
-            device = await navigator.serial.requestPort();
-            if (method === 'stlink') {
-                await connectSTLink();
-            } else {
-                await connectUART();
-            }
+            await handleConnection();
         }
     }
 }
+
+connectButton.onclick = handleConnection;
 
 function get_settings(deviceType) {
     const config = hardware[vendorSelect.value][typeSelect.value][modelSelect.value];
@@ -202,15 +221,11 @@ let connectUART = async () => {
     try {
         lblConnTo.innerHTML = 'Connected to device: ' + chip;
         lblConnTo.style.display = 'block';
-        programUartButton.style.display = 'initial';
+        flashButton.style.display = 'initial';
     } catch(e) {
         lblConnTo.innerHTML = 'Failed to connect to device, restart device and try again';
         lblConnTo.style.display = 'block';
     }
-}
-
-programUartButton.onclick = async () => {
-    await flasher.flash(binary);
 }
 
 let connectSTLink = async () => {
@@ -219,11 +234,12 @@ let connectSTLink = async () => {
     binary = await Configure.download(deviceType, config, firmwareUrl, options);
 
     await stlink.connect(config, firmwareUrl, options);
-    programStlinkButton.style.display = 'initial';
+    flashButton.style.display = 'initial';
 }
 
-programStlinkButton.onclick = async () => {
-    await stlink.flash(binary, _('flash-bootloader').checked);
+flashButton.onclick = async () => {
+    if (flasher !== null) await flasher.flash(binary, _('erase-flash').checked);
+    else await stlink.flash(binary, _('flash-bootloader').checked);
 }
 
 let downloadFirmware = async () => {
