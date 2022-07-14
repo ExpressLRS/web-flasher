@@ -2,13 +2,8 @@ function _(el) {
     return document.getElementById(el);
 }
 
-const connectUartButton = _('connectUartButton');
-const connectStlinkButton = _('connectStlinkButton');
-const disconnectButton = _('disconnectButton');
-const eraseButton = _('eraseButton');
 const programUartButton = _('programUartButton');
 const programStlinkButton = _('programStlinkButton');
-const downloadButton = _('downloadButton');
 const vendorSelect = _('vendor');
 const typeSelect = _('type');
 const modelSelect = _('model');
@@ -32,8 +27,6 @@ term.open(terminal);
 
 let stlink = new STLink(term);
 
-disconnectButton.style.display = 'none';
-eraseButton.style.display = 'none';
 programUartButton.style.display = 'none';
 programStlinkButton.style.display = 'none';
 
@@ -58,10 +51,7 @@ vendorSelect.onchange = async () => {
     typeSelect.value = '';
     modelSelect.disabled = true;
     modelSelect.value = '';
-    _('options').style.display = 'none';
-    setDisplay('.uart', 'none');
-    setDisplay('.stlink', 'none');
-    setDisplay('.wifi', 'none');
+    _('device-next').disabled = true;
 }
 
 typeSelect.onchange = async () => {
@@ -73,14 +63,14 @@ typeSelect.onchange = async () => {
         modelSelect.appendChild(opt);
     }
     modelSelect.disabled = false;
-    modelSelect.value = '';
-    _('options').style.display = 'none';
-    setDisplay('.uart', 'none');
-    setDisplay('.stlink', 'none');
-    setDisplay('.wifi', 'none');
+    _('device-next').disabled = true;
 }
 
 modelSelect.onchange = async () => {
+    _('device-next').disabled = false;
+}
+
+_('device-next').onclick = async() => {
     setDisplay('.tx_2400', 'none');
     setDisplay('.rx_2400', 'none');
     setDisplay('.tx_900', 'none');
@@ -97,7 +87,6 @@ modelSelect.onchange = async () => {
     if (features) features.forEach(f => setDisplay('.feature-' + f, 'block'));
 
     _('fcclbt').value = 'FCC';
-    _('options').style.display = 'block';
     setDisplay('.' + typeSelect.value, 'block');
     setDisplay('.' + hardware[vendorSelect.value][typeSelect.value][modelSelect.value]['platform'], 'block');
 
@@ -107,19 +96,53 @@ modelSelect.onchange = async () => {
     _('wifi').disabled = true;
     _('stlink').disabled = true;
     hardware[vendorSelect.value][typeSelect.value][modelSelect.value].upload_methods.forEach((k) =>_(k).disabled = false);
+
+    _('step-device').style.display = 'none';
+    _('step-2').classList.add("active");
+    _('step-2').classList.add("editable");
+    _('step-1').classList.add("done");
+    _('step-1').classList.remove("editable");
+    _('step-options').style.display = 'block';
 }
 
 _('method').onchange = async () => {
-    setDisplay('._method', 'none');
-    setDisplay('.' + _('method').value, 'block');
-    _('terminal').style.display = 'block';
+    _('options-next').disabled = false;
+    if (_('method').value === 'download') {
+        _('options-next').value = 'Download';
+    } else {
+        _('options-next').value = 'Next';
+    }
 }
 
-function checkStatus(response) {
-    if (!response.ok) {
-        throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+_('options-next').onclick = async () => {
+    const method = _('method').value;
+    if (method === 'download') {
+        await downloadFirmware();
+    } else {
+        _('step-options').style.display = 'none';
+        _('step-3').classList.add("active");
+        _('step-3').classList.add("editable");
+        _('step-2').classList.add("done");
+        _('step-2').classList.remove("editable");
+        _('step-flash').style.display = 'block';
+
+        setDisplay('._method', 'none');
+        setDisplay('.' + method, 'block');
+        _('terminal').style.display = 'block';
+
+        if (method != 'wifi') {
+            if (device !== null) {
+                if(transport)
+                    await transport.disconnect();
+            }
+            device = await navigator.serial.requestPort();
+            if (method === 'stlink') {
+                await connectSTLink();
+            } else {
+                await connectUART();
+            }
+        }
     }
-    return response;
 }
 
 function get_settings(deviceType) {
@@ -162,16 +185,12 @@ function get_settings(deviceType) {
     return {config: config, firmwareUrl: firmwareUrl, options: options};
 }
 
-connectUartButton.onclick = async () => {
-    if (device === null) {
-        device = await navigator.serial.requestPort();
-    }
-
+let connectUART = async () => {
     let deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX';
-    let method = methodSelect.value;
     let {config, firmwareUrl, options} = get_settings(deviceType);
     binary = await Configure.download(deviceType, config, firmwareUrl, options);
 
+    let method = methodSelect.value;
     let chip = '';
     if (config.platform === 'stm32') {
         flasher = new XmodemFlasher(device, deviceType, method, config, options, firmwareUrl, term);
@@ -183,9 +202,6 @@ connectUartButton.onclick = async () => {
     try {
         lblConnTo.innerHTML = 'Connected to device: ' + chip;
         lblConnTo.style.display = 'block';
-        connectUartButton.style.display = 'none';
-        disconnectButton.style.display = 'initial';
-        eraseButton.style.display = 'initial';
         programUartButton.style.display = 'initial';
     } catch(e) {
         lblConnTo.innerHTML = 'Failed to connect to device, restart device and try again';
@@ -197,12 +213,12 @@ programUartButton.onclick = async () => {
     await flasher.flash(binary);
 }
 
-connectStlinkButton.onclick = async () => {
-    connectStlinkButton.disabled = true;
+let connectSTLink = async () => {
     let deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX';
     let {config, firmwareUrl, options} = get_settings(deviceType);
-    await stlink.connect(config, firmwareUrl, options);
     binary = await Configure.download(deviceType, config, firmwareUrl, options);
+
+    await stlink.connect(config, firmwareUrl, options);
     programStlinkButton.style.display = 'initial';
 }
 
@@ -210,7 +226,7 @@ programStlinkButton.onclick = async () => {
     await stlink.flash(binary, _('flash-bootloader').checked);
 }
 
-downloadButton.onclick = async () => {
+let downloadFirmware = async () => {
     let deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX';
     let {config, firmwareUrl, options} = get_settings(deviceType);
     let binary = await Configure.download(deviceType, config, firmwareUrl, options);
@@ -245,6 +261,13 @@ downloadButton.onclick = async () => {
 }
 
 function initialise() {
+    function checkStatus(response) {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+        }
+        return response;
+    }
+
     initBindingPhraseGen();
     fetch('firmware/hardware/targets.json')
         .then(response => checkStatus(response) && response.json())
@@ -257,7 +280,6 @@ function initialise() {
                 vendorSelect.appendChild(opt);
             }
             vendorSelect.disabled = false;
-            _('options').style.display = 'none';
             setDisplay('.uart', 'none');
             setDisplay('.stlink', 'none');
             setDisplay('.wifi', 'none');
