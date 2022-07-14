@@ -167,31 +167,40 @@ class Transport {
         let t;
         let packet = this.left_over;
         this.left_over = new Uint8Array(0);
-        if (packet.length < min_data) {
-            const reader = this.device.readable.getReader();
-            try {
-                if (timeout > 0) {
-                    t = setTimeout(function () {
-                        reader.cancel();
-                    }, timeout);
+        if (this.slip_reader_enabled) {
+            const val_final = this.slip_reader(packet);
+            if (val_final.length > 0) {
+                if (this.tracing) {
+                    console.log('Read results');
+                    console.log(this.hexdump(val_final));
                 }
-                do {
-                    const { value, done } = await reader.read();
-                    if (done) {
-                        this.left_over = packet;
-                        reader.releaseLock();
-                        await this.device.close();
-                        await this.device.open({ baudRate: this.baudrate });
-                        throw ("timeout");
-                    }
-                    packet = new Uint8Array(this._appendBuffer(packet.buffer, value.buffer));
-                } while (packet.length < min_data);
-                reader.releaseLock();
-            } finally {
-                if (timeout > 0) {
-                    clearTimeout(t);
-                }
+                return val_final;
             }
+            packet = this.left_over;
+            this.left_over = new Uint8Array(0);
+        }
+
+        const reader = this.device.readable.getReader();
+        try {
+            if (timeout > 0) {
+                t = setTimeout(function () {
+                    reader.cancel();
+                }, timeout);
+            }
+            do {
+                const { value, done } = await reader.read();
+                if (done) {
+                    this.left_over = packet;
+                    throw ("timeout");
+                }
+                packet = new Uint8Array(this._appendBuffer(packet.buffer, value.buffer));
+            } while (packet.length < min_data);
+            reader.releaseLock();
+        } finally {
+            if (timeout > 0) {
+                clearTimeout(t);
+            }
+            reader.releaseLock();
         }
         if (this.tracing) {
             console.log('Read bytes');
@@ -247,19 +256,16 @@ class Transport {
                 do {
                     const { value, done } = await reader.read();
                     if (done) {
-                        reader.releaseLock();
-                        await this.device.close();
-                        await this.device.open({ baudRate: this.baudrate });
                         return '';
                     }
                     packet = new Uint8Array(this._appendBuffer(packet.buffer, value.buffer));
                     index = findDelimeter(packet);
                 } while (index == -1);
-                reader.releaseLock();
             } finally {
                 if (timeout > 0) {
                     clearTimeout(t);
                 }
+                reader.releaseLock();
             }
         }
         this.left_over = packet.slice(index);
@@ -287,12 +293,8 @@ class Transport {
             }
             const { value, done } = await reader.read();
             if (done) {
-                reader.releaseLock();
-                await this.device.close();
-                await this.device.open({ baudRate: this.baudrate });
                 throw ("timeout");
             }
-            reader.releaseLock();
             if (this.tracing) {
                 console.log('Read bytes');
                 console.log(value);
@@ -302,6 +304,7 @@ class Transport {
             if (timeout > 0) {
                 clearTimeout(t);
             }
+            reader.releaseLock();
         }
     }
 
