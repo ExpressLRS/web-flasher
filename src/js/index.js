@@ -28,7 +28,6 @@ function _(el) {
     return document.getElementById(el);
 }
 
-
 function initialise() {
     term = new Terminal({ cols: 80, rows: 40 });
     const fitAddon = new FitAddon();
@@ -209,11 +208,9 @@ let connectUART = async () => {
             }
             try {
                 lblConnTo.innerHTML = 'Connected to device: ' + chip;
-                lblConnTo.style.display = 'block';
                 flashButton.style.display = 'initial';
             } catch(e) {
                 lblConnTo.innerHTML = 'Failed to connect to device, restart device and try again';
-                lblConnTo.style.display = 'block';
             }
             return;
         }
@@ -230,15 +227,18 @@ let connectSTLink = async () => {
         stlink = new STLink(term);
         let deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX';
         let {config, firmwareUrl, options} = get_settings(deviceType);
-        await stlink.connect(config, firmwareUrl, options, e => {
+        let version = await stlink.connect(config, firmwareUrl, options, e => {
+            term.clear();
             flashButton.style.display = 'none';
             connectButton.style.display = 'block';
         });
+        lblConnTo.innerHTML = 'Connected to device: ' + version;
         connectButton.style.display = 'none';
         binary = await Configure.download(deviceType, config, firmwareUrl, options);
 
         flashButton.style.display = 'initial';
     } catch(e) {
+        lblConnTo.innerHTML = 'Not connected';
         flashButton.style.display = 'none';
         connectButton.style.display = 'block';
     }

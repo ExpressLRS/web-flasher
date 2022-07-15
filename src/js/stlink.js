@@ -135,13 +135,12 @@ class STLink {
         if (this.stlink !== null) {
             await this.stlink.detach();
             this.on_disconnect();
-            return;
         }
         try {
             let device = await navigator.usb.requestDevice({
                 filters: libstlink.usb.filters
             });
-            navigator.usb.on_disconnect = e => {
+            navigator.usb.ondisconnect = e => {
                 if (e.device == device) handler();
             };
             let next_stlink = new WebStlink(this);
@@ -153,7 +152,9 @@ class STLink {
         }
         if (this.stlink !== null) {
             await this.on_successful_attach(this.stlink, this.device);
+            return 'ST-Link/' + this.stlink._stlink.ver_str;
         }
+        throw "not connected";
     }
 
     checkStatus = (response) => {
