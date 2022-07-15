@@ -1,8 +1,4 @@
 import { initBindingPhraseGen } from './phrase.js'
-import { ESPFlasher } from './espflasher.js'
-import { XmodemFlasher } from './xmodem.js'
-import { STLink } from './stlink.js';
-import { MelodyParser } from './melody.js';
 import { Configure } from './configure.js';
 import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
@@ -142,7 +138,7 @@ _('method').onchange = async () => {
     }
 }
 
-function get_settings(deviceType) {
+let get_settings = async(deviceType) => {
     const config = hardware[vendorSelect.value][typeSelect.value][modelSelect.value];
     const firmwareUrl = 'firmware/' + _('fcclbt').value + '/' + config['firmware'] + '/firmware.bin';
     const options = {};
@@ -172,13 +168,19 @@ function get_settings(deviceType) {
     }
     const beeptype = Number(_('melody-type').value);
     options['beeptype'] = beeptype > 2 ? 2 : beeptype;
-    if (beeptype == 2) {
-        options['melody'] = MelodyParser.parseToArray('A4 20 B4 20|60|0');
-    } else if (beeptype == 3) {
-        options['melody'] = MelodyParser.parseToArray('E5 40 E5 40 C5 120 E5 40 G5 22 G4 21|20|0');
-    } else if (beeptype == 4) {
-        options['melody'] = MelodyParser.parseToArray(_('melody').value);
-    }
+
+    options['melody'] = await import('./melody.js')
+        .then((_) => {
+            if (beeptype == 2) {
+                return _.MelodyParser.parseToArray('A4 20 B4 20|60|0');
+            } else if (beeptype == 3) {
+                return _.MelodyParser.parseToArray('E5 40 E5 40 C5 120 E5 40 G5 22 G4 21|20|0');
+            } else if (beeptype == 4) {
+                return  _.MelodyParser.parseToArray(_('melody').value);
+            } else {
+                return [];
+            }
+        });
     return {config: config, firmwareUrl: firmwareUrl, options: options};
 }
 
@@ -194,16 +196,22 @@ let connectUART = async () => {
             connectButton.style.display = 'none';
 
             let deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX';
-            let {config, firmwareUrl, options} = get_settings(deviceType);
+            let {config, firmwareUrl, options} = await get_settings(deviceType);
             binary = await Configure.download(deviceType, config, firmwareUrl, options);
 
             let method = methodSelect.value;
             let chip = '';
             if (config.platform === 'stm32') {
-                flasher = new XmodemFlasher(device, deviceType, method, config, options, firmwareUrl, term);
+                flasher = await import('./xmodem.js')
+                .then ((_) => {
+                    return new XmodemFlasher(device, deviceType, method, config, options, firmwareUrl, term);
+                });
                 chip = await flasher.connect();
             } else {
-                flasher = new ESPFlasher(device, deviceType, method, config, options, firmwareUrl, term);
+                flasher = await import('./espflasher.js')
+                .then ((_) => {
+                    return new ESPFlasher(device, deviceType, method, config, options, firmwareUrl, term);
+                });
                 chip = await flasher.connect();
             }
             try {
@@ -224,9 +232,13 @@ let connectUART = async () => {
 
 let connectSTLink = async () => {
     try {
-        stlink = new STLink(term);
+        await import('./stlink.js')
+            .then ((_) => {
+                stlink = new _.STLink(term);
+            });
+
         let deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX';
-        let {config, firmwareUrl, options} = get_settings(deviceType);
+        let {config, firmwareUrl, options} = await get_settings(deviceType);
         let version = await stlink.connect(config, firmwareUrl, options, e => {
             term.clear();
             flashButton.style.display = 'none';
@@ -277,7 +289,7 @@ flashButton.onclick = async () => {
 
 let downloadFirmware = async () => {
     let deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX';
-    let {config, firmwareUrl, options} = get_settings(deviceType);
+    let {config, firmwareUrl, options} = await get_settings(deviceType);
     let binary = await Configure.download(deviceType, config, firmwareUrl, options);
 
     let file = null,
