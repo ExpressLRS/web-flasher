@@ -190,6 +190,7 @@ const connectUART = async () => {
     if (device != null) {
       device.addEventListener('disconnect', async (e) => {
         device = null
+        term.clear()
         flashButton.style.display = 'none'
         connectButton.style.display = 'block'
       })

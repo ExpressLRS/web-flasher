@@ -1,6 +1,6 @@
 // CSS
-import '../css/app.css';
+import '../css/app.css'
 
 // JavaScript
-import 'muicss/dist/js/mui.js';
-import './index.js';
+import 'muicss/dist/js/mui.js'
+import './index.js'
