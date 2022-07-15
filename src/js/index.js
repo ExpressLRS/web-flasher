@@ -1,6 +1,11 @@
-function _(el) {
-    return document.getElementById(el);
-}
+import { initBindingPhraseGen } from './phrase.js'
+import { ESPFlasher } from './espflasher.js'
+import { XmodemFlasher } from './xmodem.js'
+import { STLink } from './stlink.js';
+import { MelodyParser } from './melody.js';
+import { Configure } from './configure.js';
+import { Terminal } from 'xterm';
+import { FitAddon } from 'xterm-addon-fit';
 
 const flashButton = _('flashButton');
 const connectButton = _('connectButton');
@@ -10,27 +15,51 @@ const modelSelect = _('model');
 const lblConnTo = _('lblConnTo');
 const methodSelect = _('method');
 
-import { initBindingPhraseGen } from './phrase.js'
-import { ESPFlasher } from './espflasher.js'
-import { XmodemFlasher } from './xmodem.js'
-import { STLink } from './stlink.js';
-import { MelodyParser } from './melody.js';
-import { Configure } from './configure.js';
-import { Terminal } from 'xterm';
-
 let hardware = null;
 let device = null;
 let flasher = null;
 let binary = null;
-
-let term = new Terminal({ cols: 120, rows: 40 });
-term.open(_('terminal'));
-
-let stlink = new STLink(term);
-
-flashButton.style.display = 'none';
+let term = null;
+let stlink = null;
 
 document.addEventListener('DOMContentLoaded', initialise, false);
+
+function _(el) {
+    return document.getElementById(el);
+}
+
+
+function initialise() {
+    term = new Terminal({ cols: 80, rows: 40 });
+    const fitAddon = new FitAddon();
+    term.loadAddon(fitAddon);
+    term.open(_('serial-monitor'));
+    fitAddon.fit();
+
+    function checkStatus(response) {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+        }
+        return response;
+    }
+
+    initBindingPhraseGen();
+    fetch('firmware/hardware/targets.json')
+        .then(response => checkStatus(response) && response.json())
+        .then(json => {
+            hardware = json;
+            for (const k in json) {
+                let opt = document.createElement('option');
+                opt.value = k;
+                opt.innerHTML = json[k].name === undefined ? k : json[k].name;
+                vendorSelect.appendChild(opt);
+            }
+            vendorSelect.disabled = false;
+            setDisplay('.uart', 'none');
+            setDisplay('.stlink', 'none');
+            setDisplay('.wifi', 'none');
+        });
+}
 
 function setDisplay(type, disp) {
     const elements = document.querySelectorAll(type);
@@ -114,57 +143,6 @@ _('method').onchange = async () => {
     }
 }
 
-let handleConnection = async () => {
-    if (device !== null) {
-        if(transport)
-            await transport.disconnect();
-    }
-    try {
-        device = await navigator.serial.requestPort();
-        if (device != null) {
-            device.addEventListener('disconnect', async (e) => {
-                device = null;
-                flashButton.style.display = 'none';
-                connectButton.style.display = 'block';
-            });
-            connectButton.style.display = 'none';
-            if (_('method').value === 'stlink') {
-                await connectSTLink();
-            } else {
-                await connectUART();
-            }
-        }
-    } catch(e) {
-        device = null;
-        flashButton.style.display = 'none';
-        connectButton.style.display = 'block';
-    }
-}
-
-_('options-next').onclick = async () => {
-    const method = _('method').value;
-    if (method === 'download') {
-        await downloadFirmware();
-    } else {
-        _('step-options').style.display = 'none';
-        _('step-3').classList.add("active");
-        _('step-3').classList.add("editable");
-        _('step-2').classList.add("done");
-        _('step-2').classList.remove("editable");
-        _('step-flash').style.display = 'block';
-
-        setDisplay('._method', 'none');
-        setDisplay('.' + method, 'block');
-        _('terminal').style.display = 'block';
-
-        if (method != 'wifi') {
-            await handleConnection();
-        }
-    }
-}
-
-connectButton.onclick = handleConnection;
-
 function get_settings(deviceType) {
     const config = hardware[vendorSelect.value][typeSelect.value][modelSelect.value];
     const firmwareUrl = 'firmware/' + _('fcclbt').value + '/' + config['firmware'] + '/firmware.bin';
@@ -206,36 +184,90 @@ function get_settings(deviceType) {
 }
 
 let connectUART = async () => {
-    let deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX';
-    let {config, firmwareUrl, options} = get_settings(deviceType);
-    binary = await Configure.download(deviceType, config, firmwareUrl, options);
-
-    let method = methodSelect.value;
-    let chip = '';
-    if (config.platform === 'stm32') {
-        flasher = new XmodemFlasher(device, deviceType, method, config, options, firmwareUrl, term);
-        chip = await flasher.connect();
-    } else {
-        flasher = new ESPFlasher(device, deviceType, method, config, options, firmwareUrl, term);
-        chip = await flasher.connect();
-    }
     try {
-        lblConnTo.innerHTML = 'Connected to device: ' + chip;
-        lblConnTo.style.display = 'block';
-        flashButton.style.display = 'initial';
+        device = await navigator.serial.requestPort();
+        if (device != null) {
+            device.addEventListener('disconnect', async (e) => {
+                device = null;
+                flashButton.style.display = 'none';
+                connectButton.style.display = 'block';
+            });
+            connectButton.style.display = 'none';
+
+            let deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX';
+            let {config, firmwareUrl, options} = get_settings(deviceType);
+            binary = await Configure.download(deviceType, config, firmwareUrl, options);
+
+            let method = methodSelect.value;
+            let chip = '';
+            if (config.platform === 'stm32') {
+                flasher = new XmodemFlasher(device, deviceType, method, config, options, firmwareUrl, term);
+                chip = await flasher.connect();
+            } else {
+                flasher = new ESPFlasher(device, deviceType, method, config, options, firmwareUrl, term);
+                chip = await flasher.connect();
+            }
+            try {
+                lblConnTo.innerHTML = 'Connected to device: ' + chip;
+                lblConnTo.style.display = 'block';
+                flashButton.style.display = 'initial';
+            } catch(e) {
+                lblConnTo.innerHTML = 'Failed to connect to device, restart device and try again';
+                lblConnTo.style.display = 'block';
+            }
+            return;
+        }
     } catch(e) {
-        lblConnTo.innerHTML = 'Failed to connect to device, restart device and try again';
-        lblConnTo.style.display = 'block';
     }
+    device = null;
+    flashButton.style.display = 'none';
+    connectButton.style.display = 'block';
+
 }
 
 let connectSTLink = async () => {
-    let deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX';
-    let {config, firmwareUrl, options} = get_settings(deviceType);
-    binary = await Configure.download(deviceType, config, firmwareUrl, options);
+    try {
+        stlink = new STLink(term);
+        let deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX';
+        let {config, firmwareUrl, options} = get_settings(deviceType);
+        await stlink.connect(config, firmwareUrl, options, e => {
+            flashButton.style.display = 'none';
+            connectButton.style.display = 'block';
+        });
+        connectButton.style.display = 'none';
+        binary = await Configure.download(deviceType, config, firmwareUrl, options);
 
-    await stlink.connect(config, firmwareUrl, options);
-    flashButton.style.display = 'initial';
+        flashButton.style.display = 'initial';
+    } catch(e) {
+        flashButton.style.display = 'none';
+        connectButton.style.display = 'block';
+    }
+}
+
+_('options-next').onclick = async () => {
+    const method = _('method').value;
+    if (method === 'download') {
+        await downloadFirmware();
+    } else {
+        _('step-options').style.display = 'none';
+        _('step-3').classList.add("active");
+        _('step-3').classList.add("editable");
+        _('step-2').classList.add("done");
+        _('step-2').classList.remove("editable");
+        _('step-flash').style.display = 'block';
+
+        setDisplay('._method', 'none');
+        setDisplay('.' + method, 'block');
+        _('mui-terminal').style.display = 'block';
+
+        if (method !== 'wifi') {
+            if (method === 'stlink')
+                connectButton.onclick = connectSTLink;
+            else
+                connectButton.onclick = connectUART;
+            await connectButton.onclick();
+        }
+    }
 }
 
 flashButton.onclick = async () => {
@@ -275,30 +307,4 @@ let downloadFirmware = async () => {
         link.dispatchEvent(event);
         document.body.removeChild(link);
     });
-}
-
-function initialise() {
-    function checkStatus(response) {
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status} - ${response.statusText}`);
-        }
-        return response;
-    }
-
-    initBindingPhraseGen();
-    fetch('firmware/hardware/targets.json')
-        .then(response => checkStatus(response) && response.json())
-        .then(json => {
-            hardware = json;
-            for (const k in json) {
-                let opt = document.createElement('option');
-                opt.value = k;
-                opt.innerHTML = json[k].name === undefined ? k : json[k].name;
-                vendorSelect.appendChild(opt);
-            }
-            vendorSelect.disabled = false;
-            setDisplay('.uart', 'none');
-            setDisplay('.stlink', 'none');
-            setDisplay('.wifi', 'none');
-        });
 }

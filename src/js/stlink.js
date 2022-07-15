@@ -127,7 +127,7 @@ class STLink {
         this.device = null;
     }
 
-    connect = async (config, firmwareUrl, options) => {
+    connect = async (config, firmwareUrl, options, handler) => {
         this.config = config;
         this.firmwareUrl = firmwareUrl;
         this.options = options;
@@ -141,6 +141,9 @@ class STLink {
             let device = await navigator.usb.requestDevice({
                 filters: libstlink.usb.filters
             });
+            navigator.usb.on_disconnect = e => {
+                if (e.device == device) handler();
+            };
             let next_stlink = new WebStlink(this);
             await next_stlink.attach(device, this);
             this.stlink = next_stlink;
