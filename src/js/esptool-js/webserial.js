@@ -256,16 +256,19 @@ class Transport {
                 do {
                     const { value, done } = await reader.read();
                     if (done) {
+                        reader.releaseLock();
+                        await this.device.close();
+                        await this.device.open({ baudRate: this.baudrate });
                         return '';
                     }
                     packet = new Uint8Array(this._appendBuffer(packet.buffer, value.buffer));
                     index = findDelimeter(packet);
                 } while (index == -1);
+                reader.releaseLock();
             } finally {
                 if (timeout > 0) {
                     clearTimeout(t);
                 }
-                reader.releaseLock();
             }
         }
         this.left_over = packet.slice(index);
