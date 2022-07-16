@@ -1,4 +1,4 @@
-import { Transport } from './esptool-js/webserial.js'
+import { TransportEx } from './serialex.js'
 import { ESPLoader } from './esptool-js/ESPLoader.js'
 import { Passthrough } from './passthrough.js'
 
@@ -20,7 +20,7 @@ class ESPFlasher {
       baudrate = 420000
     }
 
-    const transport = new Transport(this.device, true)
+    const transport = new TransportEx(this.device, true)
     this.esploader = new ESPLoader(transport, baudrate, this.term, true)
 
     const passthrough = new Passthrough(transport, this.term, this.config.firmware)

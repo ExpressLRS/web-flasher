@@ -1,4 +1,4 @@
-import { Transport } from './esptool-js/webserial.js'
+import { TransportEx } from './serialex.js'
 import { Bootloader, Passthrough } from './passthrough.js'
 
 const log = { info: function () {}, warn: function () {}, error: function () {}, debug: function () {} }
@@ -239,7 +239,7 @@ class XmodemFlasher {
       this.init_seq1 = Bootloader.get_init_seq('CRSF')
     }
 
-    this.transport = new Transport(this.device, true)
+    this.transport = new TransportEx(this.device, true)
     await this.transport.connect({ baud: 420000 })
     this.passthrough = new Passthrough(this.transport, this.terminal, this.config.firmware)
     return 'XModem Flasher'
