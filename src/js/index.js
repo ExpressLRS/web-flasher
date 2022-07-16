@@ -319,6 +319,10 @@ const connectSTLink = async () => {
     })
 }
 
+const connectWifi = async () => {
+
+}
+
 _('options-next').onclick = async () => {
   const method = _('method').value
   if (method === 'download') {
@@ -329,16 +333,24 @@ _('options-next').onclick = async () => {
     _('step-3').classList.add('editable')
     _('step-2').classList.add('done')
     _('step-2').classList.remove('editable')
-    _('step-flash').style.display = 'block'
+    if (method === 'wifi') {
+      _('step-wifi').style.display = 'block'
+    } else {
+      _('step-flash').style.display = 'block'
+    }
 
     setDisplay('._method', 'none')
     setDisplay('.' + method, 'block')
     _('mui-terminal').style.display = 'block'
 
-    if (method !== 'wifi') {
-      if (method === 'stlink') { connectButton.onclick = connectSTLink } else { connectButton.onclick = connectUART }
-      await connectButton.onclick()
+    if (method === 'wifi') {
+      connectButton.onclick = connectWifi
+    } else if (method === 'stlink') {
+      connectButton.onclick = connectSTLink
+    } else {
+      connectButton.onclick = connectUART
     }
+    await connectButton.onclick()
   }
 }
 
