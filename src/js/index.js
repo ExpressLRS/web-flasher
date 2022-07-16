@@ -63,6 +63,39 @@ function setDisplay (type, disp) {
   })
 }
 
+_('step-1').onclick = async () => {
+  _('step-device').style.display = 'block'
+  _('step-options').style.display = 'none'
+  _('step-flash').style.display = 'none'
+
+  _('step-1').classList.remove('done')
+  _('step-1').classList.add('active')
+  _('step-1').classList.add('editable')
+
+  _('step-2').classList.remove('active')
+  _('step-2').classList.remove('editable')
+  _('step-2').classList.remove('done')
+
+  _('step-3').classList.remove('active')
+  _('step-3').classList.remove('editable')
+  _('step-3').classList.remove('done')
+}
+
+_('step-2').onclick = async () => {
+  if (_('step-flash').style.display === 'block') {
+    _('step-options').style.display = 'block'
+    _('step-flash').style.display = 'none'
+
+    _('step-2').classList.remove('done')
+    _('step-2').classList.add('active')
+    _('step-2').classList.add('editable')
+
+    _('step-3').classList.remove('active')
+    _('step-3').classList.remove('editable')
+    _('step-3').classList.remove('done')
+  }
+}
+
 vendorSelect.onchange = async () => {
   _('tx_2400').disabled = true
   _('tx_900').disabled = true
