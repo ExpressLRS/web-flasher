@@ -220,78 +220,103 @@ const getSettings = async (deviceType) => {
 }
 
 const connectUART = async () => {
-  try {
-    device = await navigator.serial.requestPort()
-    if (device != null) {
-      device.addEventListener('disconnect', async (e) => {
-        device = null
-        term.clear()
-        flashButton.style.display = 'none'
-        connectButton.style.display = 'block'
-      })
-      connectButton.style.display = 'none'
-
-      const deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX'
-      const radioType = typeSelect.value.endsWith('_900') ? 'sx127x' : 'sx128x'
-      const { config, firmwareUrl, options } = await getSettings(deviceType)
-      binary = await Configure.download(deviceType, radioType, config, firmwareUrl, options)
-
-      const method = methodSelect.value
-      let chip = ''
-      if (config.platform === 'stm32') {
-        flasher = await import('./xmodem.js')
-          .then((_) => {
-            return new _.XmodemFlasher(device, deviceType, method, config, options, firmwareUrl, term)
-          })
-        chip = await flasher.connect()
-      } else {
-        flasher = await import('./espflasher.js')
-          .then((_) => {
-            return new _.ESPFlasher(device, deviceType, method, config, options, firmwareUrl, term)
-          })
-        chip = await flasher.connect()
-      }
-      try {
-        lblConnTo.innerHTML = 'Connected to device: ' + chip
-        flashButton.style.display = 'initial'
-      } catch (e) {
-        lblConnTo.innerHTML = 'Failed to connect to device, restart device and try again'
-      }
-      return
-    }
-  } catch (e) {
-    console.log(e)
-  }
-  device = null
-  flashButton.style.display = 'none'
-  connectButton.style.display = 'block'
+  const deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX'
+  const radioType = typeSelect.value.endsWith('_900') ? 'sx127x' : 'sx128x'
+  await getSettings(deviceType)
+    .then(({ config, firmwareUrl, options }) => {
+      Promise
+        .all([
+          navigator.serial.requestPort()
+            .then(d => {
+              device = d
+              device.addEventListener('disconnect', async (e) => {
+                device = null
+                term.clear()
+                flashButton.style.display = 'none'
+                connectButton.style.display = 'block'
+              })
+              connectButton.style.display = 'none'
+            }),
+          Configure.download(deviceType, radioType, config, firmwareUrl, options)
+            .then(b => {
+              binary = b
+            })
+        ])
+        .then(_ => {
+          const method = methodSelect.value
+          let fp
+          if (config.platform === 'stm32') {
+            fp = import('./xmodem.js')
+              .then(m => {
+                return new m.XmodemFlasher(device, deviceType, method, config, options, firmwareUrl, term)
+              })
+          } else {
+            fp = import('./espflasher.js')
+              .then(m => {
+                return new m.ESPFlasher(device, deviceType, method, config, options, firmwareUrl, term)
+              })
+          }
+          fp
+            .then(f => {
+              flasher = f
+              return f.connect()
+            })
+            .then(chip => {
+              lblConnTo.innerHTML = 'Connected to device: ' + chip
+              flashButton.style.display = 'initial'
+            })
+            .catch(() => {
+              lblConnTo.innerHTML = 'Failed to connect to device, restart device and try again'
+              flashButton.style.display = 'none'
+              connectButton.style.display = 'block'
+            })
+        })
+        .catch(() => {
+          lblConnTo.innerHTML = 'No device selected'
+          flashButton.style.display = 'none'
+          connectButton.style.display = 'block'
+        })
+    })
 }
 
 const connectSTLink = async () => {
-  try {
-    await import('./stlink.js')
-      .then((_) => {
-        stlink = new _.STLink(term)
-      })
+  const deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX'
+  const radioType = typeSelect.value.endsWith('_900') ? 'sx127x' : 'sx128x'
 
-    const deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX'
-    const radioType = typeSelect.value.endsWith('_900') ? 'sx127x' : 'sx128x'
-    const { config, firmwareUrl, options } = await getSettings(deviceType)
-    const version = await stlink.connect(config, firmwareUrl, options, e => {
-      term.clear()
-      flashButton.style.display = 'none'
-      connectButton.style.display = 'block'
+  await Promise
+    .all([
+      import('./stlink.js')
+        .then((_) => {
+          stlink = new _.STLink(term)
+        }),
+      getSettings(deviceType)
+    ])
+    .then(([_, { config, firmwareUrl, options }]) => {
+      Promise
+        .all([
+          stlink.connect(config, firmwareUrl, options, e => {
+            term.clear()
+            flashButton.style.display = 'none'
+            connectButton.style.display = 'block'
+          })
+            .then(version => {
+              lblConnTo.innerHTML = 'Connected to device: ' + version
+            })
+            .catch((e) => {
+              lblConnTo.innerHTML = 'Not connected'
+              flashButton.style.display = 'none'
+              connectButton.style.display = 'block'
+              return Promise.reject(e)
+            }),
+          Configure.download(deviceType, radioType, config, firmwareUrl, options)
+            .then(bin => { binary = bin })
+        ])
+        .then(() => {
+          connectButton.style.display = 'none'
+          flashButton.style.display = 'initial'
+        })
+        .catch(() => {})
     })
-    lblConnTo.innerHTML = 'Connected to device: ' + version
-    connectButton.style.display = 'none'
-    binary = await Configure.download(deviceType, radioType, config, firmwareUrl, options)
-
-    flashButton.style.display = 'initial'
-  } catch (e) {
-    lblConnTo.innerHTML = 'Not connected'
-    flashButton.style.display = 'none'
-    connectButton.style.display = 'block'
-  }
 }
 
 _('options-next').onclick = async () => {
