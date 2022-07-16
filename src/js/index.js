@@ -166,21 +166,23 @@ const getSettings = async (deviceType) => {
   if (typeSelect.value === 'rx_900' || typeSelect.value === 'tx_900') {
     options.domain = +_('domain').value
   }
-  const beeptype = Number(_('melody-type').value)
-  options.beeptype = beeptype > 2 ? 2 : beeptype
+  if (config.features !== undefined && config.features.indexOf('buzzer') !== -1) {
+    const beeptype = Number(_('melody-type').value)
+    options.beeptype = beeptype > 2 ? 2 : beeptype
 
-  options.melody = await import('./melody.js')
-    .then((_) => {
-      if (beeptype === 2) {
-        return _.MelodyParser.parseToArray('A4 20 B4 20|60|0')
-      } else if (beeptype === 3) {
-        return _.MelodyParser.parseToArray('E5 40 E5 40 C5 120 E5 40 G5 22 G4 21|20|0')
-      } else if (beeptype === 4) {
-        return _.MelodyParser.parseToArray(_('melody').value)
-      } else {
-        return []
-      }
-    })
+    options.melody = await import('./melody.js')
+      .then((_) => {
+        if (beeptype === 2) {
+          return _.MelodyParser.parseToArray('A4 20 B4 20|60|0')
+        } else if (beeptype === 3) {
+          return _.MelodyParser.parseToArray('E5 40 E5 40 C5 120 E5 40 G5 22 G4 21|20|0')
+        } else if (beeptype === 4) {
+          return _.MelodyParser.parseToArray(_('melody').value)
+        } else {
+          return []
+        }
+      })
+  }
   return { config, firmwareUrl, options }
 }
 
@@ -197,8 +199,9 @@ const connectUART = async () => {
       connectButton.style.display = 'none'
 
       const deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX'
+      const radioType = typeSelect.value.endsWith('_900') ? 'sx127x' : 'sx128x'
       const { config, firmwareUrl, options } = await getSettings(deviceType)
-      binary = await Configure.download(deviceType, config, firmwareUrl, options)
+      binary = await Configure.download(deviceType, radioType, config, firmwareUrl, options)
 
       const method = methodSelect.value
       let chip = ''
@@ -224,6 +227,7 @@ const connectUART = async () => {
       return
     }
   } catch (e) {
+    console.log(e)
   }
   device = null
   flashButton.style.display = 'none'
@@ -238,6 +242,7 @@ const connectSTLink = async () => {
       })
 
     const deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX'
+    const radioType = typeSelect.value.endsWith('_900') ? 'sx127x' : 'sx128x'
     const { config, firmwareUrl, options } = await getSettings(deviceType)
     const version = await stlink.connect(config, firmwareUrl, options, e => {
       term.clear()
@@ -246,7 +251,7 @@ const connectSTLink = async () => {
     })
     lblConnTo.innerHTML = 'Connected to device: ' + version
     connectButton.style.display = 'none'
-    binary = await Configure.download(deviceType, config, firmwareUrl, options)
+    binary = await Configure.download(deviceType, radioType, config, firmwareUrl, options)
 
     flashButton.style.display = 'initial'
   } catch (e) {
@@ -286,8 +291,9 @@ flashButton.onclick = async () => {
 
 const downloadFirmware = async () => {
   const deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX'
+  const radioType = typeSelect.value.endsWith('_900') ? 'sx127x' : 'sx128x'
   const { config, firmwareUrl, options } = await getSettings(deviceType)
-  const binary = await Configure.download(deviceType, config, firmwareUrl, options)
+  const binary = await Configure.download(deviceType, radioType, config, firmwareUrl, options)
 
   let file = null
   const makeFile = function () {

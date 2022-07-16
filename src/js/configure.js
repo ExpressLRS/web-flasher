@@ -75,16 +75,19 @@ export class Configure {
     return pos + 1
   }
 
-  static #patch_firmware (binary, pos, options) {
-    pos += 8 + 2 // Skip magic & version
-    const hardware = binary[pos]
-    const _hasBuzzer = hardware & 2
-    const _deviceType = (hardware >> 4) & 7
-    const _radioChip = (hardware >> 7) & 1
-    pos += 1 // Skip the hardware flag
+  static #configureSTM32 (binary, deviceType, radioType, options) {
+    let pos = this.#find_patch_location(binary)
+    if (pos === -1) throw new Error('Configuration magic not found in firmware file. Is this a 3.x firmware?')
+
+    pos += 8 // Skip magic
+    const version = binary[pos] + binary[pos + 1] << 8
+    pos += 2 // Skip version
+    if (version === 0) {
+      pos += 1 // Skip the (old) hardware flag
+    }
 
     // Poke in the domain
-    if (_radioChip === 0 && options.domain) { // SX127X
+    if (radioType === 'sx127x' && options.domain) {
       binary[pos] = options.domain
     }
     pos += 1
@@ -100,21 +103,15 @@ export class Configure {
     }
     pos += 7
 
-    if (_deviceType === 0) { // TX target
+    if (deviceType === 'TX') { // TX target
       pos = this.#patch_tx_params(binary, pos, options)
-      if (_hasBuzzer) { // Has a Buzzer
+      if (options.beeptype) { // Has a Buzzer
         pos = this.#patch_buzzer(binary, pos, options)
       }
-    }
-    if (_deviceType === 1) { // RX target
+    } else if (deviceType === 'RX') { // RX target
       pos = this.#patch_rx_params(binary, pos, options)
     }
-  }
 
-  static #configureSTM32 (binary, options) {
-    const pos = this.#find_patch_location(binary)
-    if (pos === -1) throw new Error('Configuration magic not found in firmware file. Is this a 3.x firmware?')
-    this.#patch_firmware(binary, pos, options)
     return binary
   }
 
@@ -179,9 +176,9 @@ export class Configure {
     return binary
   }
 
-  static download = async (deviceType, config, firmwareUrl, options) => {
+  static download = async (deviceType, radioType, config, firmwareUrl, options) => {
     if (config.platform === 'stm32') {
-      const entry = await this.#fetch_file(firmwareUrl, 0, (bin) => this.#configureSTM32(bin, options))
+      const entry = await this.#fetch_file(firmwareUrl, 0, (bin) => this.#configureSTM32(bin, deviceType, radioType, options))
       return entry.data
     } else {
       const list = []
