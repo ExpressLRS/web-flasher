@@ -1,0 +1,10 @@
+{
+    "configurations": [
+        {
+            "type": "pwa-chrome",
+            "name": "flasher",
+            "request": "launch",
+            "url": "http://localhost:8080"
+        }
+    ]
+}
