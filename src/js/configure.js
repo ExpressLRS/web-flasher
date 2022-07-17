@@ -148,7 +148,6 @@ export class Configure {
     }
     pos = (pos + 16) & ~15
     if (config.platform === 'esp32') pos += 32
-    console.log(pos.toString(16))
     return pos
   }
 
@@ -159,20 +158,30 @@ export class Configure {
     return c
   }
 
-  static #configureESP = (binary, config, options) => {
-    function bstrToUi8 (bStr) {
-      const len = bStr.length
-      const u8array = new Uint8Array(len)
-      for (let i = 0; i < len; i++) {
-        u8array[i] = bStr.charCodeAt(i)
-      }
-      return u8array
+  static #ui8ToBstr = (u8Array) => {
+    const len = u8Array.length
+    let bStr = ''
+    for (let i = 0; i < len; i++) {
+      bStr += String.fromCharCode(u8Array[i])
     }
+    return bStr
+  }
+
+  static #bstrToUi8 = (bStr) => {
+    const len = bStr.length
+    const u8array = new Uint8Array(len)
+    for (let i = 0; i < len; i++) {
+      u8array[i] = bStr.charCodeAt(i)
+    }
+    return u8array
+  }
+
+  static #configureESP = (binary, config, options) => {
     const end = this.#findFirmwareEnd(binary, config)
     binary = binary.slice(0, end)
-    binary = this.#appendArray(binary, bstrToUi8(config.product_name.padEnd(128, '\x00')))
-    binary = this.#appendArray(binary, bstrToUi8(config.lua_name.padEnd(16, '\x00')))
-    binary = this.#appendArray(binary, bstrToUi8(JSON.stringify(options).padEnd(512, '\x00')))
+    binary = this.#appendArray(binary, this.#bstrToUi8(config.product_name.padEnd(128, '\x00')))
+    binary = this.#appendArray(binary, this.#bstrToUi8(config.lua_name.padEnd(16, '\x00')))
+    binary = this.#appendArray(binary, this.#bstrToUi8(JSON.stringify(options).padEnd(512, '\x00')))
     return binary
   }
 
@@ -195,7 +204,14 @@ export class Configure {
       return await Promise
         .all(list)
         .then(files => {
-          files[files.length - 1].data = this.#appendArray(files[files.length - 1].data, this.#appendArray(files[0].data, new Uint8Array([0])))
+          if (config.overlay) {
+            config.overlay = {}
+          }
+          const data = this.#bstrToUi8(JSON.stringify({
+            ...JSON.parse(this.#ui8ToBstr(files[0].data)),
+            ...config.overlay
+          }))
+          files[files.length - 1].data = this.#appendArray(files[files.length - 1].data, this.#appendArray(data, new Uint8Array([0])))
           return files.splice(1)
         })
     }
