@@ -54,10 +54,10 @@ class ESPFlasher {
     return chip
   }
 
-  flash = async (files) => {
+  flash = async (files, erase) => {
     const loader = this.esploader
     const fileArray = files.map(v => ({ data: loader.ui8ToBstr(v.data), address: v.address }))
-    await loader.write_flash({ fileArray, flash_size: 'keep' })
+    await loader.write_flash({ fileArray, flash_size: 'keep', erase_all: erase })
       .then(_ => loader.soft_reset())
   }
 }
