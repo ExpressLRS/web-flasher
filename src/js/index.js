@@ -247,14 +247,10 @@ const connectUART = async () => {
           let fp
           if (config.platform === 'stm32') {
             fp = import('./xmodem.js')
-              .then(m => {
-                return new m.XmodemFlasher(device, deviceType, method, config, options, firmwareUrl, term)
-              })
+              .then(m => new m.XmodemFlasher(device, deviceType, method, config, options, firmwareUrl, term))
           } else {
             fp = import('./espflasher.js')
-              .then(m => {
-                return new m.ESPFlasher(device, deviceType, method, config, options, firmwareUrl, term)
-              })
+              .then(m => new m.ESPFlasher(device, deviceType, method, config, options, firmwareUrl, term))
           }
           fp
             .then(f => {
@@ -286,21 +282,20 @@ const connectSTLink = async () => {
   await Promise
     .all([
       import('./stlink.js')
-        .then((_) => {
-          stlink = new _.STLink(term)
-        }),
+        .then(_ => new _.STLink(term)),
       getSettings(deviceType)
     ])
-    .then(([_, { config, firmwareUrl, options }]) => {
+    .then(([_stlink, { config, firmwareUrl, options }]) =>
       Promise
         .all([
-          stlink.connect(config, firmwareUrl, options, e => {
+          _stlink.connect(config, firmwareUrl, options, e => {
             term.clear()
             flashButton.style.display = 'none'
             connectButton.style.display = 'block'
           })
             .then(version => {
               lblConnTo.innerHTML = 'Connected to device: ' + version
+              stlink = _stlink
             })
             .catch((e) => {
               lblConnTo.innerHTML = 'Not connected'
@@ -309,14 +304,14 @@ const connectSTLink = async () => {
               return Promise.reject(e)
             }),
           Configure.download(deviceType, radioType, config, firmwareUrl, options)
-            .then(bin => { binary = bin })
         ])
-        .then(() => {
+        .then(([_, _bin]) => {
           connectButton.style.display = 'none'
           flashButton.style.display = 'initial'
+          binary = _bin
         })
         .catch(() => {})
-    })
+    )
 }
 
 const connectWifi = async () => {
