@@ -362,34 +362,41 @@ flashButton.onclick = async () => {
 const downloadFirmware = async () => {
   const deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX'
   const radioType = typeSelect.value.endsWith('_900') ? 'sx127x' : 'sx128x'
-  const { config, firmwareUrl, options } = await getSettings(deviceType)
-  const binary = await Configure.download(deviceType, radioType, config, firmwareUrl, options)
 
-  let file = null
-  const makeFile = function () {
-    let bin
-    if (config.platform === 'stm32') {
-      bin = binary.buffer
-    } else {
-      bin = binary[binary.length - 1].data.buffer
-    }
-    const data = new Blob([bin], { type: 'application/octet-stream' })
-    if (file !== null) {
-      window.URL.revokeObjectURL(file)
-    }
-    file = window.URL.createObjectURL(data)
-    return file
-  }
+  await getSettings(deviceType)
+    .then(({ config, firmwareUrl, options }) => {
+      return Promise.all([
+        config,
+        Configure.download(deviceType, radioType, config, firmwareUrl, options)
+      ])
+    })
+    .then(([config, binary]) => {
+      let file = null
+      const makeFile = function () {
+        let bin
+        if (config.platform === 'stm32') {
+          bin = binary.buffer
+        } else {
+          bin = binary[binary.length - 1].data.buffer
+        }
+        const data = new Blob([bin], { type: 'application/octet-stream' })
+        if (file !== null) {
+          window.URL.revokeObjectURL(file)
+        }
+        file = window.URL.createObjectURL(data)
+        return file
+      }
 
-  const link = document.createElement('a')
-  link.setAttribute('download', 'firmware.bin')
-  link.href = makeFile()
-  document.body.appendChild(link)
+      const link = document.createElement('a')
+      link.setAttribute('download', 'firmware.bin')
+      link.href = makeFile()
+      document.body.appendChild(link)
 
-  // wait for the link to be added to the document
-  window.requestAnimationFrame(function () {
-    const event = new MouseEvent('click')
-    link.dispatchEvent(event)
-    document.body.removeChild(link)
-  })
+      // wait for the link to be added to the document
+      window.requestAnimationFrame(function () {
+        const event = new MouseEvent('click')
+        link.dispatchEvent(event)
+        document.body.removeChild(link)
+      })
+    })
 }
