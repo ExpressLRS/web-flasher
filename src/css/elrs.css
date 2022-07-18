@@ -18,10 +18,3 @@ body, input, select, textarea {
     font-weight: 300;
     line-height: 1.65em;
 }
-
-@media screen and (max-width: 800px) {
-    .logo {
-        width:25%;
-		height:25%;
-    }
-}
