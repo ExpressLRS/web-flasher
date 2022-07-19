@@ -1,4 +1,5 @@
 @import 'muicss/dist/css/mui.css';
 @import 'xterm';
 @import './stepper.css';
+@import './alert.css';
 @import './elrs.css';

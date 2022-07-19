@@ -2,6 +2,7 @@ import { initBindingPhraseGen } from './phrase.js'
 import { Configure } from './configure.js'
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
+import { cuteAlert } from './alert.js'
 
 const flashButton = _('flashButton')
 const connectButton = _('connectButton')
@@ -17,6 +18,7 @@ let flasher = null
 let binary = null
 let term = null
 let stlink = null
+let uploadURL = null
 
 document.addEventListener('DOMContentLoaded', initialise, false)
 
@@ -275,42 +277,42 @@ const connectUART = async () => {
     })
 }
 
-const connectSTLink = async () => {
+const generateFirmware = async () => {
   const deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX'
   const radioType = typeSelect.value.endsWith('_900') ? 'sx127x' : 'sx128x'
+  return getSettings(deviceType)
+    .then(({ config, firmwareUrl, options }) => Promise.all([
+      Configure.download(deviceType, radioType, config, firmwareUrl, options),
+      { config, firmwareUrl, options }
+    ]))
+}
 
+const connectSTLink = async () => {
   await Promise
     .all([
       import('./stlink.js')
         .then(_ => new _.STLink(term)),
-      getSettings(deviceType)
+      generateFirmware()
     ])
-    .then(([_stlink, { config, firmwareUrl, options }]) =>
-      Promise
-        .all([
-          _stlink.connect(config, firmwareUrl, options, e => {
-            term.clear()
-            flashButton.style.display = 'none'
-            connectButton.style.display = 'block'
-          })
-            .then(version => {
-              lblConnTo.innerHTML = 'Connected to device: ' + version
-              stlink = _stlink
-            })
-            .catch((e) => {
-              lblConnTo.innerHTML = 'Not connected'
-              flashButton.style.display = 'none'
-              connectButton.style.display = 'block'
-              return Promise.reject(e)
-            }),
-          Configure.download(deviceType, radioType, config, firmwareUrl, options)
-        ])
-        .then(([_, _bin]) => {
+    .then(([_stlink, [_bin, { config, firmwareUrl, options }]]) =>
+      _stlink.connect(config, firmwareUrl, options, e => {
+        term.clear()
+        flashButton.style.display = 'none'
+        connectButton.style.display = 'block'
+      })
+        .then(version => {
+          lblConnTo.innerHTML = 'Connected to device: ' + version
           connectButton.style.display = 'none'
           flashButton.style.display = 'initial'
           binary = _bin
+          stlink = _stlink
         })
-        .catch(() => {})
+        .catch((e) => {
+          lblConnTo.innerHTML = 'Not connected'
+          flashButton.style.display = 'none'
+          connectButton.style.display = 'block'
+          return Promise.reject(e)
+        })
     )
 }
 
@@ -338,6 +340,7 @@ const connectWifi = async () => {
     _('target').innerHTML = 'Target firmware: ' + response.target
     _('version').innerHTML = 'Version: ' + response.version
     flashButton.style.display = 'block'
+    uploadURL = url
   }).catch(reason => {
     lblConnTo.innerHTML = 'No device found'
     console.log(reason)
@@ -371,24 +374,14 @@ _('options-next').onclick = async () => {
 
 flashButton.onclick = async () => {
   const method = _('method').value
-  if (method === 'wifi') {
-    //
-  } else if (flasher !== null) await flasher.flash(binary, _('erase-flash').checked)
+  if (method === 'wifi') await wifiUpload()
+  else if (flasher !== null) await flasher.flash(binary, _('erase-flash').checked)
   else await stlink.flash(binary, _('flash-bootloader').checked)
 }
 
 const downloadFirmware = async () => {
-  const deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX'
-  const radioType = typeSelect.value.endsWith('_900') ? 'sx127x' : 'sx128x'
-
-  await getSettings(deviceType)
-    .then(({ config, firmwareUrl, options }) => {
-      return Promise.all([
-        config,
-        Configure.download(deviceType, radioType, config, firmwareUrl, options)
-      ])
-    })
-    .then(([config, binary]) => {
+  await generateFirmware()
+    .then(([binary, { config, firmwareUrl, options }]) => {
       let file = null
       const makeFile = function () {
         let bin
@@ -417,4 +410,124 @@ const downloadFirmware = async () => {
         document.body.removeChild(link)
       })
     })
+}
+
+const wifiUpload = async () => {
+  flashButton.disabled = true
+  await generateFirmware()
+    .then((binary) => {
+      const file = new Blob(binary)
+      file.name = 'firmware.bin'
+      const formdata = new FormData()
+      formdata.append('upload', file, file.name)
+      const ajax = new XMLHttpRequest()
+      ajax.upload.addEventListener('progress', progressHandler, false)
+      ajax.addEventListener('load', completeHandler, false)
+      ajax.addEventListener('error', errorHandler, false)
+      ajax.addEventListener('abort', abortHandler, false)
+      ajax.open('POST', uploadURL + '/update')
+      ajax.setRequestHeader('X-FileSize', file.size)
+      ajax.send(formdata)
+    })
+    .catch((e) => {
+      flashButton.disabled = false
+    })
+}
+
+function progressHandler (event) {
+  // _("loaded_n_total").innerHTML = "Uploaded " + event.loaded + " bytes of " + event.total;
+  const percent = Math.round((event.loaded / event.total) * 100)
+  _('progressBar').value = percent
+  _('status').innerHTML = percent + '% uploaded... please wait'
+}
+
+function completeHandler (event) {
+  _('status').innerHTML = ''
+  _('progressBar').value = 0
+  flashButton.disabled = false
+  const data = JSON.parse(event.target.responseText)
+  if (data.status === 'ok') {
+    function showMessage () {
+      cuteAlert({
+        type: 'success',
+        title: 'Update Succeeded',
+        message: data.msg
+      })
+    }
+    // This is basically a delayed display of the success dialog with a fake progress
+    let percent = 0
+    const interval = setInterval(() => {
+      percent = percent + 2
+      _('progressBar').value = percent
+      _('status').innerHTML = percent + '% flashed... please wait'
+      if (percent === 100) {
+        clearInterval(interval)
+        _('status').innerHTML = ''
+        _('progressBar').value = 0
+        showMessage()
+      }
+    }, 100)
+  } else if (data.status === 'mismatch') {
+    cuteAlert({
+      type: 'question',
+      title: 'Targets Mismatch',
+      message: data.msg,
+      confirmText: 'Flash anyway',
+      cancelText: 'Cancel'
+    }).then((e) => {
+      const xmlhttp = new XMLHttpRequest()
+      xmlhttp.onreadystatechange = function () {
+        if (this.readyState === 4) {
+          _('status').innerHTML = ''
+          _('progressBar').value = 0
+          if (this.status === 200) {
+            const data = JSON.parse(this.responseText)
+            cuteAlert({
+              type: 'info',
+              title: 'Force Update',
+              message: data.msg
+            })
+          } else {
+            cuteAlert({
+              type: 'error',
+              title: 'Force Update',
+              message: 'An error occurred trying to force the update'
+            })
+          }
+        }
+      }
+      xmlhttp.open('POST', '/forceupdate', true)
+      const data = new FormData()
+      data.append('action', e)
+      xmlhttp.send(data)
+    })
+  } else {
+    cuteAlert({
+      type: 'error',
+      title: 'Update Failed',
+      message: data.msg
+    })
+  }
+}
+
+function errorHandler (event) {
+  _('status').innerHTML = ''
+  _('progressBar').value = 0
+  flashButton.disabled = false
+  cuteAlert({
+    type: 'error',
+    title: 'Update Failed',
+    message: event.target.responseText
+  })
+}
+
+function abortHandler (event) {
+  _('status').innerHTML = ''
+  _('progressBar').value = 0
+  flashButton.disabled = false
+  cuteAlert({
+    type: 'info',
+    title: 'Update Aborted',
+    message: event.target.responseText
+  })
 }
