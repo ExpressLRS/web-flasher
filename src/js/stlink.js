@@ -208,7 +208,7 @@ class STLink {
         this.log('================')
         try {
           await this.stlink.halt()
-          await this.stlink.flash(this.target.flash_start + addr, binary)
+          await this.stlink.flash(this.target.flash_start + addr, binary[0])
         } catch (err) {
           this.error(err)
         }

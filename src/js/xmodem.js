@@ -323,7 +323,7 @@ class XmodemFlasher {
     } else {
       this.log('\nWe were already in bootloader\n')
     }
-    await this.xmodem.send(binary)
+    await this.xmodem.send(binary[0])
   }
 
   checkStatus = (response) => {

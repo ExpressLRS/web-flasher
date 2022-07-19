@@ -327,13 +327,13 @@ const connectWifi = async () => {
   await Promise.any([
     fetch('http://10.0.0.1/target')
       .then(response => check(response))
-      .then(_ => ['http://10.0.0.1/', _]),
+      .then(_ => ['http://10.0.0.1', _]),
     fetch(`http://elrs_${deviceType}/target`)
       .then(response => check(response))
-      .then(_ => [`http://elrs_${deviceType}/`, _]),
+      .then(_ => [`http://elrs_${deviceType}`, _]),
     fetch(`http://elrs_${deviceType}.local/target`)
       .then(response => check(response))
-      .then(_ => [`http://elrs_${deviceType}/`, _])
+      .then(_ => [`http://elrs_${deviceType}`, _])
   ]).then(([url, response]) => {
     lblConnTo.innerHTML = 'Connected to: ' + url
     _('product_name').innerHTML = 'Product name: ' + response.product_name
@@ -384,12 +384,7 @@ const downloadFirmware = async () => {
     .then(([binary, { config, firmwareUrl, options }]) => {
       let file = null
       const makeFile = function () {
-        let bin
-        if (config.platform === 'stm32') {
-          bin = binary.buffer
-        } else {
-          bin = binary[binary.length - 1].data.buffer
-        }
+        const bin = binary[binary.length - 1].data.buffer
         const data = new Blob([bin], { type: 'application/octet-stream' })
         if (file !== null) {
           window.URL.revokeObjectURL(file)
@@ -415,18 +410,18 @@ const downloadFirmware = async () => {
 const wifiUpload = async () => {
   flashButton.disabled = true
   await generateFirmware()
-    .then((binary) => {
-      const file = new Blob(binary)
-      file.name = 'firmware.bin'
+    .then(([binary, { config, firmwareUrl, options }]) => {
+      const bin = binary[binary.length - 1].data.buffer
+      const data = new Blob([bin], { type: 'application/octet-stream' })
       const formdata = new FormData()
-      formdata.append('upload', file, file.name)
+      formdata.append('upload', data, 'firmware.bin')
       const ajax = new XMLHttpRequest()
       ajax.upload.addEventListener('progress', progressHandler, false)
       ajax.addEventListener('load', completeHandler, false)
       ajax.addEventListener('error', errorHandler, false)
       ajax.addEventListener('abort', abortHandler, false)
       ajax.open('POST', uploadURL + '/update')
-      ajax.setRequestHeader('X-FileSize', file.size)
+      ajax.setRequestHeader('X-FileSize', data.size)
       ajax.send(formdata)
     })
     .catch((e) => {
@@ -496,7 +491,7 @@ function completeHandler (event) {
           }
         }
       }
-      xmlhttp.open('POST', '/forceupdate', true)
+      xmlhttp.open('POST', uploadURL + '/forceupdate', true)
       const data = new FormData()
       data.append('action', e)
       xmlhttp.send(data)
