@@ -1,5 +1,6 @@
 import { TransportEx } from './serialex.js'
 import { Bootloader, Passthrough } from './passthrough.js'
+import { cuteAlert } from './alert.js'
 
 const log = { info: function () {}, warn: function () {}, error: function () {}, debug: function () {} }
 
@@ -127,6 +128,8 @@ class Xmodem {
           if (blockNumber % 10 === 0) {
             const percent = Math.floor(blockNumber * 100 / packagedBuffer.length)
             _self.logger.log(`${percent}% uploaded...`)
+            document.getElementById('progressBar').value = percent
+            document.getElementById('status').innerHTML = `Flashing: ${percent}% uploaded... please wait`
           }
         } else if (packagedBuffer.length === blockNumber) {
           // We are EOT
@@ -139,6 +142,8 @@ class Xmodem {
             // We are finished!
             log.info('[SEND] - Finished!')
             _self.emit('stop', 0)
+            document.getElementById('progressBar').value = 100
+            document.getElementById('status').innerHTML = 'Flashing complete'
             sending = false
           }
         }
@@ -169,6 +174,7 @@ class Xmodem {
     // eslint-disable-next-line no-unmodified-loop-condition
     while (sending) {
       const reader = this.device.readable.getReader()
+      // PAK need a timeout and handler
       const { value, done } = await reader.read()
       if (done) {
         reader.releaseLock()
@@ -263,6 +269,11 @@ class XmodemFlasher {
         while (!gotBootloader) {
           currAttempt++
           if (currAttempt > 10) {
+            await cuteAlert({
+              type: 'error',
+              title: 'Flashing Failed',
+              message: 'Failed to enter bootloader mode in a reasonable time'
+            })
             throw new Error('[FAILED] to get to BL in reasonable time')
           }
           this.log(`[${currAttempt}] retry...`)
@@ -296,12 +307,19 @@ class XmodemFlasher {
               const flashTarget = this.config.firmware.toUpperCase()
 
               if (line.trim() !== flashTarget && !force) {
-                //     if query_yes_no("\n\n\nWrong target selected! your RX is '%s', trying to flash '%s', continue? Y/N\n" % (line, flash_target)):
-                //         force = true
-                //         continue
-                //     else:
+                const e = await cuteAlert({
+                  type: 'question',
+                  title: 'Targets Mismatch',
+                  message: `Wrong target selected your RX is '${line.trim()}', trying to flash '${flashTarget}'`,
+                  confirmText: 'Flash anyway',
+                  cancelText: 'Cancel'
+                })
+                if (e === 'confirm') {
+                  force = true
+                  continue
+                }
                 this.log(`Wrong target selected your RX is '${line.trim()}', trying to flash '${flashTarget}'`)
-                throw new Error('mismatch')
+                return
               } else if (flashTarget !== '') {
                 this.log(`Verified RX target '${flashTarget}'`)
               }
@@ -313,8 +331,13 @@ class XmodemFlasher {
         this.transport.set_delimiters(['CCC'])
         const data = await this.transport.read_line({ timeout: 15000 })
         if (data.indexOf('CCC') === -1) {
+          await cuteAlert({
+            type: 'error',
+            title: 'Flashing Failed',
+            message: 'Unable to communicate with bootloader'
+          })
           this.log('[FAILED] Unable to communicate with bootloader...')
-          throw new Error('failed')
+          return
         }
         this.log(' sync OK\n')
       } else {
@@ -324,6 +347,20 @@ class XmodemFlasher {
       this.log('\nWe were already in bootloader\n')
     }
     await this.xmodem.send(binary[0])
+      .then(() => {
+        return cuteAlert({
+          type: 'success',
+          title: 'Flashing Succeeded',
+          message: 'Firmware upload complete'
+        })
+      })
+      .catch((e) => {
+        return cuteAlert({
+          type: 'error',
+          title: 'Flashing Failed',
+          message: e.message
+        })
+      })
   }
 
   checkStatus = (response) => {
