@@ -24,19 +24,19 @@ function _ (el) {
   return document.getElementById(el)
 }
 
+function checkStatus (response) {
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} - ${response.statusText}`)
+  }
+  return response
+}
+
 function initialise () {
   term = new Terminal({ cols: 80, rows: 40 })
   const fitAddon = new FitAddon()
   term.loadAddon(fitAddon)
   term.open(_('serial-monitor'))
   fitAddon.fit()
-
-  function checkStatus (response) {
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status} - ${response.statusText}`)
-    }
-    return response
-  }
 
   initBindingPhraseGen()
   fetch('firmware/hardware/targets.json')
@@ -315,7 +315,33 @@ const connectSTLink = async () => {
 }
 
 const connectWifi = async () => {
-
+  function check (response) {
+    if (!response.ok) {
+      throw Promise.reject(new Error('Failed to connect to device'))
+    }
+    return response.json()
+  }
+  const deviceType = typeSelect.value.substring(0, 2)
+  await Promise.any([
+    fetch('http://10.0.0.1/target')
+      .then(response => check(response))
+      .then(_ => ['http://10.0.0.1/', _]),
+    fetch(`http://elrs_${deviceType}/target`)
+      .then(response => check(response))
+      .then(_ => [`http://elrs_${deviceType}/`, _]),
+    fetch(`http://elrs_${deviceType}.local/target`)
+      .then(response => check(response))
+      .then(_ => [`http://elrs_${deviceType}/`, _])
+  ]).then(([url, response]) => {
+    lblConnTo.innerHTML = 'Connected to: ' + url
+    _('product_name').innerHTML = 'Product name: ' + response.product_name
+    _('target').innerHTML = 'Target firmware: ' + response.target
+    _('version').innerHTML = 'Version: ' + response.version
+    flashButton.style.display = 'block'
+  }).catch(reason => {
+    lblConnTo.innerHTML = 'No device found'
+    console.log(reason)
+  })
 }
 
 _('options-next').onclick = async () => {
@@ -328,15 +354,9 @@ _('options-next').onclick = async () => {
     _('step-3').classList.add('editable')
     _('step-2').classList.add('done')
     _('step-2').classList.remove('editable')
-    if (method === 'wifi') {
-      _('step-wifi').style.display = 'block'
-    } else {
-      _('step-flash').style.display = 'block'
-    }
+    _('step-flash').style.display = 'block'
 
-    setDisplay('._method', 'none')
     setDisplay('.' + method, 'block')
-    _('mui-terminal').style.display = 'block'
 
     if (method === 'wifi') {
       connectButton.onclick = connectWifi
@@ -350,7 +370,10 @@ _('options-next').onclick = async () => {
 }
 
 flashButton.onclick = async () => {
-  if (flasher !== null) await flasher.flash(binary, _('erase-flash').checked)
+  const method = _('method').value
+  if (method === 'wifi') {
+    //
+  } else if (flasher !== null) await flasher.flash(binary, _('erase-flash').checked)
   else await stlink.flash(binary, _('flash-bootloader').checked)
 }
 

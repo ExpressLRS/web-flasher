@@ -194,35 +194,34 @@
         </div>
 
         <div class="mui-panel" id="step-flash" style="display: none;">
-            <div class="mui-panel uart betaflight etx stlink _method" id="program" style="display: none;">
-                <h3>Flash</h3>
-                <form class="mui-form">
-                    <label id="lblConnTo">Connected to device: </label>
-                    <br/>
-                    <div class="mui-checkbox esp8285 esp32">
+            <h3>Flash</h3>
+            <form class="mui-form">
+                <label id="lblConnTo">Connecting to device...</label>
+                <label id="product_name" class="wifi"></label>
+                <label id="target" class="wifi"></label>
+                <label id="version" class="wifi"></label>
+                <br/>
+                <div class="uart betaflight etx stlink" style="display: none;">
+                    <div class="mui-checkbox esp8285 esp32" style="display: none;">
                         <input id='erase-flash' type='checkbox' />
                         <label>Erase flash first?</label>
                     </div>
-                    <div class="mui-checkbox stlink">
+                    <div class="mui-checkbox stlink" style="display: none;">
                         <input id='flash-bootloader' type='checkbox' />
                         <label>Also flash bootloader?</label>
                     </div>
+                </div>
 
-                    <input class="mui-btn mui-btn--primary" type="button" id="connectButton" value="Connect"
-                        style="display: none;" />
-                    <input class="mui-btn mui-btn--primary" type="button" id="flashButton" value="Flash"
-                        style="display: none;" />
-                </form>
-            </div>
+                <input class="mui-btn mui-btn--primary" type="button" id="connectButton" value="Connect"
+                    style="display: none;" />
+                <input class="mui-btn mui-btn--primary" type="button" id="flashButton" value="Flash"
+                    style="display: none;" />
+            </form>
 
-            <div class="mui-panel" id="mui-terminal" style="display: none;">
+            <div class="mui-panel uart betaflight etx stlink" id="mui-terminal" style="display: none;">
                 <div id="serial-monitor"></div>
             </div>
         </div>
-
-        <div class="mui-panel" id="step-wifi" style="display: none;">
-        </div>
-
     <script>
         // Safari 3.0+ "[object HTMLElementConstructor]"
         var isSafari = /constructor/i.test(window.HTMLElement) || (function (p) { return p.toString() === "[object SafariRemoteNotification]"; })(!window['safari'] || (typeof safari !== 'undefined' && window['safari'].pushNotification));
