@@ -376,7 +376,17 @@ flashButton.onclick = async () => {
   const method = _('method').value
   if (method === 'wifi') await wifiUpload()
   else if (flasher !== null) await flasher.flash(binary, _('erase-flash').checked)
-  else await stlink.flash(binary, _('flash-bootloader').checked)
+  else {
+    await stlink.flash(binary, _('flash-bootloader').checked)
+      .then(() => {
+        cuteAlert({
+          type: 'success',
+          title: 'Flashing Succeeded',
+          message: 'Firmware upload complete'
+        })
+      })
+      .catch((e) => { errorHandler(e.message) })
+  }
 }
 
 const downloadFirmware = async () => {
@@ -418,7 +428,7 @@ const wifiUpload = async () => {
       const ajax = new XMLHttpRequest()
       ajax.upload.addEventListener('progress', progressHandler, false)
       ajax.addEventListener('load', completeHandler, false)
-      ajax.addEventListener('error', errorHandler, false)
+      ajax.addEventListener('error', (e) => errorHandler(e.target.responseText), false)
       ajax.addEventListener('abort', abortHandler, false)
       ajax.open('POST', uploadURL + '/update')
       ajax.setRequestHeader('X-FileSize', data.size)
@@ -430,7 +440,6 @@ const wifiUpload = async () => {
 }
 
 function progressHandler (event) {
-  // _("loaded_n_total").innerHTML = "Uploaded " + event.loaded + " bytes of " + event.total;
   const percent = Math.round((event.loaded / event.total) * 100)
   _('progressBar').value = percent
   _('status').innerHTML = percent + '% uploaded... please wait'
@@ -505,14 +514,14 @@ function completeHandler (event) {
   }
 }
 
-function errorHandler (event) {
+function errorHandler (msg) {
   _('status').innerHTML = ''
   _('progressBar').value = 0
   flashButton.disabled = false
   cuteAlert({
     type: 'error',
     title: 'Update Failed',
-    message: event.target.responseText
+    message: msg
   })
 }
 

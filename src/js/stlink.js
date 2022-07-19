@@ -56,10 +56,14 @@ class STLink {
       percent = 100
     }
     this.info(`${this._msg}: ${percent}%`)
+    document.getElementById('progressBar').value = percent
+    document.getElementById('status').innerHTML = `${this._msg}: ${percent}% uploaded... please wait`
   }
 
   bargraph_done () {
     this.info(`${this._msg}: complete`)
+    document.getElementById('progressBar').value = 100
+    document.getElementById('status').innerHTML = `${this._msg}: Complete`
   }
 
   update_debugger_info (stlink, device) {
@@ -187,7 +191,8 @@ class STLink {
     return transform(binary)
   }
 
-  flash = async (binary, flashBootloader) => {
+  flash = async (binary, flashBootloader, progressCallback) => {
+    this.progressCallback = progressCallback
     if (this.stlink !== null && this.stlink.connected) {
       if (flashBootloader) {
         this.log('\nFlash bootloader')
@@ -198,22 +203,19 @@ class STLink {
           await this.stlink.flash(this.target.flash_start, data)
         } catch (err) {
           this.error(err)
-          return
+          throw err
         }
       }
 
+      const addr = parseInt(this.config.stlink.offset, 16)
+      this.log('\nFlash ExpressLRS')
+      this.log('================')
       try {
-        const addr = parseInt(this.config.stlink.offset, 16)
-        this.log('\nFlash ExpressLRS')
-        this.log('================')
-        try {
-          await this.stlink.halt()
-          await this.stlink.flash(this.target.flash_start + addr, binary[0])
-        } catch (err) {
-          this.error(err)
-        }
-      } catch (error) {
-        this.error(error)
+        await this.stlink.halt()
+        await this.stlink.flash(this.target.flash_start + addr, binary[0])
+      } catch (err) {
+        this.error(err)
+        throw err
       }
     }
   }
