@@ -3,6 +3,7 @@ import { Configure } from './configure.js'
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
 import { cuteAlert } from './alert.js'
+import { MismatchError, AlertError } from './error.js'
 
 const flashButton = _('flashButton')
 const connectButton = _('connectButton')
@@ -263,15 +264,28 @@ const connectUART = async () => {
               lblConnTo.innerHTML = 'Connected to device: ' + chip
               flashButton.style.display = 'initial'
             })
-            .catch(() => {
-              lblConnTo.innerHTML = 'Failed to connect to device, restart device and try again'
+            .catch(e => {
               flashButton.style.display = 'none'
               connectButton.style.display = 'block'
-              return cuteAlert({
-                type: 'error',
-                title: 'Connection Failed',
-                message: 'Failed to connect to device, restart device and try again'
-              })
+              if (e instanceof MismatchError) {
+                lblConnTo.innerHTML = 'Target mismatch, flashing cancelled'
+              } else if (e instanceof AlertError) {
+                lblConnTo.innerHTML = 'Failed to connect to device, restart device and try again'
+                return cuteAlert({
+                  type: 'error',
+                  title: e.title,
+                  message: e.message
+                })
+              } else {
+                lblConnTo.innerHTML = 'Failed to connect to device, restart device and try again'
+                flashButton.style.display = 'none'
+                connectButton.style.display = 'block'
+                return cuteAlert({
+                  type: 'error',
+                  title: e.title,
+                  message: e.message
+                })
+              }
             })
         })
         .catch(() => {

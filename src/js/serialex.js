@@ -2,8 +2,8 @@ import { Transport } from './esptool-js/webserial'
 
 class TransportEx extends Transport {
   ui8ToBstr (u8Array) {
-    let i; const len = u8Array.length; let bStr = ''
-    for (i = 0; i < len; i++) {
+    let bStr = ''
+    for (let i = 0; i < u8Array.length; i++) {
       bStr += String.fromCharCode(u8Array[i])
     }
     return bStr

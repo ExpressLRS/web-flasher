@@ -61,7 +61,7 @@ export function cuteAlert ({
     </div>
     <div class="alert-body">
       <span class="alert-title">${title}</span>
-      <span class="alert-message">${message}</span>
+      <span class="alert-message">${message.replace('\n', '<br/>')}</span>
       ${btnTemplate}
     </div>
   </div>
