@@ -1,3 +1,5 @@
+import { cuteAlert } from './alert.js'
+
 class Bootloader {
   static INIT_SEQ = {
     CRSF: [0xEC, 0x04, 0x32, this.ord('b'), this.ord('l')],
@@ -89,25 +91,30 @@ class Passthrough {
   edgeTX = async () => {
     this.log('======== PASSTHROUGH INIT ========')
 
-    const expect = (want, got) => {
+    const expect = async (want, got) => {
       if (got.indexOf(want) === -1) {
+        await cuteAlert({
+          type: 'error',
+          title: 'Did not get expected reposnse',
+          message: `Wanted '${want}', but got '${got}' instead`
+        })
         throw new Error('Did not get expected response')
       }
     }
     this.transport.set_delimiters(['> '])
     await this.transport.write_string('set pulses 0\n')
-    expect('set: ', await this.transport.read_line({ timeout: 100 }))
+    await expect('set: ', await this.transport.read_line({ timeout: 100 }))
     await this.transport.write_string('set rfmod 0 power off\n')
-    expect('set: ', await this.transport.read_line({ timeout: 100 }))
+    await expect('set: ', await this.transport.read_line({ timeout: 100 }))
     await this._sleep(500)
     await this.transport.write_string('set rfmod 0 bootpin 1\n')
-    expect('set: ', await this.transport.read_line({ timeout: 100 }))
+    await expect('set: ', await this.transport.read_line({ timeout: 100 }))
     await this._sleep(100)
     await this.transport.write_string('set rfmod 0 power on\n')
-    expect('set: ', await this.transport.read_line({ timeout: 100 }))
+    await expect('set: ', await this.transport.read_line({ timeout: 100 }))
     await this._sleep(100)
     await this.transport.write_string('set rfmod 0 bootpin 0\n')
-    expect('set: ', await this.transport.read_line({ timeout: 100 }))
+    await expect('set: ', await this.transport.read_line({ timeout: 100 }))
 
     this.log('Enabling serial passthrough...')
     this.transport.set_delimiters(['\n'])
@@ -149,11 +156,18 @@ class Passthrough {
     if (!await this._validate_serialrx('rx_spi_protocol', ['EXPRESSLRS'])) { serialCheck.push('ExpressLRS SPI RX detected\n\nUpdate via betaflight to flash your RX\nhttps://www.expresslrs.org/2.0/hardware/spi-receivers/') }
 
     if (serialCheck.length > 0) {
+      let msg = ''
       this.log('\n\n [ERROR] Invalid serial RX configuration detected:')
       for (const err of serialCheck) {
         this.log('    !!! ' + err + ' !!!')
+        msg += err + '\n'
       }
       this.log('\n    Please change the configuration and try again!')
+      await cuteAlert({
+        type: 'error',
+        title: 'Invalid serial RX configuration detected',
+        message: msg
+      })
       throw new Error('Passthrough failed')
     }
 
@@ -179,6 +193,11 @@ class Passthrough {
     }
     if (!index) {
       this.log('!!! RX Serial not found !!!!\n  Check configuration and try again...')
+      await cuteAlert({
+        type: 'error',
+        title: 'Serial RX not found',
+        message: 'Check flight controller RX configuration'
+      })
       throw new Error('not found')
     }
 
@@ -215,28 +234,29 @@ class Passthrough {
     try {
       this.transport.set_delimiters('\n')
       rxTarget = (await this.transport.read_line({ timeout: 200 })).trim()
-      // for (let i=0 ; i<10 ; i++) {
-      //     let line = await this.transport.read_line({timeout:200});
-      //     if (line !== undefined) {
-      //         const pos = line.toUpperCase().indexOf(this.flash_target.toUpperCase());
-      //         if (pos != -1) {
-      //             rx_target = line.substring(pos).trim();
-      //             break;
-      //         }
-      //         rx_target += line;
-      //     }
-      // }
     } catch (e) {
       console.log(e)
     }
 
-    if (rxTarget === '') { this.log('Cannot detect RX target, blindly flashing!') } else if (this.uploadforce) { this.log(`Force flashing ${this.flash_target}, detected ${rxTarget}`) } else if (rxTarget.toUpperCase() !== this.flash_target.toUpperCase()) {
-      // if query_yes_no('\n\n\nWrong target selected! your RX is '%s', trying to flash '%s', continue? Y/N\n' % (rx_target, this.flash_target)):
-      //     this.log('Ok, flashing anyway!');
-      // else:
-      this.log(`Wrong target selected your RX is '${rxTarget}', trying to flash '${this.flash_target}'`)
-      throw new Error('mismatch')
-    } else if (this.flash_target !== '') { this.log(`Verified RX target '${this.flash_target}'`) }
+    if (rxTarget === '') {
+      this.log('Cannot detect RX target, blindly flashing!')
+    } else if (this.uploadforce) {
+      this.log(`Force flashing ${this.flash_target}, detected ${rxTarget}`)
+    } else if (rxTarget.toUpperCase() !== this.flash_target.toUpperCase()) {
+      const e = await cuteAlert({
+        type: 'question',
+        title: 'Targets Mismatch',
+        message: `Wrong target selected your RX is '${rxTarget}', trying to flash '${this.flash_target}'`,
+        confirmText: 'Flash anyway',
+        cancelText: 'Cancel'
+      })
+      if (e !== 'confirm') {
+        this.log(`Wrong target selected your RX is '${rxTarget}', trying to flash '${this.flash_target}'`)
+        throw new Error('mismatch')
+      }
+    } else if (this.flash_target !== '') {
+      this.log(`Verified RX target '${this.flash_target}'`)
+    }
     await this._sleep(500)
     this.log('======== BOOTLOADER ENGAGED ========')
   }
