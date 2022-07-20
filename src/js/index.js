@@ -375,8 +375,23 @@ _('options-next').onclick = async () => {
 flashButton.onclick = async () => {
   const method = _('method').value
   if (method === 'wifi') await wifiUpload()
-  else if (flasher !== null) await flasher.flash(binary, _('erase-flash').checked)
-  else {
+  else if (flasher !== null) {
+    await flasher.flash(binary, _('erase-flash').checked)
+      .then(() => {
+        return cuteAlert({
+          type: 'success',
+          title: 'Flashing Succeeded',
+          message: 'Firmware upload complete'
+        })
+      })
+      .catch((e) => {
+        return cuteAlert({
+          type: 'error',
+          title: 'Flashing Failed',
+          message: e.message
+        })
+      })
+  } else {
     await stlink.flash(binary, _('flash-bootloader').checked)
       .then(() => {
         cuteAlert({

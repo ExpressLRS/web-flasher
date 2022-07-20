@@ -1,6 +1,7 @@
 import { TransportEx } from './serialex.js'
 import { ESPLoader } from './esptool-js/ESPLoader.js'
 import { Passthrough } from './passthrough.js'
+import CryptoJS from 'crypto-js'
 
 class ESPFlasher {
   constructor (device, type, method, config, options, firmwareUrl, term) {
@@ -21,7 +22,8 @@ class ESPFlasher {
     }
 
     const transport = new TransportEx(this.device, true)
-    this.esploader = new ESPLoader(transport, baudrate, this.term, true)
+    this.esploader = new ESPLoader(transport, baudrate, this.term)
+    this.esploader.ESP_RAM_BLOCK = 0x0800 // we override otherwise flashing on BF will fail
 
     const passthrough = new Passthrough(transport, this.term, this.config.firmware)
     if (this.method === 'uart') {
@@ -50,6 +52,7 @@ class ESPFlasher {
     }
 
     const chip = await this.esploader.main_fn({ mode })
+    this.esploader.FLASH_WRITE_SIZE = 0x0800 // again, override...
     console.log('Settings done for :' + chip)
     return chip
   }
@@ -57,8 +60,22 @@ class ESPFlasher {
   flash = async (files, erase) => {
     const loader = this.esploader
     const fileArray = files.map(v => ({ data: loader.ui8ToBstr(v.data), address: v.address }))
-    await loader.write_flash({ fileArray, flash_size: 'keep', erase_all: erase })
-      .then(_ => loader.soft_reset())
+    return loader.write_flash({
+      fileArray,
+      flash_size: 'keep',
+      erase_all: erase,
+      reportProgress: (fileIndex, written, total) => {
+        const percent = Math.round(written / total * 100)
+        document.getElementById('progressBar').value = percent
+        document.getElementById('status').innerHTML = `Flashing: ${percent}% uploaded... please wait`
+      },
+      calculateMD5Hash: (image) => CryptoJS.MD5(CryptoJS.enc.Latin1.parse(image))
+    })
+      .then(_ => {
+        document.getElementById('progressBar').value = 100
+        document.getElementById('status').innerHTML = 'Flashing complete'
+        return loader.soft_reset()
+      })
   }
 }
 

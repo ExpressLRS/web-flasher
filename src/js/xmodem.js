@@ -346,21 +346,7 @@ class XmodemFlasher {
     } else {
       this.log('\nWe were already in bootloader\n')
     }
-    await this.xmodem.send(binary[0])
-      .then(() => {
-        return cuteAlert({
-          type: 'success',
-          title: 'Flashing Succeeded',
-          message: 'Firmware upload complete'
-        })
-      })
-      .catch((e) => {
-        return cuteAlert({
-          type: 'error',
-          title: 'Flashing Failed',
-          message: e.message
-        })
-      })
+    return this.xmodem.send(binary[0])
   }
 
   checkStatus = (response) => {

@@ -1,6 +1,30 @@
 import { Transport } from './esptool-js/webserial'
 
 class TransportEx extends Transport {
+  ui8ToBstr (u8Array) {
+    let i; const len = u8Array.length; let bStr = ''
+    for (i = 0; i < len; i++) {
+      bStr += String.fromCharCode(u8Array[i])
+    }
+    return bStr
+  }
+
+  bstrToUi8 (bStr) {
+    const len = bStr.length
+    const u8array = new Uint8Array(len)
+    for (let i = 0; i < len; i++) {
+      u8array[i] = bStr.charCodeAt(i)
+    }
+    return u8array
+  }
+
+  set_delimiters (delimiters = ['\n', 'CCC']) {
+    this.delimiters = []
+    for (const d of delimiters) {
+      this.delimiters.push(this.bstrToUi8(d))
+    }
+  }
+
   read_line = async ({ timeout = 0 } = {}) => {
     console.log('Read with timeout ' + timeout)
     let t
@@ -55,6 +79,27 @@ class TransportEx extends Transport {
       console.log(this.hexdump(packet))
     }
     return this.ui8ToBstr(packet)
+  }
+
+  write_string = async (data) => {
+    const writer = this.device.writable.getWriter()
+    const out = this.bstrToUi8(data)
+    if (this.tracing) {
+      console.log('Write bytes')
+      console.log(this.hexdump(out))
+    }
+    await writer.write(out.buffer)
+    writer.releaseLock()
+  }
+
+  write_array = async (data) => {
+    const writer = this.device.writable.getWriter()
+    if (this.tracing) {
+      console.log('Write bytes')
+      console.log(this.hexdump(data))
+    }
+    await writer.write(data.buffer)
+    writer.releaseLock()
   }
 }
 
