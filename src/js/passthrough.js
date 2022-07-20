@@ -59,10 +59,11 @@ class Bootloader {
 }
 
 class Passthrough {
-  constructor (transport, terminal, flashTarget, halfDuplex = false, uploadforce = false) {
+  constructor (transport, terminal, flashTarget, baudrate, halfDuplex = false, uploadforce = false) {
     this.transport = transport
     this.terminal = terminal
     this.flash_target = flashTarget
+    this.baudrate = baudrate
     this.half_duplex = halfDuplex
     this.uploadforce = uploadforce
   }

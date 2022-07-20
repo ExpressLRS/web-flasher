@@ -267,12 +267,22 @@ const connectUART = async () => {
               lblConnTo.innerHTML = 'Failed to connect to device, restart device and try again'
               flashButton.style.display = 'none'
               connectButton.style.display = 'block'
+              return cuteAlert({
+                type: 'error',
+                title: 'Connection Failed',
+                message: 'Failed to connect to device, restart device and try again'
+              })
             })
         })
         .catch(() => {
           lblConnTo.innerHTML = 'No device selected'
           flashButton.style.display = 'none'
           connectButton.style.display = 'block'
+          return cuteAlert({
+            type: 'error',
+            title: 'No Device Selected',
+            message: 'A serial device must be select to perform flashing'
+          })
         })
     })
 }

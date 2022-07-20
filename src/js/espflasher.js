@@ -19,42 +19,47 @@ class ESPFlasher {
     let baudrate = 460800
     if (this.method === 'betaflight') {
       baudrate = 420000
+      mode = 'no_reset'
+    } else if (this.method === 'etx') {
+      baudrate = 230400
+      mode = 'no_reset'
     }
 
     const transport = new TransportEx(this.device, true)
-    this.esploader = new ESPLoader(transport, baudrate, this.term)
+    this.esploader = new ESPLoader(transport, baudrate, this.term, baudrate)
     this.esploader.ESP_RAM_BLOCK = 0x0800 // we override otherwise flashing on BF will fail
 
-    const passthrough = new Passthrough(transport, this.term, this.config.firmware)
+    const passthrough = new Passthrough(transport, this.term, this.config.firmware, baudrate)
     if (this.method === 'uart') {
       if (this.type === 'RX') {
         await transport.connect({ baud: baudrate })
-        const ret = await this.esploader._connect_attempt()
-        if (ret !== 'success') {
-          await transport.disconnect()
-          await transport.connect({ baud: 420000 })
-          await passthrough.reset_to_bootloader()
-        }
+          .then(_ => this.esploader._connect_attempt())
+          .then(ret => {
+            if (ret !== 'success') {
+              return transport.disconnect()
+                .then(_ => transport.connect({ baud: 420000 }))
+                .then(_ => passthrough.reset_to_bootloader())
+            }
+          })
       } else {
         await transport.connect({ baud: 230400 })
       }
     } else if (this.method === 'betaflight') {
-      baudrate = 420000
-      mode = 'no_reset'
       await transport.connect({ baud: baudrate })
-      await passthrough.betaflight()
-      await passthrough.reset_to_bootloader()
+        .then(_ => passthrough.betaflight())
+        .then(_ => passthrough.reset_to_bootloader())
     } else if (this.method === 'etx') {
-      baudrate = 230400
-      mode = 'no_reset'
       await transport.connect({ baud: baudrate })
-      await passthrough.edgeTX()
+        .then(_ => passthrough.edgeTX())
     }
 
-    const chip = await this.esploader.main_fn({ mode })
-    this.esploader.FLASH_WRITE_SIZE = 0x0800 // again, override...
-    console.log('Settings done for :' + chip)
-    return chip
+    return transport.disconnect()
+      .then(_ => this.esploader.main_fn({ mode }))
+      .then(chip => {
+        this.esploader.FLASH_WRITE_SIZE = 0x0800 // again, override...
+        console.log('Settings done for :' + chip)
+        return chip
+      })
   }
 
   flash = async (files, erase) => {
