@@ -123,6 +123,7 @@ typeSelect.onchange = async () => {
     modelSelect.appendChild(opt)
   }
   modelSelect.disabled = false
+  modelSelect.value = ''
   _('device-next').disabled = true
 }
 
