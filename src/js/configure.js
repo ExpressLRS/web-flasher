@@ -122,17 +122,17 @@ export class Configure {
     return response
   }
 
-  static #fetch_file = async (file, addr, transform = (e) => e) => {
-    const response = await fetch(file)
-    const blob = await this.#checkStatus(response).blob()
-    const binary = await new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = function found () {
-        resolve(new Uint8Array(reader.result))
-      }
-      reader.readAsArrayBuffer(blob)
-    })
-    return { data: transform(binary), address: addr }
+  static #fetch_file = (file, addr, transform = (e) => e) => {
+    return fetch(file)
+      .then(_ => this.#checkStatus(_).blob())
+      .then(_ => new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = function found () {
+          resolve(new Uint8Array(reader.result))
+        }
+        reader.readAsArrayBuffer(_)
+      }))
+      .then(_ => ({ data: transform(_), address: addr }))
   }
 
   static #findFirmwareEnd = (binary, config) => {

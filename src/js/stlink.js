@@ -12,28 +12,20 @@ class STLink {
     this.term.writeln(str)
   }
 
-  debug (msg) {
-    // this.log('debug: ' + msg);
-  }
+  debug (msg) {}
 
-  verbose (msg) {
-    // this.log(msg);
-  }
+  verbose (msg) {}
 
   info (msg) {
-    this.log(msg)
-  }
-
-  message (msg) {
-    this.log(msg)
+    this.log('[INFO] ' + msg)
   }
 
   error (msg) {
-    this.log(msg)
+    this.log('[ERROR] ' + msg)
   }
 
   warning (msg) {
-    this.log(msg)
+    this.log('[WARN] ' + msg)
   }
 
   /* eslint-disable camelcase */
