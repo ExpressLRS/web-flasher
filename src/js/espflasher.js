@@ -79,7 +79,7 @@ class ESPFlasher {
       .then(_ => {
         document.getElementById('progressBar').value = 100
         document.getElementById('status').innerHTML = 'Flashing complete'
-        return loader.soft_reset()
+        return loader.soft_reset().catch(() => {})
       })
   }
 }

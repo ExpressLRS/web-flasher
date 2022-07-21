@@ -117,10 +117,10 @@ class Passthrough {
         const cmd = 'serialpassthrough rfmod 0 ' + this.transport.baudrate.toString()
         this.log(`  CMD: '${cmd}`)
         return this.transport.write_string(cmd + '\n')
-          .then(this.transport.read_line({ timeout: 200 }))
+          .then(_ => this.transport.read_line({ timeout: 200 }))
       })
       .then(_ => this.log('======== PASSTHROUGH DONE ========'))
-      .catch(async e => {
+      .catch(e => {
         this.log(e.message)
         this.log('======== PASSTHROUGH FAILED ========')
         return Promise.reject(e)
