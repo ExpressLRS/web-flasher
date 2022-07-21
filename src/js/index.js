@@ -5,6 +5,7 @@ import { FitAddon } from 'xterm-addon-fit'
 import { cuteAlert } from './alert.js'
 import { MismatchError, AlertError } from './error.js'
 
+const versions = ['3.0.0-RC2', '3.0.0-RC1']
 const flashButton = _('flashButton')
 const connectButton = _('connectButton')
 const vendorSelect = _('vendor')
@@ -42,7 +43,28 @@ function initialise () {
   fitAddon.fit()
 
   initBindingPhraseGen()
-  fetch('firmware/hardware/targets.json')
+  let selected = true
+  for (const v in versions) {
+    const opt = document.createElement('option')
+    opt.value = versions[v]
+    opt.innerHTML = versions[v]
+    opt.selected = selected
+    _('version').appendChild(opt)
+    selected = false
+  }
+  _('version').onchange()
+}
+
+_('version').onchange = async () => {
+  vendorSelect.options.length = 1
+  vendorSelect.disabled = true
+  vendorSelect.value = ''
+  typeSelect.disabled = true
+  typeSelect.value = ''
+  modelSelect.disabled = true
+  modelSelect.value = ''
+
+  fetch('firmware/' + _('version').value + '/hardware/targets.json')
     .then(response => checkStatus(response) && response.json())
     .then(json => {
       hardware = json
@@ -177,7 +199,7 @@ _('method').onchange = async () => {
 
 const getSettings = async (deviceType) => {
   const config = hardware[vendorSelect.value][typeSelect.value][modelSelect.value]
-  const firmwareUrl = 'firmware/' + _('fcclbt').value + '/' + config.firmware + '/firmware.bin'
+  const firmwareUrl = 'firmware/' + _('version').value + '/' + _('fcclbt').value + '/' + config.firmware + '/firmware.bin'
   const options = {}
 
   if (_('uid').value !== '') {

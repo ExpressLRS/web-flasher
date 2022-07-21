@@ -60,15 +60,20 @@
         </div>
 
         <div class="mui-panel" id="step-device">
-            <div class="mui--text-headline">Target Hardware</div>
+            <div class="mui--text-headline">Target Selection</div>
+            <div class="mui-select">
+                <select name="version" id="version">
+                </select>
+                <label>Version</label>
+            </div>
             <div class="mui-select">
                 <select name="vendor" id="vendor" disabled>
-                    <option value="" disabled selected>Select vendor --</option>
+                    <option value="" disabled selected>Vendor</option>
                 </select>
             </div>
             <div class="mui-select">
                 <select name="type" id="type" disabled>
-                    <option value="" disabled selected>Select type --</option>
+                    <option value="" disabled selected>Device Type</option>
                     <option value="tx_2400" id="tx_2400" disabled>2.4GHz Transmitter</option>
                     <option value="rx_2400" id="rx_2400" disabled>2.4GHz Receiver</option>
                     <option value="tx_900" id="tx_900" disabled>900MHz Transmitter</option>
@@ -77,7 +82,7 @@
             </div>
             <div class="mui-select">
                 <select name="model" id="model" disabled>
-                    <option value="" disabled selected>Select model --</option>
+                    <option value="" disabled selected>Device Model</option>
                 </select>
             </div>
             <div><input class="mui-btn mui-btn--primary mui--pull-right" type="button" id="device-next" value="Next"

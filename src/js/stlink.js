@@ -189,7 +189,7 @@ class STLink {
       if (flashBootloader) {
         this.log('\nFlash bootloader')
         this.log('================')
-        const data = await this.fetch_file('firmware/bootloader/' + this.config.stlink.bootloader)
+        const data = await this.fetch_file('firmware/' + document.getElementById('version').value + '/bootloader/' + this.config.stlink.bootloader)
         try {
           await this.stlink.halt()
           await this.stlink.flash(this.target.flash_start, data)
