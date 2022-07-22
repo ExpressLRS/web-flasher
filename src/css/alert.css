@@ -47,10 +47,27 @@
     animation: open-frame 0.3s linear;
 }
 
+.dialog-frame {
+    background: #fff;
+    min-height: 400px;
+    min-width: 450px;
+    box-shadow: 5px 5px 10px rgb(0, 0, 0, 0.2);
+    border-radius: 10px;
+    animation: open-frame 0.3s linear;
+}
+
 .alert-header {
     display: flex;
     flex-direction: row;
     height: 175px;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+
+.dialog-header {
+    display: flex;
+    flex-direction: row;
+    height: 50px;
     border-top-left-radius: 5px;
     border-top-right-radius: 5px;
 }

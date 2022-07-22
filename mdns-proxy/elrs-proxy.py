@@ -46,11 +46,9 @@ PORT = 9097
 
 app = Bottle()
 
-METHODS = ['GET', 'POST', 'OPTIONS']
 POST_HEADERS = {
-    'Access-Control-Allow-Methods': ', '.join(METHODS),
-    'Access-Control-Allow-Headers': 'Content-Type, '
-    'Access-Control-Allow-Headers, Authorization, X-Requested-With',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, X-FileSize',
 }
 
 @app.get('/mdns', method=['GET'])
@@ -59,7 +57,7 @@ def mdns():
     response.set_header('Access-Control-Allow-Origin', '*')
     return json.dumps(mdnsServices)
 
-@app.get('/<path:path>', method=METHODS)
+@app.get('/<path:path>', method=['GET', 'OPTIONS'])
 def get(path):
     response.set_header('Access-Control-Allow-Origin', '*')
     qstring = request.query_string
@@ -70,21 +68,31 @@ def get(path):
 
     if request.method == 'GET':
         r = requests.get(url, headers=header)
+        response.status = r.status_code
+        return r.text
     else:
         for k, v in POST_HEADERS.items():
             response.set_header(k, v)
+        return
 
-        if request.method == 'OPTIONS':
-            return
+@app.get('/<path:path>', method=['POST'])
+def get(path):
+    response.set_header('Access-Control-Allow-Origin', '*')
+    qstring = request.query_string
+    qstring = ('?' + qstring) if qstring else ''
+    url = '{}://{}{}'.format(request.urlparts[0], path, qstring)
 
-        r = requests.post(url, data=request.body.read(), headers=header)
+    form_data = request.forms.dict
+    file_data = request.files.get('upload')
+    files = {file_data.name: (file_data.filename, file_data.file)} if file_data is not None else None
+    headers = {}
+    for k, v in request.headers.items():
+        headers[k] = v
+    headers.pop('Content-Type')
+    r = requests.post(url, data=form_data, files=files, headers=headers)
 
     response.status = r.status_code
     return r.text
-
-@app.get('/', method=METHODS)
-def getroot():
-    return get(None)
 
 try:
     print('Starting ELRS proxy on port {}'.format(PORT))

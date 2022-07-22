@@ -1,7 +1,8 @@
 export class AlertError extends Error {
-  constructor (title = undefined, message = undefined) {
+  constructor (title = undefined, message = undefined, type = 'error') {
     super(message)
     this.title = title
+    this.type = type
   }
 }
 

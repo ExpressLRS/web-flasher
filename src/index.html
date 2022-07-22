@@ -85,8 +85,10 @@
                     <option value="" disabled selected>Device Model</option>
                 </select>
             </div>
-            <div><input class="mui-btn mui-btn--primary mui--pull-right" type="button" id="device-next" value="Next"
-                    disabled /></div>
+            <div class="mui--pull-right">
+                <button class="mui-btn" id="device-discover">Wifi Auto Discover</button>
+                <button class="mui-btn mui-btn--primary" id="device-next" disabled>Next</button>
+            </div>
         </div>
 
         <div class="mui-panel" id="step-options" style="display: none;">
@@ -194,8 +196,9 @@
                 </select>
             </div>
 
-            <div><input class="mui-btn mui-btn--primary mui--pull-right" type="button" id="options-next" value="Next"
-                    disabled /></div>
+            <div class="mui--pull-right">
+                <button class="mui-btn mui-btn--primary" id="options-next" disabled>Next</button>
+            </div>
         </div>
 
         <div class="mui-panel" id="step-flash" style="display: none;">
@@ -204,7 +207,7 @@
                 <label id="lblConnTo">Connecting to device...</label>
                 <label id="product_name" class="wifi"></label>
                 <label id="target" class="wifi"></label>
-                <label id="version" class="wifi"></label>
+                <label id="firmware-version" class="wifi"></label>
                 <br/>
                 <div class="uart betaflight etx stlink" style="display: none;">
                     <div class="mui-checkbox esp8285 esp32" style="display: none;">
@@ -217,10 +220,8 @@
                     </div>
                 </div>
 
-                <input class="mui-btn mui-btn--primary" type="button" id="connectButton" value="Connect"
-                    style="display: none;" />
-                <input class="mui-btn mui-btn--primary" type="button" id="flashButton" value="Flash"
-                    style="display: none;" />
+                <button class="mui-btn mui-btn--primary" id="connectButton" style="display: none;">Connect</button>
+                <button class="mui-btn mui-btn--primary" id="flashButton" style="display: none;">Flash</button>
             </form>
 
             <div>

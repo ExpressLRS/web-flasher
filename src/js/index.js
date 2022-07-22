@@ -4,6 +4,7 @@ import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
 import { cuteAlert } from './alert.js'
 import { MismatchError, AlertError } from './error.js'
+import { cuteDialog } from './dialog.js'
 
 const versions = ['3.0.0-RC2', '3.0.0-RC1']
 const flashButton = _('flashButton')
@@ -13,6 +14,7 @@ const typeSelect = _('type')
 const modelSelect = _('model')
 const lblConnTo = _('lblConnTo')
 const methodSelect = _('method')
+const deviceNext = _('device-next')
 
 let hardware = null
 let device = null
@@ -33,6 +35,99 @@ function checkStatus (response) {
     throw new Error(`HTTP ${response.status} - ${response.statusText}`)
   }
   return response
+}
+
+_('device-discover').onclick = async () => {
+  function check (response) {
+    if (!response.ok) {
+      throw Promise.reject(new Error('Failed to connect to device'))
+    }
+    return response.json()
+  }
+  fetch('http://localhost:9097/mdns')
+    .then(response => check(response))
+    .catch(async (e) => {
+      throw new AlertError('Auto-discovery proxy not running', 'Auto detection of wifi devices cannot be performed without the help of the ExpressLRS auto-discovery proxy', 'warning')
+    })
+    .then(mdns => {
+      if (Object.keys(mdns).length === 0) {
+        throw new AlertError('No wifi devices detected', 'Auto deteection failed to find any devices on the network', 'error')
+      }
+      let rows = ''
+      for (const key of Object.keys(mdns)) {
+        const device = key.substring(0, key.indexOf('.'))
+        rows += `<tr><td>${device}</td><td>${mdns[key].address}</td><td><button class="mui-btn mui-btn--small mui-btn--primary device-button" id="${key}">Select</button></td></tr>`
+      }
+      const table = `
+<table class="mui-table">
+  <thead>
+    <tr>
+      <th>Product</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+      ${rows}
+  </tbody>
+  </table>
+`
+      return Promise.all([cuteDialog({ title: 'Select Device to Flash', bodyTemplate: table, closeStyle: 'circle' }), mdns])
+    })
+    .then(([id, mdns]) => {
+      const candidates = []
+      let i = 0
+      let rows = ''
+      for (const vendor of Object.keys(hardware)) {
+        for (const type of Object.keys(hardware[vendor])) {
+          for (const model of Object.keys(hardware[vendor][type])) {
+            if (mdns[id].properties.product !== undefined && hardware[vendor][type][model].product_name === mdns[id].properties.product) {
+              candidates.push({ vendor, type, model, product: hardware[vendor][type][model].product_name })
+              rows += `<tr><td style="padding: 0px;">${hardware[vendor][type][model].product_name}</td><td style="padding: 0px;"><button class="mui-btn mui-btn--small mui-btn--primary device-button" id="${i}">Select</button></td></tr>`
+              i++
+            }
+            if (hardware[vendor][type][model].prior_target_name === mdns[id].properties.target) {
+              candidates.push({ vendor, type, model, product: hardware[vendor][type][model].product_name })
+              rows += `<tr><td style="padding: 0px;">${hardware[vendor][type][model].product_name}</td><td style="padding: 0px;"><button class="mui-btn mui-btn--small mui-btn--primary device-button" id="${i}">Select</button></td></tr>`
+              i++
+            }
+          }
+        }
+      }
+      // display the candidates and ask which it is
+      const table = `
+<table class="mui-table">
+  <thead>
+    <tr>
+      <th>Device</th>
+      <th>Address</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+      ${rows}
+  </tbody>
+  </table>
+`
+      return Promise.all([candidates, mdns[id], cuteDialog({ title: 'Select Device Model', bodyTemplate: table, closeStyle: 'circle' })])
+    })
+    .then(([candidates, mdns, selected]) => {
+      uploadURL = null
+      if (selected !== undefined) {
+        vendorSelect.value = candidates[selected].vendor
+        vendorSelect.onchange()
+        typeSelect.value = candidates[selected].type
+        typeSelect.onchange()
+        modelSelect.value = candidates[selected].model
+        modelSelect.onchange()
+        deviceNext.onclick()
+        methodSelect.value = 'wifi'
+        methodSelect.onchange()
+        uploadURL = 'http://localhost:9097/' + mdns.address
+      }
+    })
+    .catch((e) => {
+      return cuteAlert({ type: e.type, title: e.title, message: e.message, closeStyle: 'circle' })
+    })
 }
 
 function initialise () {
@@ -88,7 +183,7 @@ function setDisplay (type, disp) {
   })
 }
 
-_('step-1').onclick = async () => {
+_('step-1').onclick = () => {
   _('step-device').style.display = 'block'
   _('step-options').style.display = 'none'
   _('step-flash').style.display = 'none'
@@ -106,7 +201,7 @@ _('step-1').onclick = async () => {
   _('step-3').classList.remove('done')
 }
 
-_('step-2').onclick = async () => {
+_('step-2').onclick = () => {
   if (_('step-flash').style.display === 'block') {
     _('step-options').style.display = 'block'
     _('step-flash').style.display = 'none'
@@ -121,7 +216,7 @@ _('step-2').onclick = async () => {
   }
 }
 
-vendorSelect.onchange = async () => {
+vendorSelect.onchange = () => {
   _('tx_2400').disabled = true
   _('tx_900').disabled = true
   _('rx_2400').disabled = true
@@ -133,10 +228,10 @@ vendorSelect.onchange = async () => {
   typeSelect.value = ''
   modelSelect.disabled = true
   modelSelect.value = ''
-  _('device-next').disabled = true
+  deviceNext.disabled = true
 }
 
-typeSelect.onchange = async () => {
+typeSelect.onchange = () => {
   modelSelect.options.length = 1
   for (const k in hardware[vendorSelect.value][typeSelect.value]) {
     const opt = document.createElement('option')
@@ -146,14 +241,14 @@ typeSelect.onchange = async () => {
   }
   modelSelect.disabled = false
   modelSelect.value = ''
-  _('device-next').disabled = true
+  deviceNext.disabled = true
 }
 
-modelSelect.onchange = async () => {
-  _('device-next').disabled = false
+modelSelect.onchange = () => {
+  deviceNext.disabled = false
 }
 
-_('device-next').onclick = async () => {
+deviceNext.onclick = () => {
   setDisplay('.tx_2400', 'none')
   setDisplay('.rx_2400', 'none')
   setDisplay('.tx_900', 'none')
@@ -188,9 +283,9 @@ _('device-next').onclick = async () => {
   _('step-options').style.display = 'block'
 }
 
-_('method').onchange = async () => {
+methodSelect.onchange = () => {
   _('options-next').disabled = false
-  if (_('method').value === 'download') {
+  if (methodSelect.value === 'download') {
     _('options-next').value = 'Download'
   } else {
     _('options-next').value = 'Next'
@@ -371,31 +466,39 @@ const connectWifi = async () => {
     return response.json()
   }
   const deviceType = typeSelect.value.substring(0, 2)
-  await Promise.any([
-    fetch('http://10.0.0.1/target')
+  let promise
+  if (uploadURL !== null) {
+    promise = fetch(uploadURL + '/target')
       .then(response => check(response))
-      .then(_ => ['http://10.0.0.1', _]),
-    fetch(`http://elrs_${deviceType}/target`)
-      .then(response => check(response))
-      .then(_ => [`http://elrs_${deviceType}`, _]),
-    fetch(`http://elrs_${deviceType}.local/target`)
-      .then(response => check(response))
-      .then(_ => [`http://elrs_${deviceType}`, _])
-  ]).then(([url, response]) => {
+      .then(_ => [uploadURL, _])
+  } else {
+    promise = Promise.any([
+      fetch('http://10.0.0.1/target')
+        .then(response => check(response))
+        .then(_ => ['http://10.0.0.1', _]),
+      fetch(`http://elrs_${deviceType}/target`)
+        .then(response => check(response))
+        .then(_ => [`http://elrs_${deviceType}`, _]),
+      fetch(`http://elrs_${deviceType}.local/target`)
+        .then(response => check(response))
+        .then(_ => [`http://elrs_${deviceType}`, _])
+    ])
+  }
+  await promise.then(([url, response]) => {
     lblConnTo.innerHTML = 'Connected to: ' + url
     _('product_name').innerHTML = 'Product name: ' + response.product_name
     _('target').innerHTML = 'Target firmware: ' + response.target
-    _('version').innerHTML = 'Version: ' + response.version
+    _('firmware-version').innerHTML = 'Version: ' + response.version
     flashButton.style.display = 'block'
     uploadURL = url
   }).catch(reason => {
-    lblConnTo.innerHTML = 'No device found'
+    lblConnTo.innerHTML = 'No device found, or error connecting to device'
     console.log(reason)
   })
 }
 
 _('options-next').onclick = async () => {
-  const method = _('method').value
+  const method = methodSelect.value
   if (method === 'download') {
     await downloadFirmware()
   } else {
@@ -420,7 +523,7 @@ _('options-next').onclick = async () => {
 }
 
 flashButton.onclick = async () => {
-  const method = _('method').value
+  const method = methodSelect.value
   if (method === 'wifi') await wifiUpload()
   else if (flasher !== null) {
     await flasher.flash(binary, _('erase-flash').checked)
@@ -540,7 +643,7 @@ function completeHandler (event) {
       message: data.msg,
       confirmText: 'Flash anyway',
       cancelText: 'Cancel'
-    }).then((e) => {
+    }).then((confirm) => {
       const xmlhttp = new XMLHttpRequest()
       xmlhttp.onreadystatechange = function () {
         if (this.readyState === 4) {
@@ -564,7 +667,7 @@ function completeHandler (event) {
       }
       xmlhttp.open('POST', uploadURL + '/forceupdate', true)
       const data = new FormData()
-      data.append('action', e)
+      data.append('action', confirm)
       xmlhttp.send(data)
     })
   } else {
