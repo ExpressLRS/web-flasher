@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>ESP Tool</title>
+    <title>ExpressLRS Flasher</title>
     <link rel="icon" href="favicon.ico" />
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet"
         type="text/css" />
@@ -68,22 +68,25 @@
             </div>
             <div class="mui-select">
                 <select name="vendor" id="vendor" disabled>
-                    <option value="" disabled selected>Vendor</option>
+                    <option value="" disabled selected></option>
                 </select>
+                <label>Vendor</label>
             </div>
             <div class="mui-select">
                 <select name="type" id="type" disabled>
-                    <option value="" disabled selected>Device Type</option>
+                    <option value="" disabled selected></option>
                     <option value="tx_2400" id="tx_2400" disabled>2.4GHz Transmitter</option>
                     <option value="rx_2400" id="rx_2400" disabled>2.4GHz Receiver</option>
                     <option value="tx_900" id="tx_900" disabled>900MHz Transmitter</option>
                     <option value="rx_900" id="rx_900" disabled>900MHz Receiver</option>
                 </select>
+                <label>Device Type</label>
             </div>
             <div class="mui-select">
                 <select name="model" id="model" disabled>
-                    <option value="" disabled selected>Device Model</option>
+                    <option value="" disabled selected></option>
                 </select>
+                <label>Device Model</label>
             </div>
             <div class="mui--pull-right">
                 <button class="mui-btn" id="device-discover">Wifi Auto Discover</button>
@@ -94,8 +97,8 @@
         <div class="mui-panel" id="step-options" style="display: none;">
             <div class="mui--text-headline">Runtime Options</div>
 
-            <div class="mui-textfield">
-                <input type="text" id="phrase" name="phrase" placeholder="Binding Phrase" />
+            <div class="mui-textfield mui-textfield--float-label">
+                <input type="text" id="phrase" name="phrase"/>
                 <label for="phrase">Binding Phrase</label>
             </div>
             <div class="mui-textfield">
@@ -104,6 +107,7 @@
             </div>
 
             <div class="mui-select tx_2400 rx_2400" style="display: none;">
+                <label>Region</label>
                 <select id='fcclbt' name='fcclbt'>
                     <option value='FCC' selected>FCC</option>
                     <option value='LBT'>LBT</option>
@@ -122,16 +126,22 @@
             </div>
 
             <div class="esp8285 esp32" style="display: none;">
-                <input type="hidden" id="wifi-ssid" name="wifi-ssid" />
-                <input type="hidden" id='wifi-password' name='wifi-password' />
-                <div class="mui-textfield">
+                <div class="mui-textfield mui-textfield--float-label">
+                    <input size='32' id='wifi-ssid' name='wifi-ssid' type='text' value="" />
+                    <label>WiFi SSID</label>
+                </div>
+                <div class="mui-textfield mui-textfield--float-label">
+                    <input size='64' id='wifi-password' name='wifi-password' type='password' value="" />
+                    <label>WiFi Password</label>
+                </div>
+                <div class="mui-textfield mui-textfield--float-label">
                     <input size='3' id='wifi-on-interval' name='wifi-on-interval' type='text' value="60" />
                     <label>WiFi "auto on" interval (s)</label>
                 </div>
             </div>
 
             <div class="tx_2400 tx_900" style="display: none;">
-                <div class="mui-textfield">
+                <div class="mui-textfield mui-textfield--float-label">
                     <input size='5' id='tlm-interval' name='tlm-interval' type='text' value="240" />
                     <label>TLM report interval (ms)</label>
                 </div>
@@ -139,7 +149,7 @@
                     <input id='uart-inverted' name='uart-inverted' type='checkbox' checked />
                     <label>UART inverted</label>
                 </div>
-                <div class="mui-textfield feature-fan">
+                <div class="mui-textfield mui-textfield--float-label feature-fan">
                     <input size='3' id='fan-runtime' name='fan-runtime' type='text' value="30" />
                     <label>Fan runtime (s)</label>
                 </div>
@@ -158,7 +168,7 @@
                             <option value="4">Custom tune</option>
                         </select>
                     </div>
-                    <div class="mui-textfield">
+                    <div class="mui-textfield mui-textfield--float-label">
                         <input id='melody' name='melody' type='text' value="" />
                         <label>Melody</label>
                     </div>
@@ -166,7 +176,7 @@
             </div>
 
             <div class="rx_900 rx_2400" style="display: none;">
-                <div class="mui-textfield">
+                <div class="mui-textfield mui-textfield--float-label">
                     <input size='7' id='rcvr-uart-baud' name='rcvr-uart-baud' type='text' value="420000" />
                     <label>UART baud</label>
                 </div>
@@ -187,13 +197,14 @@
             <div class="mui-select">
                 <select id="method">
                     <option value="" disabled selected>Select flashing method</option>
-                    <option value="download" id="download">Save to local disk</option>
+                    <option value="download" id="download">Local Download</option>
                     <option value="uart" id="uart">Serial UART</option>
                     <option value="betaflight" id="betaflight">Betaflight Passthrough</option>
                     <option value="etx" id="etx">EdgeTX Passthrough</option>
                     <option value="wifi" id="wifi">WiFi</option>
                     <option value="stlink" id="stlink">STLink</option>
                 </select>
+                <label>Flashing Method</label>
             </div>
 
             <div class="mui--pull-right">

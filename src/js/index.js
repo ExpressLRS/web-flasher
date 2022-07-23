@@ -7,6 +7,7 @@ import { MismatchError, AlertError } from './error.js'
 import { cuteDialog } from './dialog.js'
 
 const versions = ['3.0.0-RC2', '3.0.0-RC1']
+const versionSelect = _('version')
 const flashButton = _('flashButton')
 const connectButton = _('connectButton')
 const vendorSelect = _('vendor')
@@ -144,13 +145,13 @@ function initialise () {
     opt.value = versions[v]
     opt.innerHTML = versions[v]
     opt.selected = selected
-    _('version').appendChild(opt)
+    versionSelect.appendChild(opt)
     selected = false
   }
-  _('version').onchange()
+  versionSelect.onchange()
 }
 
-_('version').onchange = async () => {
+versionSelect.onchange = async () => {
   vendorSelect.options.length = 1
   vendorSelect.disabled = true
   vendorSelect.value = ''
@@ -159,7 +160,7 @@ _('version').onchange = async () => {
   modelSelect.disabled = true
   modelSelect.value = ''
 
-  fetch('firmware/' + _('version').value + '/hardware/targets.json')
+  fetch('firmware/' + versionSelect.value + '/hardware/targets.json')
     .then(response => checkStatus(response) && response.json())
     .then(json => {
       hardware = json
@@ -294,7 +295,7 @@ methodSelect.onchange = () => {
 
 const getSettings = async (deviceType) => {
   const config = hardware[vendorSelect.value][typeSelect.value][modelSelect.value]
-  const firmwareUrl = 'firmware/' + _('version').value + '/' + _('fcclbt').value + '/' + config.firmware + '/firmware.bin'
+  const firmwareUrl = 'firmware/' + versionSelect.value + '/' + _('fcclbt').value + '/' + config.firmware + '/firmware.bin'
   const options = {}
 
   if (_('uid').value !== '') {
@@ -304,8 +305,10 @@ const getSettings = async (deviceType) => {
   }
   if (config.platform !== 'stm32') {
     options['wifi-on-interval'] = +_('wifi-on-interval').value
-    options['wifi-ssid'] = _('wifi-ssid').value
-    options['wifi-password'] = _('wifi-password').value
+    if (_('wifi-ssid').value !== '') {
+      options['wifi-ssid'] = _('wifi-ssid').value
+      options['wifi-password'] = _('wifi-password').value
+    }
   }
   if (deviceType === 'RX') {
     options['rcvr-uart-baud'] = +_('rcvr-uart-baud').value
