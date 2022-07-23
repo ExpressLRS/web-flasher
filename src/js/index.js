@@ -171,49 +171,61 @@ versionSelect.onchange = async () => {
         vendorSelect.appendChild(opt)
       }
       vendorSelect.disabled = false
-      setDisplay('.uart', 'none')
-      setDisplay('.stlink', 'none')
-      setDisplay('.wifi', 'none')
+      setDisplay('.uart', false)
+      setDisplay('.stlink', false)
+      setDisplay('.wifi', false)
     })
 }
 
-function setDisplay (type, disp) {
-  const elements = document.querySelectorAll(type)
-  elements.forEach(element => {
-    element.style.display = disp
-  })
+function setDisplay (elementOrSelector, shown = true) {
+  if (typeof elementOrSelector === 'string') {
+    const elements = document.querySelectorAll(elementOrSelector)
+    elements.forEach(element => {
+      setClass(element, 'display--none', shown)
+    })
+  } else if (typeof elementOrSelector === 'object') {
+    setClass(elementOrSelector, 'display--none', shown)
+  }
+}
+
+function setClass (element, className, enabled = true) {
+  if (enabled) {
+    element.classList.add(className)
+  } else {
+    element.classList.remove(className)
+  }
 }
 
 _('step-1').onclick = () => {
-  _('step-device').style.display = 'block'
-  _('step-options').style.display = 'none'
-  _('step-flash').style.display = 'none'
+  setDisplay('#step-device')
+  setDisplay('#step-options', false)
+  setDisplay('#step-flash', false)
 
-  _('step-1').classList.remove('done')
-  _('step-1').classList.add('active')
-  _('step-1').classList.add('editable')
+  setClass('#step-1', 'done', false)
+  setClass('#step-1', 'active')
+  setClass('#step-1', 'editable')
 
-  _('step-2').classList.remove('active')
-  _('step-2').classList.remove('editable')
-  _('step-2').classList.remove('done')
+  setClass('#step-2', 'active', false)
+  setClass('#step-2', 'editable', false)
+  setClass('#step-2', 'done', false)
 
-  _('step-3').classList.remove('active')
-  _('step-3').classList.remove('editable')
-  _('step-3').classList.remove('done')
+  setClass('#step-3', 'active', false)
+  setClass('#step-3', 'editable', false)
+  setClass('#step-3', 'done', false)
 }
 
 _('step-2').onclick = () => {
   if (_('step-flash').style.display === 'block') {
-    _('step-options').style.display = 'block'
-    _('step-flash').style.display = 'none'
+    setDisplay('#step-options')
+    setDisplay('#step-flash', false)
 
-    _('step-2').classList.remove('done')
-    _('step-2').classList.add('active')
-    _('step-2').classList.add('editable')
+    setClass('#step-2', 'done', false)
+    setClass('#step-2', 'active')
+    setClass('#step-2', 'editable')
 
-    _('step-3').classList.remove('active')
-    _('step-3').classList.remove('editable')
-    _('step-3').classList.remove('done')
+    setClass('#step-3', 'active', false)
+    setClass('#step-3', 'editable', false)
+    setClass('#step-3', 'done', false)
   }
 }
 
@@ -250,24 +262,24 @@ modelSelect.onchange = () => {
 }
 
 deviceNext.onclick = () => {
-  setDisplay('.tx_2400', 'none')
-  setDisplay('.rx_2400', 'none')
-  setDisplay('.tx_900', 'none')
-  setDisplay('.rx_900', 'none')
-  setDisplay('.esp8285', 'none')
-  setDisplay('.esp32', 'none')
-  setDisplay('.stm32', 'none')
-  setDisplay('.feature-fan', 'none')
-  setDisplay('.feature-unlock-higher-power', 'none')
-  setDisplay('.feature-sbus-uart', 'none')
-  setDisplay('.feature-buzzer', 'none')
+  setDisplay('.tx_2400', false)
+  setDisplay('.rx_2400', false)
+  setDisplay('.tx_900', false)
+  setDisplay('.rx_900', false)
+  setDisplay('.esp8285', false)
+  setDisplay('.esp32', false)
+  setDisplay('.stm32', false)
+  setDisplay('.feature-fan', false)
+  setDisplay('.feature-unlock-higher-power', false)
+  setDisplay('.feature-sbus-uart', false)
+  setDisplay('.feature-buzzer', false)
 
   const features = hardware[vendorSelect.value][typeSelect.value][modelSelect.value].features
-  if (features) features.forEach(f => setDisplay('.feature-' + f, 'block'))
+  if (features) features.forEach(f => setDisplay('.feature-' + f))
 
   _('fcclbt').value = 'FCC'
-  setDisplay('.' + typeSelect.value, 'block')
-  setDisplay('.' + hardware[vendorSelect.value][typeSelect.value][modelSelect.value].platform, 'block')
+  setDisplay('.' + typeSelect.value)
+  setDisplay('.' + hardware[vendorSelect.value][typeSelect.value][modelSelect.value].platform)
 
   _('uart').disabled = true
   _('betaflight').disabled = true
@@ -276,12 +288,12 @@ deviceNext.onclick = () => {
   _('stlink').disabled = true
   hardware[vendorSelect.value][typeSelect.value][modelSelect.value].upload_methods.forEach((k) => { _(k).disabled = false })
 
-  _('step-device').style.display = 'none'
-  _('step-2').classList.add('active')
-  _('step-2').classList.add('editable')
-  _('step-1').classList.add('done')
-  _('step-1').classList.remove('editable')
-  _('step-options').style.display = 'block'
+  setDisplay('#step-device', false)
+  setClass('#step-2', 'active')
+  setClass('#step-2', 'editable')
+  setClass('#step-1', 'done')
+  setClass('#step-1', 'editable', false)
+  setDisplay('#step-options')
 }
 
 methodSelect.onchange = () => {
@@ -356,10 +368,10 @@ const connectUART = async () => {
               device.addEventListener('disconnect', async (e) => {
                 device = null
                 term.clear()
-                flashButton.style.display = 'none'
-                connectButton.style.display = 'block'
+                setDisplay(flashButton, false)
+                setDisplay(connectButton)
               })
-              connectButton.style.display = 'none'
+              setDisplay(connectButton, false)
             }),
           Configure.download(deviceType, radioType, config, firmwareUrl, options)
             .then(b => {
@@ -383,11 +395,11 @@ const connectUART = async () => {
             })
             .then(chip => {
               lblConnTo.innerHTML = 'Connected to device: ' + chip
-              flashButton.style.display = 'initial'
+              setDisplay(flashButton)
             })
             .catch(e => {
-              flashButton.style.display = 'none'
-              connectButton.style.display = 'block'
+              setDisplay(flashButton, false)
+              setDisplay(connectButton)
               if (e instanceof MismatchError) {
                 lblConnTo.innerHTML = 'Target mismatch, flashing cancelled'
               } else if (e instanceof AlertError) {
@@ -399,8 +411,8 @@ const connectUART = async () => {
                 })
               } else {
                 lblConnTo.innerHTML = 'Failed to connect to device, restart device and try again'
-                flashButton.style.display = 'none'
-                connectButton.style.display = 'block'
+                setDisplay(flashButton, false)
+                setDisplay(connectButton)
                 return cuteAlert({
                   type: 'error',
                   title: e.title,
@@ -411,8 +423,8 @@ const connectUART = async () => {
         })
         .catch(() => {
           lblConnTo.innerHTML = 'No device selected'
-          flashButton.style.display = 'none'
-          connectButton.style.display = 'block'
+          setDisplay(flashButton, false)
+          setDisplay(connectButton)
           return cuteAlert({
             type: 'error',
             title: 'No Device Selected',
@@ -442,20 +454,20 @@ const connectSTLink = async () => {
     .then(([_stlink, [_bin, { config, firmwareUrl, options }]]) =>
       _stlink.connect(config, firmwareUrl, options, e => {
         term.clear()
-        flashButton.style.display = 'none'
-        connectButton.style.display = 'block'
+        setDisplay(flashButton, false)
+        setDisplay(connectButton)
       })
         .then(version => {
           lblConnTo.innerHTML = 'Connected to device: ' + version
-          connectButton.style.display = 'none'
-          flashButton.style.display = 'initial'
+          setDisplay(connectButton, false)
+          setDisplay(flashButton)
           binary = _bin
           stlink = _stlink
         })
         .catch((e) => {
           lblConnTo.innerHTML = 'Not connected'
-          flashButton.style.display = 'none'
-          connectButton.style.display = 'block'
+          setDisplay(flashButton, false)
+          setDisplay(connectButton)
           return Promise.reject(e)
         })
     )
@@ -492,7 +504,7 @@ const connectWifi = async () => {
     _('product_name').innerHTML = 'Product name: ' + response.product_name
     _('target').innerHTML = 'Target firmware: ' + response.target
     _('firmware-version').innerHTML = 'Version: ' + response.version
-    flashButton.style.display = 'block'
+    setDisplay(flashButton)
     uploadURL = url
   }).catch(reason => {
     lblConnTo.innerHTML = 'No device found, or error connecting to device'
@@ -505,14 +517,14 @@ _('options-next').onclick = async () => {
   if (method === 'download') {
     await downloadFirmware()
   } else {
-    _('step-options').style.display = 'none'
-    _('step-3').classList.add('active')
-    _('step-3').classList.add('editable')
-    _('step-2').classList.add('done')
-    _('step-2').classList.remove('editable')
-    _('step-flash').style.display = 'block'
+    setDisplay('#step-options', false)
+    setClass('#step-3', 'active')
+    setClass('#step-3', 'editable')
+    setClass('#step-2', 'done')
+    setClass('#step-2', 'editable', false)
+    setDisplay('#step-flash')
 
-    setDisplay('.' + method, 'block')
+    setDisplay('.' + method)
 
     if (method === 'wifi') {
       connectButton.onclick = connectWifi

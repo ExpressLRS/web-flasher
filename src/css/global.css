@@ -1,0 +1,5 @@
+/* common inline styles replacement */
+
+.display--none {
+  display: none;
+}
