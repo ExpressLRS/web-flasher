@@ -146,6 +146,18 @@
     align-self: center;
 }
 
+.dialog-title {
+    font-size: 18px !important;
+    font-family: "Source Sans Pro", Helvetica, sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: #222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
 .alert-message {
     font-size: 15px !important;
     color: #666;
