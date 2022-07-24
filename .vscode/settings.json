@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "__config": "c",
+        "locale": "c",
+        "random": "c",
+        "__functional_03": "c",
+        "functional": "c",
+        "complex": "c",
+        "system_error": "c",
+        "mdns.h": "c",
+        "unistd.h": "c"
+    }
+}
