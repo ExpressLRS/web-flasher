@@ -195,7 +195,7 @@ void startServer()
         printf("socket creation failed...\n");
         exit(0);
     } else printf("Socket successfully created..\n");
-    bzero(&servaddr, sizeof(servaddr));
+    memset(&servaddr, 0, sizeof(servaddr));
 
     // assign IP, PORT
     servaddr.sin_family = AF_INET;
