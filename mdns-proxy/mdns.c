@@ -131,9 +131,6 @@ query_callback(int sock, const struct sockaddr* from, size_t addrlen, mdns_entry
 	(void)sizeof(name_length);
 	(void)sizeof(user_data);
 	mdns_string_t fromaddrstr = ip_address_to_string(addrbuffer, sizeof(addrbuffer), from, addrlen);
-	if (strncmp(current.from, fromaddrstr.str, fromaddrstr.length) != 0) {
-		append();
-	}
 	strlcpy(current.from, fromaddrstr.str, fromaddrstr.length+1);
 
 	if (rtype == MDNS_RECORDTYPE_PTR) {
@@ -365,8 +362,64 @@ open_client_sockets(int* sockets, int max_sockets, int port) {
 }
 
 // Send a mDNS query
+static int sockets[32];
+static int num_sockets;
+static int query_id[32];
+static size_t capacity = 2048;
+static char buffer[2048];
+
+
+int *
+open_mdns_sockets() {
+	memset(sockets, -1, sizeof(sockets));
+	num_sockets = open_client_sockets(sockets, sizeof(sockets) / sizeof(sockets[0]), 0);
+	if (num_sockets <= 0) {
+		printf("Failed to open any client sockets\n");
+		return NULL;
+	}
+	return sockets;
+}
+
+void
+send_mdns_query(mdns_query_t query) {
+	for (int isock = 0; isock < num_sockets; ++isock) {
+		query_id[isock] = mdns_multiquery_send(sockets[isock], &query, 1, buffer, capacity, 0);
+		if (query_id[isock] < 0)
+			printf("Failed to send mDNS query: %s\n", strerror(errno));
+	}
+}
+
+void xxx() {
+	void* user_data = 0;
+	int res;
+	outbuf[0] = 0;
+	do {
+		struct timeval timeout;
+		timeout.tv_sec = 1;
+		timeout.tv_usec = 0;
+
+		res = select(nfds, &readfs, 0, 0, &timeout);
+		if (res > 0) {
+			for (int isock = 0; isock < num_sockets; ++isock) {
+				if (FD_ISSET(sockets[isock], &readfs)) {
+					mdns_query_recv(sockets[isock], buffer, capacity, query_callback, user_data, query_id[isock]);
+					append();
+				}
+				FD_SET(sockets[isock], &readfs);
+			}
+		}
+	} while (res > 0);
+}
+
+void close_mdns_sockets() {
+	for (int isock = 0; isock < num_sockets; ++isock)
+		mdns_socket_close(sockets[isock]);
+}
+
+
+// Send a mDNS query
 const char *
-send_mdns_query(mdns_query_t* query, size_t count) {
+send_mdns_query_old(mdns_query_t* query, size_t count) {
 	int sockets[32];
 	int query_id[32];
 	int num_sockets = open_client_sockets(sockets, sizeof(sockets) / sizeof(sockets[0]), 0);
@@ -406,6 +459,7 @@ send_mdns_query(mdns_query_t* query, size_t count) {
 			for (int isock = 0; isock < num_sockets; ++isock) {
 				if (FD_ISSET(sockets[isock], &readfs)) {
 					mdns_query_recv(sockets[isock], buffer, capacity, query_callback, user_data, query_id[isock]);
+					append();
 				}
 				FD_SET(sockets[isock], &readfs);
 			}
@@ -416,7 +470,6 @@ send_mdns_query(mdns_query_t* query, size_t count) {
 	for (int isock = 0; isock < num_sockets; ++isock)
 		mdns_socket_close(sockets[isock]);
 
-	append();
 	return outbuf;
 }
 

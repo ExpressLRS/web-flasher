@@ -16,10 +16,14 @@
 #define closesocket close
 #endif
 
-extern const char *send_mdns_query(mdns_query_t* query, size_t count);
+extern int* open_mdns_sockets();
+extern const char *send_mdns_query(mdns_query_t query);
+
+extern const char *
+send_mdns_query_old(mdns_query_t* query, size_t count);
 
 int running = 1;
-fd_set active_fd_set, response_fd_set;
+fd_set active_fd_set, response_fd_set, mdns_fd_set;
 struct {
     int peer;
     unsigned int started: 1;
@@ -81,13 +85,13 @@ int do_mdns_query(int conn)
         "Connection: close\r\n"
         "Accept-Ranges: none\r\n"
         "Access-Control-Allow-Origin: *\r\n\r\n";
-	mdns_query_t query[1];
+	mdns_query_t query;
 
-	query[0].name = "_http._tcp.local.";
-	query[0].type = MDNS_RECORDTYPE_PTR;
-	query[0].length = strlen(query[0].name);
+	query.name = "_http._tcp.local.";
+	query.type = MDNS_RECORDTYPE_PTR;
+	query.length = strlen(query.name);
 
-    const char *out = send_mdns_query(query, 1);
+    const char *out = send_mdns_query_old(&query, 1);
     if (out == NULL || strlen(out)==0) out = "{}";
 
     char head[256];
@@ -212,7 +216,14 @@ void startServer()
     /* Initialize the set of active sockets. */
     FD_ZERO(&active_fd_set);
     FD_ZERO(&response_fd_set);
+    FD_ZERO(&mdns_fd_set);
     FD_SET(sockfd, &active_fd_set);
+
+    int *sockets = open_mdns_sockets();
+    while(*sockets != -1) {
+        FD_SET(*sockets, &active_fd_set);
+        FD_SET(*sockets, &mdns_fd_set);
+    }
 
     while (running) {
         /* Block until input arrives on one or more active sockets. */
@@ -238,6 +249,8 @@ void startServer()
                     FD_SET(client, &active_fd_set);
                     connection[client].started = 0;
                     connection[client].peer = -1;
+                } else if (FD_ISSET(i, &mdns_fd_set)) {
+                    // process MDNS response
                 } else {
                     /* Data arriving on an already-connected socket. */
                     if (process_data(i) < 0) {
