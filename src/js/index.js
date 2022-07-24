@@ -181,14 +181,16 @@ function setDisplay (elementOrSelector, shown = true) {
   if (typeof elementOrSelector === 'string') {
     const elements = document.querySelectorAll(elementOrSelector)
     elements.forEach(element => {
-      setClass(element, 'display--none', shown)
+      setClass(element, 'display--none', !shown)
     })
   } else if (typeof elementOrSelector === 'object') {
-    setClass(elementOrSelector, 'display--none', shown)
+    setClass(elementOrSelector, 'display--none', !shown)
   }
 }
 
-function setClass (element, className, enabled = true) {
+function setClass (elementOrSelector, className, enabled = true) {
+  const element = (typeof elementOrSelector === 'string') ? document.querySelector(elementOrSelector) : elementOrSelector
+
   if (enabled) {
     element.classList.add(className)
   } else {
