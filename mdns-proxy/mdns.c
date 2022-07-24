@@ -131,12 +131,14 @@ query_callback(int sock, const struct sockaddr* from, size_t addrlen, mdns_entry
 	(void)sizeof(name_length);
 	(void)sizeof(user_data);
 	mdns_string_t fromaddrstr = ip_address_to_string(addrbuffer, sizeof(addrbuffer), from, addrlen);
-	strlcpy(current.from, fromaddrstr.str, fromaddrstr.length+1);
+	strncpy(current.from, fromaddrstr.str, sizeof(current.from)-1);
+	current.from[sizeof(current.from)-1] = 0;
 
 	if (rtype == MDNS_RECORDTYPE_PTR) {
 		mdns_string_t namestr = mdns_record_parse_ptr(data, size, record_offset, record_length,
 		                                              namebuffer, sizeof(namebuffer));
-		strlcpy(current.name, namestr.str, namestr.length+1);
+		strncpy(current.name, namestr.str, sizeof(current.name)-1);
+		current.name[sizeof(current.name)-1] = 0;
 	} else if (rtype == MDNS_RECORDTYPE_SRV) {
 		mdns_record_srv_t srv = mdns_record_parse_srv(data, size, record_offset, record_length,
 		                                              namebuffer, sizeof(namebuffer));
@@ -146,14 +148,19 @@ query_callback(int sock, const struct sockaddr* from, size_t addrlen, mdns_entry
 		mdns_record_parse_a(data, size, record_offset, record_length, &addr);
 		mdns_string_t addrstr =
 		    ipv4_address_to_string(namebuffer, sizeof(namebuffer), &addr, sizeof(addr));
-		strlcpy(current.addr, addrstr.str, addrstr.length+1);
+		strncpy(current.addr, addrstr.str, sizeof(current.addr)-1);
+		current.addr[sizeof(current.addr)-1] = 0;
 	} else if (rtype == MDNS_RECORDTYPE_TXT) {
 		size_t parsed = mdns_record_parse_txt(data, size, record_offset, record_length, txtbuffer,
 		                                      sizeof(txtbuffer) / sizeof(mdns_record_txt_t));
 		for (size_t itxt = 0; itxt < parsed; ++itxt) {
 			if (txtbuffer[itxt].value.length) {
-				strlcpy(current.props[0][current.num_props], txtbuffer[itxt].key.str, txtbuffer[itxt].key.length+1);
-				strlcpy(current.props[1][current.num_props], txtbuffer[itxt].value.str, txtbuffer[itxt].value.length+1);
+				char *key = current.props[0][current.num_props];
+				strncpy(key, txtbuffer[itxt].key.str, sizeof(key)-1);
+				key[sizeof(key)-1] = 0;
+				char *value = current.props[1][current.num_props];
+				strncpy(value, txtbuffer[itxt].value.str, sizeof(value)-1);
+				value[sizeof(value)-1] = 0;
 			}
 			current.num_props++;
 		}
@@ -389,6 +396,7 @@ send_mdns_query(mdns_query_t query) {
 	}
 }
 
+/*
 void xxx() {
 	void* user_data = 0;
 	int res;
@@ -410,6 +418,7 @@ void xxx() {
 		}
 	} while (res > 0);
 }
+*/
 
 void close_mdns_sockets() {
 	for (int isock = 0; isock < num_sockets; ++isock)

@@ -146,11 +146,12 @@ int process_request(int conn)
 
 int process_response(int conn)
 {
-    char buffer[2048];
+    char buffer[2049];
     int nbytes;
 
     printf("response\n");
     nbytes = read (conn, buffer, 2048);
+    buffer[nbytes] = 0;
     if (nbytes < 0) {
         perror ("read");
         exit (EXIT_FAILURE);
@@ -162,7 +163,7 @@ int process_response(int conn)
         if (!connection[conn].started) {
             // add in CORS header
             const char *header = "\r\nAccess-Control-Allow-Origin: *";
-            const char *end = strnstr(buffer, "\r\n\r\n", nbytes);
+            const char *end = strstr(buffer, "\r\n\r\n");
             if (output(peer, buffer, end - buffer) == -1) return -1;
             if (output(peer, header, strlen(header)) == -1) return -1;
             return output(peer, end, nbytes - (end - buffer));
