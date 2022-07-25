@@ -1,0 +1,65 @@
+name: build
+
+on: push
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  doze:
+    name: Windows build
+    runs-on: windows-2019
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Add msbuild to PATH
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Compile a release
+        run: |
+          cd mdns-proxy
+          cl proxy.c mdns.c -link ws2_32.lib iphlpapi.lib -out:epoxy-win.exe
+
+      - name: upload artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: uploads
+          path: mdns-proxy/epoxy-win.exe
+
+  mac:
+    name: MacOS build
+    runs-on: macos-10.15
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Compile a release
+        run: |
+          cd mdns-proxy
+          cc -o epoxy-mac proxy.c mdns.c
+
+      - name: upload artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: uploads
+          path: mdns-proxy/epoxy-mac
+
+  linux:
+    name: Linux build
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Compile a release
+        run: |
+          cd mdns-proxy
+          cc -o epoxy-lin proxy.c mdns.c
+
+      - name: upload artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: uploads
+          path: mdns-proxy/epoxy-lin                    
