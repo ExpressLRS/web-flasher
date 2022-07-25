@@ -15,7 +15,17 @@ jobs:
 
       - name: Build
         run: npm install && npm run dist
-
+      - name: Get targets
+        run: |
+            cd dist
+            curl \
+              -H "Accept: application/vnd.github+json" \ 
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -L \
+              -o firmware.zip \
+              https://api.github.com/repos/ExpressLRS/ExpressLRS/actions/artifacts/308108746/zip
+            unzip firmware.zip
+            rm firmware.zip
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         if: ${{ github.ref == 'refs/heads/master' }}
