@@ -15,12 +15,14 @@ jobs:
 
       - name: Build
         run: npm install && npm run dist
-      - name: Get targets
+      - name: Get targets for 3.x.x-maintenance
         run: |
             cd dist
             curl -H "Accept: application/vnd.github+json" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -L -o firmware.zip "https://api.github.com/repos/ExpressLRS/ExpressLRS/actions/artifacts/308108746/zip"
             unzip firmware.zip
             rm firmware.zip
+            mkdir 3.x.x-maintenance 
+            mv firmware 3.x.x-maintenance/
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         if: ${{ github.ref == 'refs/heads/master' }}

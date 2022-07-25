@@ -6,7 +6,7 @@ import { cuteAlert } from './alert.js'
 import { MismatchError, AlertError } from './error.js'
 import { cuteDialog } from './dialog.js'
 
-const versions = ['3.0.0-RC2', '3.0.0-RC1']
+const versions = ['3.x.x-maintenance']
 const versionSelect = _('version')
 const flashButton = _('flashButton')
 const connectButton = _('connectButton')
