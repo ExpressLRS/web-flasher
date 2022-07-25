@@ -16,10 +16,12 @@ export function cuteDialog ({
 <div class="alert-wrapper">
   <div class="dialog-frame">
     <div class="dialog-header question-bg">
+      <div class="dialog-title">
+        <span>${title}</span>
+      </div>
       <span class="${closeStyleTemplate}">X</span>
     </div>
     <div class="alert-body">
-      <span class="alert-title">${title}</span>
       ${bodyTemplate}
     </div>
   </div>
