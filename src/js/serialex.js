@@ -1,4 +1,4 @@
-import { Transport } from './esptool-js/webserial'
+import { Transport } from 'esptool-js/webserial'
 
 class TransportEx extends Transport {
   ui8ToBstr (u8Array) {
