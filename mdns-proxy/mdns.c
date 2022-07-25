@@ -38,37 +38,6 @@ struct {
 	char props[2][16][512];	// name/value
 } current;
 
-char outbuf[65536];
-
-void append() {
-	int keep = 0;
-	for (int i=0 ; i<current.num_props ; i++) {
-		if (strcmp(current.props[0][i], "vendor") == 0 && strcmp(current.props[1][i], "elrs") == 0) {
-			keep = 1;
-			break;
-		}
-	}
-	if (keep) {
-		if (strlen(outbuf)>0) strcat(outbuf, ",");
-		sprintf(outbuf+strlen(outbuf), "{\"%s\": {\"name\": \"%s\",\"address\":\"%s\",\"port\":%d,\"properties\":{", current.name, current.name, current.addr, current.port);
-		for (int i=0 ; i<current.num_props ; i++) {
-			char value[128] = {0};
-			for (size_t j=0, k=0 ; j<strlen(current.props[1][i]) ; j++, k++) {
-				if (current.props[1][i][j] == '"' || current.props[1][i][j] == '\\') {
-					value[k++] = '\\';
-				}
-				value[k] = current.props[1][i][j];
-			}
-			sprintf(outbuf+strlen(outbuf), "%s\"%s\":\"%s\"", i>0 ? "," : "", current.props[0][i], value);
-		}
-		strcat(outbuf, "}}}\n");
-	}
-	current.name[0] = 0;
-	current.addr[0] = 0;
-	current.port = 0;
-	current.num_props = 0;
-}
-
 static mdns_string_t
 ipv4_address_to_string(char* buffer, size_t capacity, const struct sockaddr_in* addr,
                        size_t addrlen) {
@@ -156,11 +125,11 @@ query_callback(int sock, const struct sockaddr* from, size_t addrlen, mdns_entry
 		for (size_t itxt = 0; itxt < parsed; ++itxt) {
 			if (txtbuffer[itxt].value.length) {
 				char *key = current.props[0][current.num_props];
-				strncpy(key, txtbuffer[itxt].key.str, sizeof(key)-1);
-				key[sizeof(key)-1] = 0;
+				strncpy(key, txtbuffer[itxt].key.str, txtbuffer[itxt].key.length);
+				key[txtbuffer[itxt].key.length] = 0;
 				char *value = current.props[1][current.num_props];
-				strncpy(value, txtbuffer[itxt].value.str, sizeof(value)-1);
-				value[sizeof(value)-1] = 0;
+				strncpy(value, txtbuffer[itxt].value.str, txtbuffer[itxt].value.length);
+				value[txtbuffer[itxt].value.length] = 0;
 			}
 			current.num_props++;
 		}
@@ -396,131 +365,50 @@ send_mdns_query(mdns_query_t query) {
 	}
 }
 
-/*
-void xxx() {
-	void* user_data = 0;
-	int res;
-	outbuf[0] = 0;
-	do {
-		struct timeval timeout;
-		timeout.tv_sec = 1;
-		timeout.tv_usec = 0;
 
-		res = select(nfds, &readfs, 0, 0, &timeout);
-		if (res > 0) {
-			for (int isock = 0; isock < num_sockets; ++isock) {
-				if (FD_ISSET(sockets[isock], &readfs)) {
-					mdns_query_recv(sockets[isock], buffer, capacity, query_callback, user_data, query_id[isock]);
-					append();
-				}
-				FD_SET(sockets[isock], &readfs);
-			}
+void process_mdns_response(int sock, void (*handler)(const char *name, const char *json)) {
+	static char outbuf[4096];
+	int isock = -1;
+	for (int i = 0; i<32 ; i++) {
+		if (sockets[i] == sock) {
+			isock = i;
+			break;
 		}
-	} while (res > 0);
+	}
+	if (isock == -1)
+		return;
+	mdns_query_recv(sockets[isock], buffer, capacity, query_callback, NULL, query_id[isock]);
+	outbuf[0] = 0;
+	int keep = 0;
+	for (int i=0 ; i<current.num_props ; i++) {
+		if (strcmp(current.props[0][i], "vendor") == 0 && strcmp(current.props[1][i], "elrs") == 0) {
+			keep = 1;
+			break;
+		}
+	}
+	if (keep) {
+		if (strlen(outbuf)>0) strcat(outbuf, ",");
+		sprintf(outbuf+strlen(outbuf), "\"%s\": {\"name\": \"%s\",\"address\":\"%s\",\"port\":%d,\"properties\":{", current.name, current.name, current.addr, current.port);
+		for (int i=0 ; i<current.num_props ; i++) {
+			char value[128] = {0};
+			for (size_t j=0, k=0 ; j<strlen(current.props[1][i]) ; j++, k++) {
+				if (current.props[1][i][j] == '"' || current.props[1][i][j] == '\\') {
+					value[k++] = '\\';
+				}
+				value[k] = current.props[1][i][j];
+			}
+			sprintf(outbuf+strlen(outbuf), "%s\"%s\":\"%s\"", i>0 ? "," : "", current.props[0][i], value);
+		}
+		strcat(outbuf, "}}");
+		handler(current.name, outbuf);
+	}
+	current.name[0] = 0;
+	current.addr[0] = 0;
+	current.port = 0;
+	current.num_props = 0;
 }
-*/
 
 void close_mdns_sockets() {
 	for (int isock = 0; isock < num_sockets; ++isock)
 		mdns_socket_close(sockets[isock]);
 }
-
-
-// Send a mDNS query
-const char *
-send_mdns_query_old(mdns_query_t* query, size_t count) {
-	int sockets[32];
-	int query_id[32];
-	int num_sockets = open_client_sockets(sockets, sizeof(sockets) / sizeof(sockets[0]), 0);
-	if (num_sockets <= 0) {
-		printf("Failed to open any client sockets\n");
-		return NULL;
-	}
-
-	size_t capacity = 2048;
-	void* buffer = malloc(capacity);
-	void* user_data = 0;
-
-	for (int isock = 0; isock < num_sockets; ++isock) {
-		query_id[isock] = mdns_multiquery_send(sockets[isock], query, count, buffer, capacity, 0);
-		if (query_id[isock] < 0)
-			printf("Failed to send mDNS query: %s\n", strerror(errno));
-	}
-
-	int res;
-	outbuf[0] = 0;
-	do {
-		struct timeval timeout;
-		timeout.tv_sec = 1;
-		timeout.tv_usec = 0;
-
-		int nfds = 0;
-		fd_set readfs;
-		FD_ZERO(&readfs);
-		for (int isock = 0; isock < num_sockets; ++isock) {
-			if (sockets[isock] >= nfds)
-				nfds = sockets[isock] + 1;
-			FD_SET(sockets[isock], &readfs);
-		}
-
-		res = select(nfds, &readfs, 0, 0, &timeout);
-		if (res > 0) {
-			for (int isock = 0; isock < num_sockets; ++isock) {
-				if (FD_ISSET(sockets[isock], &readfs)) {
-					mdns_query_recv(sockets[isock], buffer, capacity, query_callback, user_data, query_id[isock]);
-					append();
-				}
-				FD_SET(sockets[isock], &readfs);
-			}
-		}
-	} while (res > 0);
-	free(buffer);
-
-	for (int isock = 0; isock < num_sockets; ++isock)
-		mdns_socket_close(sockets[isock]);
-
-	return outbuf;
-}
-
-#ifdef TESTING
-#ifdef _WIN32
-BOOL console_handler(DWORD signal) {
-	return TRUE;
-}
-#else
-void signal_handler(int signal) {
-}
-#endif
-
-int
-main(int argc, const char* const* argv) {
-	const char *out;
-	mdns_query_t query[1];
-
-#ifdef _WIN32
-	WORD versionWanted = MAKEWORD(1, 1);
-	WSADATA wsaData;
-	if (WSAStartup(versionWanted, &wsaData)) {
-		printf("Failed to initialize WinSock\n");
-		return -1;
-	}
-	SetConsoleCtrlHandler(console_handler, TRUE);
-#else
-	signal(SIGINT, signal_handler);
-#endif
-
-	query[0].name = "_http._tcp.local.";
-	query[0].type = MDNS_RECORDTYPE_PTR;
-	query[0].length = strlen(query[0].name);
-
-	if ((out = send_mdns_query(query, 1)) != NULL) {
-		printf("%s\n", out);
-	}
-
-#ifdef _WIN32
-	WSACleanup();
-#endif
-
-	return 0;
-}
-#endif
