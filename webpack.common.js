@@ -8,7 +8,7 @@ module.exports = {
   entry: './src/js/app.js',
   output: {
     path: path.join(__dirname, 'dist'),
-    filename: 'bundle.js',
+    filename: '[name].[contenthash].js',
     publicPath: ''
   },
   resolve: {
@@ -20,7 +20,9 @@ module.exports = {
     }
   },
   plugins: [
-    new MiniCssExtractPlugin(),
+    new MiniCssExtractPlugin({
+      filename: '[name].[contenthash].css'
+    }),
     new HtmlWebpackPlugin({
       template: 'src/index.html'
     })
@@ -40,6 +42,17 @@ module.exports = {
         extractComments: false
       }),
       new CssMinimizerPlugin()
-    ]
+    ],
+    moduleIds: 'deterministic',
+    runtimeChunk: 'single',
+    splitChunks: {
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all',
+        },
+      },
+    },
   }
 }
