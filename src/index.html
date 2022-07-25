@@ -13,7 +13,7 @@
 </head>
 
 <body>
-    <div id="safariErr" style="display:none">
+    <div class="display--none" id="safariErr">
         <p align="center" style="color:red">This tool is not supported on Safari browser!</p>
     </div>
     <header class="mui-appbar mui--z1 mui--text-center elrs-header">
@@ -94,7 +94,7 @@
             </div>
         </div>
 
-        <div class="mui-panel" id="step-options" style="display: none;">
+        <div class="mui-panel display--none" id="step-options">
             <div class="mui--text-headline">Runtime Options</div>
 
             <div class="mui-textfield mui-textfield--float-label">
@@ -106,14 +106,14 @@
                 <label>UID (Auto updated by changing the bind-phrase above)</label>
             </div>
 
-            <div class="mui-select tx_2400 rx_2400" style="display: none;">
+            <div class="mui-select tx_2400 rx_2400 display--none">
                 <label>Region</label>
                 <select id='fcclbt' name='fcclbt'>
                     <option value='FCC' selected>FCC</option>
                     <option value='LBT'>LBT</option>
                 </select>
             </div>
-            <div class="mui-select tx_900 rx_900" style="display: none;">
+            <div class="mui-select tx_900 rx_900 display--none">
                 <select id='domain' name='domain'>
                     <option value='0'>AU915</option>
                     <option value='1' selected>FCC915</option>
@@ -125,7 +125,7 @@
                 <label>Regulatory domain</label>
             </div>
 
-            <div class="esp8285 esp32" style="display: none;">
+            <div class="esp8285 esp32 display--none">
                 <div class="mui-textfield mui-textfield--float-label">
                     <input size='32' id='wifi-ssid' name='wifi-ssid' type='text' value="" />
                     <label>WiFi SSID</label>
@@ -140,7 +140,7 @@
                 </div>
             </div>
 
-            <div class="tx_2400 tx_900" style="display: none;">
+            <div class="tx_2400 tx_900 display--none">
                 <div class="mui-textfield mui-textfield--float-label">
                     <input size='5' id='tlm-interval' name='tlm-interval' type='text' value="240" />
                     <label>TLM report interval (ms)</label>
@@ -175,7 +175,7 @@
                 </div>
             </div>
 
-            <div class="rx_900 rx_2400" style="display: none;">
+            <div class="rx_900 rx_2400 display--none">
                 <div class="mui-textfield mui-textfield--float-label">
                     <input size='7' id='rcvr-uart-baud' name='rcvr-uart-baud' type='text' value="420000" />
                     <label>UART baud</label>
@@ -212,7 +212,7 @@
             </div>
         </div>
 
-        <div class="mui-panel" id="step-flash" style="display: none;">
+        <div class="mui-panel display--none" id="step-flash">
             <h3>Flash</h3>
             <form class="mui-form">
                 <div id="lblConnTo">Connecting to device...</div>
@@ -220,19 +220,19 @@
                 <div id="target" class="wifi"></div>
                 <div id="firmware-version" class="wifi"></div>
                 <br/>
-                <div class="uart betaflight etx stlink" style="display: none;">
-                    <div class="mui-checkbox esp8285 esp32" style="display: none;">
+                <div class="uart betaflight etx stlink display--none">
+                    <div class="mui-checkbox esp8285 esp32 display--none">
                         <input id='erase-flash' type='checkbox' />
                         <label>Erase flash first?</label>
                     </div>
-                    <div class="mui-checkbox stlink" style="display: none;">
+                    <div class="mui-checkbox stlink display--none">
                         <input id='flash-bootloader' type='checkbox' />
                         <label>Also flash bootloader?</label>
                     </div>
                 </div>
 
-                <button class="mui-btn mui-btn--primary" id="connectButton" style="display: none;">Connect</button>
-                <button class="mui-btn mui-btn--primary" id="flashButton" style="display: none;">Flash</button>
+                <button class="mui-btn mui-btn--primary display--none" id="connectButton">Connect</button>
+                <button class="mui-btn mui-btn--primary display--none" id="flashButton">Flash</button>
             </form>
 
             <div>
@@ -240,7 +240,7 @@
                 <progress id="progressBar" value="0" max="100" style="width:100%;"></progress>
             </div>
 
-            <div class="mui-panel uart betaflight etx stlink" style="display: none;">
+            <div class="mui-panel uart betaflight etx stlink display--none">
                 <div id="serial-monitor"></div>
             </div>
         </div>
