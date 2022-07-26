@@ -14,7 +14,8 @@
     "muicss": "^0.10.3",
     "pako": "^2.0.4",
     "xterm": "^4.19.0",
-    "xterm-addon-fit": "^0.5.0"
+    "xterm-addon-fit": "^0.5.0",
+    "esptool-js": "github:dz0ny/esptool-js#elrs-patches"
   },
   "devDependencies": {
     "css-loader": "^6.7.1",

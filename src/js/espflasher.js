@@ -1,5 +1,5 @@
 import { TransportEx } from './serialex.js'
-import { ESPLoader } from './esptool-js/ESPLoader.js'
+import { ESPLoader } from 'esptool-js/ESPLoader.js'
 import { Passthrough } from './passthrough.js'
 import CryptoJS from 'crypto-js'
 
