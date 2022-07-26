@@ -17,16 +17,19 @@ class ESPFlasher {
   connect = async () => {
     let mode = 'default_reset'
     let baudrate = 460800
+    let initbaud
     if (this.method === 'betaflight') {
       baudrate = 420000
       mode = 'no_reset'
     } else if (this.method === 'etx') {
       baudrate = 230400
       mode = 'no_reset'
+    } else if (this.method === 'uart' && this.type === 'TX') {
+      initbaud = 115200
     }
 
     const transport = new TransportEx(this.device, true)
-    this.esploader = new ESPLoader(transport, baudrate, this.term, baudrate)
+    this.esploader = new ESPLoader(transport, baudrate, this.term, initbaud === undefined ? baudrate : initbaud)
     this.esploader.ESP_RAM_BLOCK = 0x0800 // we override otherwise flashing on BF will fail
 
     const passthrough = new Passthrough(transport, this.term, this.config.firmware, baudrate)
@@ -42,7 +45,7 @@ class ESPFlasher {
             }
           })
       } else {
-        await transport.connect({ baud: 230400 })
+        await transport.connect({ baud: 115200 })
       }
     } else if (this.method === 'betaflight') {
       await transport.connect({ baud: baudrate })
@@ -56,7 +59,6 @@ class ESPFlasher {
     return transport.disconnect()
       .then(_ => this.esploader.main_fn({ mode }))
       .then(chip => {
-        this.esploader.FLASH_WRITE_SIZE = 0x0800 // again, override...
         console.log('Settings done for :' + chip)
         return chip
       })
@@ -64,6 +66,10 @@ class ESPFlasher {
 
   flash = async (files, erase) => {
     const loader = this.esploader
+    if (this.method === 'etx' || this.method === 'betaflight') {
+      loader.FLASH_WRITE_SIZE = 0x0800
+    }
+
     const fileArray = files.map(v => ({ data: loader.ui8ToBstr(v.data), address: v.address }))
     return loader.write_flash({
       fileArray,
