@@ -139,7 +139,7 @@ const checkProxy = async () => {
     .then(response => checkStatus(response) && response.json())
     .catch(async (e) => {
       Swal.fire({
-        position: 'bottom-end',
+        position: 'bottom',
         icon: 'info',
         title: 'Wifi auto-discovery disabled',
         text: 'The ExpressLRS proxy cannot be not found, so auto-discovery is disabled',
