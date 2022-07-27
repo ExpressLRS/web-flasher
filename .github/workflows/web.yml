@@ -4,9 +4,10 @@ on:
   push:
     branches:
       - master  # Set a branch to deploy
+  pull_request:
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
@@ -15,15 +16,20 @@ jobs:
 
       - name: Build
         run: npm install && npm run dist
+        
       - name: Get targets for 3.x.x-maintenance
+        if: ${{ github.ref == 'refs/heads/master' }}
         run: |
             cd dist
-            curl -H "Accept: application/vnd.github+json" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -L -o firmware.zip "https://api.github.com/repos/ExpressLRS/ExpressLRS/actions/artifacts/308108746/zip"
+            curl -H "Accept: application/vnd.github+json" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -L -o firmware.zip "https://api.github.com/repos/ExpressLRS/ExpressLRS/actions/artifacts/$ARTIFACT_ID/zip"
             unzip firmware.zip
             rm firmware.zip
             mv firmware 3.x.x-maintenance
             mkdir firmware
             mv 3.x.x-maintenance firmware/
+        env:
+          ARTIFACT_ID: "309207520"
+          
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         if: ${{ github.ref == 'refs/heads/master' }}
