@@ -5,6 +5,7 @@ import { FitAddon } from 'xterm-addon-fit'
 import { cuteAlert } from './alert.js'
 import { MismatchError, AlertError } from './error.js'
 import { cuteDialog } from './dialog.js'
+import mui from 'muicss'
 
 const versions = ['3.x.x-maintenance']
 const versionSelect = _('version')
@@ -360,6 +361,7 @@ const getSettings = async (deviceType) => {
 const connectUART = async () => {
   const deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX'
   const radioType = typeSelect.value.endsWith('_900') ? 'sx127x' : 'sx128x'
+  term.clear()
   await getSettings(deviceType)
     .then(({ config, firmwareUrl, options }) => {
       Promise
@@ -372,6 +374,8 @@ const connectUART = async () => {
                 term.clear()
                 setDisplay(flashButton, false)
                 setDisplay(connectButton)
+                _('progressBar').value = 0
+                _('status').innerHTML = ''
               })
               setDisplay(connectButton, false)
             }),
@@ -447,6 +451,7 @@ const generateFirmware = async () => {
 }
 
 const connectSTLink = async () => {
+  term.clear()
   await Promise
     .all([
       import('./stlink.js')
@@ -458,6 +463,8 @@ const connectSTLink = async () => {
         term.clear()
         setDisplay(flashButton, false)
         setDisplay(connectButton)
+        _('progressBar').value = 0
+        _('status').innerHTML = ''
       })
         .then(version => {
           lblConnTo.innerHTML = 'Connected to device: ' + version
@@ -539,35 +546,45 @@ _('options-next').onclick = async () => {
   }
 }
 
+const closeDevice = async () => {
+  if (device != null) {
+    await device.close()
+    device = null
+    setDisplay(flashButton, false)
+    setDisplay(connectButton)
+    _('progressBar').value = 0
+    _('status').innerHTML = ''
+  }
+}
+
 flashButton.onclick = async () => {
+  mui.overlay('on', { keyboard: false, static: true })
   const method = methodSelect.value
   if (method === 'wifi') await wifiUpload()
   else if (flasher !== null) {
     await flasher.flash(binary, _('erase-flash').checked)
       .then(() => {
+        mui.overlay('off')
         return cuteAlert({
-          type: 'success',
-          title: 'Flashing Succeeded',
-          message: 'Firmware upload complete'
-        })
-      })
-      .catch((e) => {
-        return cuteAlert({
-          type: 'error',
-          title: 'Flashing Failed',
-          message: e.message
-        })
-      })
-  } else {
-    await stlink.flash(binary, _('flash-bootloader').checked)
-      .then(() => {
-        cuteAlert({
           type: 'success',
           title: 'Flashing Succeeded',
           message: 'Firmware upload complete'
         })
       })
       .catch((e) => { errorHandler(e.message) })
+    await closeDevice()
+  } else {
+    await stlink.flash(binary, _('flash-bootloader').checked)
+      .then(() => {
+        mui.overlay('off')
+        return cuteAlert({
+          type: 'success',
+          title: 'Flashing Succeeded',
+          message: 'Firmware upload complete'
+        })
+      })
+      .catch((e) => { errorHandler(e.message) })
+    await closeDevice()
   }
 }
 
@@ -630,6 +647,7 @@ function progressHandler (event) {
 function completeHandler (event) {
   _('status').innerHTML = ''
   _('progressBar').value = 0
+  mui.overlay('off')
   flashButton.disabled = false
   const data = JSON.parse(event.target.responseText)
   if (data.status === 'ok') {
@@ -700,6 +718,7 @@ function errorHandler (msg) {
   _('status').innerHTML = ''
   _('progressBar').value = 0
   flashButton.disabled = false
+  mui.overlay('off')
   cuteAlert({
     type: 'error',
     title: 'Update Failed',
@@ -711,6 +730,7 @@ function abortHandler (event) {
   _('status').innerHTML = ''
   _('progressBar').value = 0
   flashButton.disabled = false
+  mui.overlay('off')
   cuteAlert({
     type: 'info',
     title: 'Update Aborted',
