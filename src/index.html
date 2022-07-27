@@ -214,12 +214,12 @@
 
         <div class="mui-panel display--none" id="step-flash">
             <h3>Flash</h3>
-            <form class="mui-form">
-                <div id="lblConnTo">Connecting to device...</div>
-                <div id="product_name" class="wifi"></div>
-                <div id="target" class="wifi"></div>
-                <div id="firmware-version" class="wifi"></div>
-                <br/>
+            <div id="lblConnTo">Connecting to device...</div>
+            <div id="product_name" class="wifi"></div>
+            <div id="target" class="wifi"></div>
+            <div id="firmware-version" class="wifi"></div>
+            <br/>
+            <div id="flash-mode" class="display--none">
                 <div class="uart betaflight etx stlink display--none">
                     <div class="mui-checkbox esp8285 esp32 display--none">
                         <input id='erase-flash' type='checkbox' />
@@ -230,11 +230,10 @@
                         <label>Also flash bootloader?</label>
                     </div>
                 </div>
+                <input class="mui-btn mui-btn--primary" type="button" id="flashButton" value="Flash" />
+            </div>
 
-                <input class="mui-btn mui-btn--primary display--none" type="button" id="connectButton" value="Connect" />
-                <input class="mui-btn mui-btn--primary display--none" type="button" id="flashButton" value="Flash" />
-            </form>
-
+            <input class="mui-btn mui-btn--primary display--none" type="button" id="connectButton" value="Connect" />
             <div>
                 <h3 id="status"></h3>
                 <progress id="progressBar" value="0" max="100" style="width:100%;"></progress>

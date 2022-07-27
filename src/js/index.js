@@ -10,6 +10,7 @@ import Swal from 'sweetalert2'
 
 const versions = ['3.x.x-maintenance']
 const versionSelect = _('version')
+const flashMode = _('flash-mode')
 const flashButton = _('flashButton')
 const connectButton = _('connectButton')
 const vendorSelect = _('vendor')
@@ -391,7 +392,7 @@ const connectUART = async () => {
               device.addEventListener('disconnect', async (e) => {
                 device = null
                 term.clear()
-                setDisplay(flashButton, false)
+                setDisplay(flashMode, false)
                 setDisplay(connectButton)
                 _('progressBar').value = 0
                 _('status').innerHTML = ''
@@ -420,25 +421,16 @@ const connectUART = async () => {
             })
             .then(chip => {
               lblConnTo.innerHTML = 'Connected to device: ' + chip
-              setDisplay(flashButton)
+              setDisplay(flashMode)
             })
-            .catch(e => {
-              setDisplay(flashButton, false)
-              setDisplay(connectButton)
+            .catch(async e => {
               if (e instanceof MismatchError) {
                 lblConnTo.innerHTML = 'Target mismatch, flashing cancelled'
-              } else if (e instanceof AlertError) {
-                lblConnTo.innerHTML = 'Failed to connect to device, restart device and try again'
-                return cuteAlert({
-                  type: 'error',
-                  title: e.title,
-                  message: e.message
-                })
+                return closeDevice()
               } else {
                 lblConnTo.innerHTML = 'Failed to connect to device, restart device and try again'
-                setDisplay(flashButton, false)
-                setDisplay(connectButton)
-                return cuteAlert({
+                await closeDevice()
+                return await cuteAlert({
                   type: 'error',
                   title: e.title,
                   message: e.message
@@ -446,11 +438,10 @@ const connectUART = async () => {
               }
             })
         })
-        .catch(() => {
+        .catch(async () => {
           lblConnTo.innerHTML = 'No device selected'
-          setDisplay(flashButton, false)
-          setDisplay(connectButton)
-          return cuteAlert({
+          await closeDevice()
+          return await cuteAlert({
             type: 'error',
             title: 'No Device Selected',
             message: 'A serial device must be select to perform flashing'
@@ -480,7 +471,7 @@ const connectSTLink = async () => {
     .then(([_stlink, [_bin, { config, firmwareUrl, options }]]) =>
       _stlink.connect(config, firmwareUrl, options, e => {
         term.clear()
-        setDisplay(flashButton, false)
+        setDisplay(flashMode, false)
         setDisplay(connectButton)
         _('progressBar').value = 0
         _('status').innerHTML = ''
@@ -488,13 +479,13 @@ const connectSTLink = async () => {
         .then(version => {
           lblConnTo.innerHTML = 'Connected to device: ' + version
           setDisplay(connectButton, false)
-          setDisplay(flashButton)
+          setDisplay(flashMode)
           binary = _bin
           stlink = _stlink
         })
         .catch((e) => {
           lblConnTo.innerHTML = 'Not connected'
-          setDisplay(flashButton, false)
+          setDisplay(flashMode, false)
           setDisplay(connectButton)
           return Promise.reject(e)
         })
@@ -532,7 +523,7 @@ const connectWifi = async () => {
     _('product_name').innerHTML = 'Product name: ' + response.product_name
     _('target').innerHTML = 'Target firmware: ' + response.target
     _('firmware-version').innerHTML = 'Version: ' + response.version
-    setDisplay(flashButton)
+    setDisplay(flashMode)
     uploadURL = url
   }).catch(reason => {
     lblConnTo.innerHTML = 'No device found, or error connecting to device'
@@ -569,41 +560,34 @@ const closeDevice = async () => {
   if (device != null) {
     await device.close()
     device = null
-    setDisplay(flashButton, false)
-    setDisplay(connectButton)
-    _('progressBar').value = 0
-    _('status').innerHTML = ''
   }
+  setDisplay(flashMode, false)
+  setDisplay(connectButton)
+  _('progressBar').value = 0
+  _('status').innerHTML = ''
 }
 
 flashButton.onclick = async () => {
   mui.overlay('on', { keyboard: false, static: true })
   const method = methodSelect.value
   if (method === 'wifi') await wifiUpload()
-  else if (flasher !== null) {
-    await flasher.flash(binary, _('erase-flash').checked)
-      .then(() => {
-        mui.overlay('off')
-        return cuteAlert({
-          type: 'success',
-          title: 'Flashing Succeeded',
-          message: 'Firmware upload complete'
-        })
+  else {
+    let p
+    if (flasher !== null) {
+      p = flasher.flash(binary, _('erase-flash').checked)
+    } else {
+      p = stlink.flash(binary, _('flash-bootloader').checked)
+    }
+    p.then(() => {
+      mui.overlay('off')
+      return cuteAlert({
+        type: 'success',
+        title: 'Flashing Succeeded',
+        message: 'Firmware upload complete'
       })
+    })
       .catch((e) => { errorHandler(e.message) })
-    await closeDevice()
-  } else {
-    await stlink.flash(binary, _('flash-bootloader').checked)
-      .then(() => {
-        mui.overlay('off')
-        return cuteAlert({
-          type: 'success',
-          title: 'Flashing Succeeded',
-          message: 'Firmware upload complete'
-        })
-      })
-      .catch((e) => { errorHandler(e.message) })
-    await closeDevice()
+      .then(() => closeDevice())
   }
 }
 
@@ -636,7 +620,6 @@ const downloadFirmware = async () => {
 }
 
 const wifiUpload = async () => {
-  flashButton.disabled = true
   await generateFirmware()
     .then(([binary, { config, firmwareUrl, options }]) => {
       const bin = binary[binary.length - 1].data.buffer
@@ -652,9 +635,7 @@ const wifiUpload = async () => {
       ajax.setRequestHeader('X-FileSize', data.size)
       ajax.send(formdata)
     })
-    .catch((e) => {
-      flashButton.disabled = false
-    })
+    .catch(() => {})
 }
 
 function progressHandler (event) {
@@ -667,7 +648,6 @@ function completeHandler (event) {
   _('status').innerHTML = ''
   _('progressBar').value = 0
   mui.overlay('off')
-  flashButton.disabled = false
   const data = JSON.parse(event.target.responseText)
   if (data.status === 'ok') {
     function showMessage () {
@@ -711,11 +691,7 @@ function completeHandler (event) {
               message: data.msg
             })
           } else {
-            cuteAlert({
-              type: 'error',
-              title: 'Force Update',
-              message: 'An error occurred trying to force the update'
-            })
+            errorHandler('An error occurred trying to force the update')
           }
         }
       }
@@ -725,18 +701,13 @@ function completeHandler (event) {
       xmlhttp.send(data)
     })
   } else {
-    cuteAlert({
-      type: 'error',
-      title: 'Update Failed',
-      message: data.msg
-    })
+    errorHandler(data.msg)
   }
 }
 
 function errorHandler (msg) {
   _('status').innerHTML = ''
   _('progressBar').value = 0
-  flashButton.disabled = false
   mui.overlay('off')
   cuteAlert({
     type: 'error',
@@ -748,7 +719,6 @@ function errorHandler (msg) {
 function abortHandler (event) {
   _('status').innerHTML = ''
   _('progressBar').value = 0
-  flashButton.disabled = false
   mui.overlay('off')
   cuteAlert({
     type: 'info',
