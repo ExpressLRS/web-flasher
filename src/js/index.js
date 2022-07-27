@@ -1,11 +1,12 @@
-import { initBindingPhraseGen } from './phrase.js'
 import { Configure } from './configure.js'
+import { MismatchError, AlertError } from './error.js'
+import { initBindingPhraseGen } from './phrase.js'
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
 import { cuteAlert } from './alert.js'
-import { MismatchError, AlertError } from './error.js'
 import { cuteDialog } from './dialog.js'
 import mui from 'muicss'
+import Swal from 'sweetalert2'
 
 const versions = ['3.x.x-maintenance']
 const versionSelect = _('version')
@@ -132,7 +133,25 @@ _('device-discover').onclick = async () => {
     })
 }
 
+const checkProxy = async () => {
+  fetch('http://localhost:9097/mdns')
+    .then(response => checkStatus(response) && response.json())
+    .catch(async (e) => {
+      Swal.fire({
+        position: 'bottom-end',
+        icon: 'info',
+        title: 'Wifi auto-discovery disabled',
+        text: 'The ExpressLRS proxy cannot be not found, so auto-discovery is disabled',
+        showConfirmButton: false,
+        backdrop: false,
+        timer: 10000
+      })
+      _('device-discover').disabled = true
+    })
+}
+
 function initialise () {
+  checkProxy()
   term = new Terminal({ cols: 80, rows: 40 })
   const fitAddon = new FitAddon()
   term.loadAddon(fitAddon)

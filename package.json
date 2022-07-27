@@ -11,11 +11,12 @@
   "dependencies": {
     "bluejay-rtttl-parse": "^2.0.2",
     "crypto-js": "^4.0.0",
+    "esptool-js": "github:pkendall64/esptool-js#elrs",
     "muicss": "^0.10.3",
     "pako": "^2.0.4",
+    "sweetalert2": "^11.4.24",
     "xterm": "^4.19.0",
-    "xterm-addon-fit": "^0.5.0",
-    "esptool-js": "github:pkendall64/esptool-js#elrs"
+    "xterm-addon-fit": "^0.5.0"
   },
   "devDependencies": {
     "css-loader": "^6.7.1",
