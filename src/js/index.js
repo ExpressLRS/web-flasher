@@ -207,7 +207,7 @@ versionSelect.onchange = async () => {
           }
         }
       }
-      autocomplete(modelSelect, models)
+      autocomplete(modelSelect, models, true)
     })
 }
 
@@ -286,7 +286,7 @@ vendorSelect.onchange = () => {
       }
     }
   }
-  autocomplete(modelSelect, models)
+  autocomplete(modelSelect, models, true)
 }
 
 typeSelect.onchange = () => {
@@ -300,7 +300,7 @@ typeSelect.onchange = () => {
       models.push(hardware[v][t][m].product_name)
     }
   }
-  autocomplete(modelSelect, models)
+  autocomplete(modelSelect, models, true)
 }
 
 modelSelect.onchange = () => {

@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-export function autocomplete (inp, arr) {
+export function autocomplete (inp, arr, includes = false) {
   /* the autocomplete function takes two arguments,
     the text field element and an array of possible autocompleted values: */
   let currentFocus
@@ -21,12 +21,15 @@ export function autocomplete (inp, arr) {
     /* for each item in the array... */
     for (let i = 0; i < arr.length; i++) {
       /* check if the item starts with the same letters as the text field value : */
-      if (arr[i].substr(0, val.length).toUpperCase() === val.toUpperCase()) {
+      if ((!includes && arr[i].substr(0, val.length).toUpperCase() === val.toUpperCase()) ||
+          (includes && arr[i].toUpperCase().includes(val.toUpperCase()))) {
         /* create a DIV element for each matching element: */
         b = document.createElement('DIV')
+        const start = arr[i].toUpperCase().indexOf(val.toUpperCase())
+        b.innerHTML = arr[i].substr(0, start)
         /* make the matching letters bold : */
-        b.innerHTML = '<strong>' + arr[i].substr(0, val.length) + '</strong>'
-        b.innerHTML += arr[i].substr(val.length)
+        b.innerHTML += '<strong>' + arr[i].substring(start, start + val.length) + '</strong>'
+        b.innerHTML += arr[i].substr(start + val.length)
         /* insert a input field that will hold the current array item's value: */
         b.innerHTML += '<input type="hidden" value="' + arr[i] + '">'
         /* execute a function when someone clicks on the item value (DIV element): */
