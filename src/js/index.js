@@ -313,6 +313,7 @@ modelSelect.onchange = () => {
           selectedModel = hardware[v][t][m]
           typeSelect.disabled = false
           deviceNext.disabled = false
+          document.querySelectorAll('.product-name').forEach(e => { e.innerHTML = selectedModel.product_name })
           return
         }
       }
