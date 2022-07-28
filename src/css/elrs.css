@@ -18,3 +18,10 @@ body, input, select, textarea {
     font-weight: 300;
     line-height: 1.65em;
 }
+
+a:active, a:focus {
+    outline: 0;
+    border: none;
+    outline-style: none;
+    -moz-outline-style: none;
+}

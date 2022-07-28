@@ -6,8 +6,8 @@ import { FitAddon } from 'xterm-addon-fit'
 import { cuteAlert } from './alert.js'
 import { cuteDialog } from './dialog.js'
 import { autocomplete } from './autocomplete.js'
+import { SwalMUI } from './global.js'
 import mui from 'muicss'
-import Swal from 'sweetalert2'
 
 const versions = ['3.x.x-maintenance']
 const versionSelect = _('version')
@@ -136,19 +136,38 @@ _('device-discover').onclick = async () => {
     })
 }
 
+function displayProxyHelp (e) {
+  e.preventDefault()
+  SwalMUI.fire({
+    icon: 'info',
+    title: 'Wifi auto-discovery',
+    html: `
+<div style="text-align: left;">
+Wifi auto-discovery allows the flasher application to discover ExpressLRS wifi enabled devices on your network using mDNS.
+It also allows flashing these devices via HTTP proxying.
+<br><br>
+To enable Wifi auto-discovery this application needs the ExpressLRS proxy running on the local computer.
+You can download the proxy for your system from the <a target="_blank" href="//github.com/pkendall64/elrs-web-flasher">github</a> project page.
+</div>
+`
+  })
+}
+
 const checkProxy = async () => {
   fetch('http://localhost:9097/mdns')
     .then(response => checkStatus(response) && response.json())
     .catch(async (e) => {
-      Swal.fire({
+      SwalMUI.fire({
         position: 'bottom',
         icon: 'info',
         title: 'Wifi auto-discovery disabled',
-        text: 'The ExpressLRS proxy cannot be not found, so auto-discovery is disabled',
+        html: 'The ExpressLRS proxy cannot be not found, so auto-discovery is disabled.<br/><br/><a href="" id="display-proxy-help">Tell me more...</a>',
         showConfirmButton: false,
         backdrop: false,
-        timer: 10000
+        timer: 10000,
+        timerProgressBar: true
       })
+      _('display-proxy-help').onclick = displayProxyHelp
       _('device-discover').disabled = true
     })
 }
