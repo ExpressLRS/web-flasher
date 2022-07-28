@@ -18,6 +18,7 @@ const modelSelect = _('model')
 const lblConnTo = _('lblConnTo')
 const methodSelect = _('method')
 const deviceNext = _('device-next')
+const deviceDiscoverButton = _('device-discover')
 
 let hardware = null
 let selectedModel = null
@@ -41,7 +42,7 @@ function checkStatus (response) {
   return response
 }
 
-_('device-discover').onclick = async () => {
+const doDiscovery = async () => {
   function check (response) {
     if (!response.ok) {
       throw Promise.reject(new Error('Failed to connect to device'))
@@ -62,7 +63,8 @@ _('device-discover').onclick = async () => {
         const device = mdns[key].address + ': ' + key.substring(0, key.indexOf('.'))
         devices[key] = device
       }
-      // If theres only 1 then select that and move on
+
+      // TODO If theres only 1 then select that and move on
 
       return Promise.all([
         SwalMUI.select({
@@ -94,7 +96,9 @@ _('device-discover').onclick = async () => {
           }
         }
       }
-      // If theres only 1 then select that and move on
+
+      // TODO If theres only 1 then select that and move on
+
       return Promise.all([
         candidates,
         mdns[id],
@@ -130,40 +134,35 @@ _('device-discover').onclick = async () => {
     })
 }
 
-function displayProxyHelp (e) {
+const displayProxyHelp = async (e) => {
   e.preventDefault()
-  SwalMUI.fire({
+  return SwalMUI.fire({
     icon: 'info',
     title: 'Wifi auto-discovery',
     html: `
 <div style="text-align: left;">
+Wifi auto-discover is current <b>disabled</b> because the ExpressLRS auto-discovery proxy is not running on the local computer.
+<br><br>
 Wifi auto-discovery allows the flasher application to discover ExpressLRS wifi enabled devices on your network using mDNS.
 It also allows flashing these devices via HTTP proxying.
 <br><br>
-To enable Wifi auto-discovery this application needs the ExpressLRS proxy running on the local computer.
+To enable Wifi auto-discovery the ExpressLRS auto-discovery proxy must be running on the local computer.
 You can download the proxy for your system from the <a target="_blank" href="//github.com/pkendall64/elrs-web-flasher">github</a> project page.
 </div>
 `
   })
 }
 
+deviceDiscoverButton.onclick = displayProxyHelp
+
 const checkProxy = async () => {
   fetch('http://localhost:9097/mdns')
     .then(response => checkStatus(response) && response.json())
-    .catch(async (e) => {
-      SwalMUI.fire({
-        position: 'bottom',
-        icon: 'info',
-        title: 'Wifi auto-discovery disabled',
-        html: 'The ExpressLRS proxy cannot be not found, so auto-discovery is disabled.<br/><br/><a href="" id="display-proxy-help">Tell me more...</a>',
-        showConfirmButton: false,
-        backdrop: false,
-        timer: 10000,
-        timerProgressBar: true
-      })
-      _('display-proxy-help').onclick = displayProxyHelp
-      _('device-discover').disabled = true
+    .then(() => {
+      deviceDiscoverButton.style.cursor = 'default'
+      deviceDiscoverButton.onclick = doDiscovery
     })
+    .catch(async (e) => {})
 }
 
 function initialise () {
