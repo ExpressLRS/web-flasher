@@ -3,11 +3,9 @@ import { MismatchError, AlertError } from './error.js'
 import { initBindingPhraseGen } from './phrase.js'
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
-import { cuteAlert } from './alert.js'
-import { cuteDialog } from './dialog.js'
 import { autocomplete } from './autocomplete.js'
+import { SwalMUI } from './swalmui.js'
 import mui from 'muicss'
-import Swal from 'sweetalert2'
 
 const versions = ['3.x.x-maintenance']
 const versionSelect = _('version')
@@ -20,6 +18,7 @@ const modelSelect = _('model')
 const lblConnTo = _('lblConnTo')
 const methodSelect = _('method')
 const deviceNext = _('device-next')
+const deviceDiscoverButton = _('device-discover')
 
 let hardware = null
 let selectedModel = null
@@ -43,7 +42,7 @@ function checkStatus (response) {
   return response
 }
 
-_('device-discover').onclick = async () => {
+const doDiscovery = async () => {
   function check (response) {
     if (!response.ok) {
       throw Promise.reject(new Error('Failed to connect to device'))
@@ -57,73 +56,67 @@ _('device-discover').onclick = async () => {
     })
     .then(mdns => {
       if (Object.keys(mdns).length === 0) {
-        throw new AlertError('No wifi devices detected', 'Auto deteection failed to find any devices on the network', 'error')
+        throw new AlertError('No wifi devices detected', 'Auto detection failed to find any devices on the network', 'error')
       }
-      let rows = ''
+      const devices = {}
       for (const key of Object.keys(mdns)) {
-        const device = key.substring(0, key.indexOf('.'))
-        rows += `<tr><td>${device}</td><td>${mdns[key].address}</td><td><button class="mui-btn mui-btn--small mui-btn--primary device-button" id="${key}">Select</button></td></tr>`
+        const device = mdns[key].address + ': ' + key.substring(0, key.indexOf('.'))
+        devices[key] = device
       }
-      const table = `
-<table class="mui-table">
-  <thead>
-    <tr>
-      <th>Product</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-      ${rows}
-  </tbody>
-  </table>
-`
-      return Promise.all([cuteDialog({ title: 'Select Device to Flash', bodyTemplate: table, closeStyle: 'circle' }), mdns])
+
+      // TODO If theres only 1 then select that and move on
+
+      return Promise.all([
+        SwalMUI.select({
+          title: 'Select Device to Flash',
+          inputOptions: devices
+        }),
+        mdns
+      ])
     })
-    .then(([id, mdns]) => {
+    .then(([device, mdns]) => {
+      if (!device.isConfirmed) return [null, mdns, undefined]
+      const id = device.value
       const candidates = []
       let i = 0
-      let rows = ''
+      const rows = {}
       for (const vendor of Object.keys(hardware)) {
         for (const type of Object.keys(hardware[vendor])) {
           for (const model of Object.keys(hardware[vendor][type])) {
             if (mdns[id].properties.product !== undefined && hardware[vendor][type][model].product_name === mdns[id].properties.product) {
               candidates.push({ vendor, type, model, product: hardware[vendor][type][model].product_name })
-              rows += `<tr><td style="padding: 0px;">${hardware[vendor][type][model].product_name}</td><td style="padding: 0px;"><button class="mui-btn mui-btn--small mui-btn--primary device-button" id="${i}">Select</button></td></tr>`
+              rows[i] = hardware[vendor][type][model].product_name
               i++
             }
             if (hardware[vendor][type][model].prior_target_name === mdns[id].properties.target) {
               candidates.push({ vendor, type, model, product: hardware[vendor][type][model].product_name })
-              rows += `<tr><td style="padding: 0px;">${hardware[vendor][type][model].product_name}</td><td style="padding: 0px;"><button class="mui-btn mui-btn--small mui-btn--primary device-button" id="${i}">Select</button></td></tr>`
+              rows[i] = hardware[vendor][type][model].product_name
               i++
             }
           }
         }
       }
-      // display the candidates and ask which it is
-      const table = `
-<table class="mui-table">
-  <thead>
-    <tr>
-      <th>Device</th>
-      <th>Address</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-      ${rows}
-  </tbody>
-  </table>
-`
-      return Promise.all([candidates, mdns[id], cuteDialog({ title: 'Select Device Model', bodyTemplate: table, closeStyle: 'circle' })])
+
+      // TODO If theres only 1 then select that and move on
+
+      return Promise.all([
+        candidates,
+        mdns[id],
+        SwalMUI.select({
+          title: 'Select Device Model',
+          inputOptions: rows
+        })
+      ])
     })
     .then(([candidates, mdns, selected]) => {
+      if (selected === undefined || !selected.isConfirmed) return
       uploadURL = null
       if (selected !== undefined) {
-        vendorSelect.value = candidates[selected].vendor
+        vendorSelect.value = candidates[selected.value].vendor
         vendorSelect.onchange()
-        typeSelect.value = candidates[selected].type
+        typeSelect.value = candidates[selected.value].type
         typeSelect.onchange()
-        modelSelect.value = candidates[selected].model
+        modelSelect.value = candidates[selected.value].product
         modelSelect.onchange()
         deviceNext.onclick()
         methodSelect.value = 'wifi'
@@ -132,25 +125,44 @@ _('device-discover').onclick = async () => {
       }
     })
     .catch((e) => {
-      return cuteAlert({ type: e.type, title: e.title, message: e.message, closeStyle: 'circle' })
+      console.log(e)
+      return SwalMUI.fire({
+        icon: e.type,
+        title: e.title,
+        text: e.message
+      })
     })
 }
+
+const displayProxyHelp = async (e) => {
+  e.preventDefault()
+  return SwalMUI.fire({
+    icon: 'info',
+    title: 'Wifi auto-discovery',
+    html: `
+<div style="text-align: left;">
+Wifi auto-discover is current <b>disabled</b> because the ExpressLRS auto-discovery proxy is not running on the local computer.
+<br><br>
+Wifi auto-discovery allows the flasher application to discover ExpressLRS wifi enabled devices on your network using mDNS.
+It also allows flashing these devices via HTTP proxying.
+<br><br>
+To enable Wifi auto-discovery the ExpressLRS auto-discovery proxy must be running on the local computer.
+You can download the proxy for your system from the <a target="_blank" href="//github.com/pkendall64/elrs-web-flasher">github</a> project page.
+</div>
+`
+  })
+}
+
+deviceDiscoverButton.onclick = displayProxyHelp
 
 const checkProxy = async () => {
   fetch('http://localhost:9097/mdns')
     .then(response => checkStatus(response) && response.json())
-    .catch(async (e) => {
-      Swal.fire({
-        position: 'bottom',
-        icon: 'info',
-        title: 'Wifi auto-discovery disabled',
-        text: 'The ExpressLRS proxy cannot be not found, so auto-discovery is disabled',
-        showConfirmButton: false,
-        backdrop: false,
-        timer: 10000
-      })
-      _('device-discover').disabled = true
+    .then(() => {
+      deviceDiscoverButton.style.cursor = 'default'
+      deviceDiscoverButton.onclick = doDiscovery
     })
+    .catch(async (e) => {})
 }
 
 function initialise () {
@@ -468,10 +480,10 @@ const connectUART = async () => {
               } else {
                 lblConnTo.innerHTML = 'Failed to connect to device, restart device and try again'
                 await closeDevice()
-                return await cuteAlert({
-                  type: 'error',
+                return await SwalMUI.fire({
+                  icon: 'error',
                   title: e.title,
-                  message: e.message
+                  html: e.message
                 })
               }
             })
@@ -479,10 +491,10 @@ const connectUART = async () => {
         .catch(async () => {
           lblConnTo.innerHTML = 'No device selected'
           await closeDevice()
-          return await cuteAlert({
-            type: 'error',
+          return await SwalMUI.fire({
+            icon: 'error',
             title: 'No Device Selected',
-            message: 'A serial device must be select to perform flashing'
+            text: 'A serial device must be select to perform flashing'
           })
         })
     })
@@ -601,6 +613,7 @@ const closeDevice = async () => {
   }
   setDisplay(flashMode, false)
   setDisplay(connectButton)
+  lblConnTo.innerHTML = 'Not connected'
   _('progressBar').value = 0
   _('status').innerHTML = ''
 }
@@ -618,10 +631,10 @@ flashButton.onclick = async () => {
     }
     p.then(() => {
       mui.overlay('off')
-      return cuteAlert({
-        type: 'success',
+      return SwalMUI.fire({
+        icon: 'success',
         title: 'Flashing Succeeded',
-        message: 'Firmware upload complete'
+        text: 'Firmware upload complete'
       })
     })
       .catch((e) => { errorHandler(e.message) })
@@ -689,10 +702,10 @@ function completeHandler (event) {
   const data = JSON.parse(event.target.responseText)
   if (data.status === 'ok') {
     function showMessage () {
-      cuteAlert({
-        type: 'success',
+      SwalMUI.fire({
+        icon: 'success',
         title: 'Update Succeeded',
-        message: data.msg
+        text: data.msg
       })
     }
     // This is basically a delayed display of the success dialog with a fake progress
@@ -709,12 +722,12 @@ function completeHandler (event) {
       }
     }, 100)
   } else if (data.status === 'mismatch') {
-    cuteAlert({
-      type: 'question',
+    SwalMUI.fire({
+      icon: 'question',
       title: 'Targets Mismatch',
-      message: data.msg,
-      confirmText: 'Flash anyway',
-      cancelText: 'Cancel'
+      html: data.msg,
+      confirmButtonText: 'Flash anyway',
+      showCancelButton: true
     }).then((confirm) => {
       const xmlhttp = new XMLHttpRequest()
       xmlhttp.onreadystatechange = function () {
@@ -723,10 +736,10 @@ function completeHandler (event) {
           _('progressBar').value = 0
           if (this.status === 200) {
             const data = JSON.parse(this.responseText)
-            cuteAlert({
-              type: 'info',
+            SwalMUI.fire({
+              icon: 'info',
               title: 'Force Update',
-              message: data.msg
+              html: data.msg
             })
           } else {
             errorHandler('An error occurred trying to force the update')
@@ -747,10 +760,10 @@ function errorHandler (msg) {
   _('status').innerHTML = ''
   _('progressBar').value = 0
   mui.overlay('off')
-  cuteAlert({
-    type: 'error',
+  SwalMUI.fire({
+    icon: 'error',
     title: 'Update Failed',
-    message: msg
+    html: msg
   })
 }
 
@@ -758,9 +771,9 @@ function abortHandler (event) {
   _('status').innerHTML = ''
   _('progressBar').value = 0
   mui.overlay('off')
-  cuteAlert({
-    type: 'info',
+  SwalMUI.fire({
+    icon: 'info',
     title: 'Update Aborted',
-    message: event.target.responseText
+    html: event.target.responseText
   })
 }

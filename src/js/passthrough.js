@@ -1,4 +1,4 @@
-import { cuteAlert } from './alert.js'
+import { SwalMUI } from './swalmui.js'
 import { MismatchError, AlertError } from './error.js'
 
 class Bootloader {
@@ -250,12 +250,12 @@ class Passthrough {
         } else if (this.uploadforce) {
           this.log(`Force flashing ${this.flash_target}, detected ${rxTarget}`)
         } else if (rxTarget.toUpperCase() !== this.flash_target.toUpperCase()) {
-          const e = await cuteAlert({
-            type: 'question',
+          const e = await SwalMUI.fire({
+            icon: 'question',
             title: 'Targets Mismatch',
-            message: `Wrong target selected your RX is '${rxTarget}', trying to flash '${this.flash_target}'`,
-            confirmText: 'Flash anyway',
-            cancelText: 'Cancel'
+            text: `Wrong target selected your RX is '${rxTarget}', trying to flash '${this.flash_target}'`,
+            confirmButtonText: 'Flash anyway',
+            showCancelButton: true
           })
           if (e !== 'confirm') {
             this.log(`Wrong target selected your RX is '${rxTarget}', trying to flash '${this.flash_target}'`)

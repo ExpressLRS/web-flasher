@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
+    "postinstall": "patch -Ntu -p0 < patches/0001-sweetalert2.patch",
     "dev": "webpack serve --open --config webpack.dev.js",
     "dist": "webpack --config webpack.dist.js"
   },

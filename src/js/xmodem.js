@@ -1,6 +1,6 @@
 import { TransportEx } from './serialex.js'
 import { Bootloader, Passthrough } from './passthrough.js'
-import { cuteAlert } from './alert.js'
+import { SwalMUI } from './swalmui.js'
 
 const log = { info: function () {}, warn: function () {}, error: function () {}, debug: function () {} }
 
@@ -269,10 +269,10 @@ class XmodemFlasher {
         while (!gotBootloader) {
           currAttempt++
           if (currAttempt > 10) {
-            await cuteAlert({
-              type: 'error',
+            await SwalMUI.fire({
+              icon: 'error',
               title: 'Flashing Failed',
-              message: 'Failed to enter bootloader mode in a reasonable time'
+              text: 'Failed to enter bootloader mode in a reasonable time'
             })
             throw new Error('[FAILED] to get to BL in reasonable time')
           }
@@ -307,12 +307,12 @@ class XmodemFlasher {
               const flashTarget = this.config.firmware.toUpperCase()
 
               if (line.trim() !== flashTarget && !force) {
-                const e = await cuteAlert({
-                  type: 'question',
+                const e = await SwalMUI.fire({
+                  icon: 'question',
                   title: 'Targets Mismatch',
-                  message: `Wrong target selected your RX is '${line.trim()}', trying to flash '${flashTarget}'`,
-                  confirmText: 'Flash anyway',
-                  cancelText: 'Cancel'
+                  text: `Wrong target selected your RX is '${line.trim()}', trying to flash '${flashTarget}'`,
+                  confirmButtonText: 'Flash anyway',
+                  showCancelButton: true
                 })
                 if (e === 'confirm') {
                   force = true
@@ -331,10 +331,10 @@ class XmodemFlasher {
         this.transport.set_delimiters(['CCC'])
         const data = await this.transport.read_line({ timeout: 15000 })
         if (data.indexOf('CCC') === -1) {
-          await cuteAlert({
-            type: 'error',
+          await SwalMUI.fire({
+            icon: 'error',
             title: 'Flashing Failed',
-            message: 'Unable to communicate with bootloader'
+            text: 'Unable to communicate with bootloader'
           })
           this.log('[FAILED] Unable to communicate with bootloader...')
           return
