@@ -471,7 +471,8 @@ const connectUART = async () => {
                 return await cuteAlert({
                   type: 'error',
                   title: e.title,
-                  message: e.message
+                  message: e.message,
+                  closeStyle: 'circle'
                 })
               }
             })
@@ -482,7 +483,8 @@ const connectUART = async () => {
           return await cuteAlert({
             type: 'error',
             title: 'No Device Selected',
-            message: 'A serial device must be select to perform flashing'
+            message: 'A serial device must be select to perform flashing',
+            closeStyle: 'circle'
           })
         })
     })
@@ -622,7 +624,8 @@ flashButton.onclick = async () => {
       return cuteAlert({
         type: 'success',
         title: 'Flashing Succeeded',
-        message: 'Firmware upload complete'
+        message: 'Firmware upload complete',
+        closeStyle: 'circle'
       })
     })
       .catch((e) => { errorHandler(e.message) })
@@ -693,7 +696,8 @@ function completeHandler (event) {
       cuteAlert({
         type: 'success',
         title: 'Update Succeeded',
-        message: data.msg
+        message: data.msg,
+        closeStyle: 'circle'
       })
     }
     // This is basically a delayed display of the success dialog with a fake progress
@@ -715,7 +719,8 @@ function completeHandler (event) {
       title: 'Targets Mismatch',
       message: data.msg,
       confirmText: 'Flash anyway',
-      cancelText: 'Cancel'
+      cancelText: 'Cancel',
+      closeStyle: 'circle'
     }).then((confirm) => {
       const xmlhttp = new XMLHttpRequest()
       xmlhttp.onreadystatechange = function () {
@@ -727,7 +732,8 @@ function completeHandler (event) {
             cuteAlert({
               type: 'info',
               title: 'Force Update',
-              message: data.msg
+              message: data.msg,
+              closeStyle: 'circle'
             })
           } else {
             errorHandler('An error occurred trying to force the update')
@@ -751,7 +757,8 @@ function errorHandler (msg) {
   cuteAlert({
     type: 'error',
     title: 'Update Failed',
-    message: msg
+    message: msg,
+    closeStyle: 'circle'
   })
 }
 
@@ -762,6 +769,7 @@ function abortHandler (event) {
   cuteAlert({
     type: 'info',
     title: 'Update Aborted',
-    message: event.target.responseText
+    message: event.target.responseText,
+    closeStyle: 'circle'
   })
 }
