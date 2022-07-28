@@ -1,0 +1,27 @@
+--- node_modules/sweetalert2/dist/sweetalert2.js	2022-07-29 08:03:47.000000000 +1200
++++ node_modules/sweetalert2/dist/sweetalert2.js	2022-07-29 08:02:17.000000000 +1200
+@@ -501,19 +501,19 @@
+       case 'select':
+       case 'textarea':
+       case 'file':
+-        return popup.querySelector(".".concat(swalClasses.popup, " > .").concat(swalClasses[inputClass]));
++        return popup.querySelector(".".concat(swalClasses.popup, " .").concat(swalClasses[inputClass]));
+ 
+       case 'checkbox':
+-        return popup.querySelector(".".concat(swalClasses.popup, " > .").concat(swalClasses.checkbox, " input"));
++        return popup.querySelector(".".concat(swalClasses.popup, " .").concat(swalClasses.checkbox, " input"));
+ 
+       case 'radio':
+-        return popup.querySelector(".".concat(swalClasses.popup, " > .").concat(swalClasses.radio, " input:checked")) || popup.querySelector(".".concat(swalClasses.popup, " > .").concat(swalClasses.radio, " input:first-child"));
++        return popup.querySelector(".".concat(swalClasses.popup, " .").concat(swalClasses.radio, " input:checked")) || popup.querySelector(".".concat(swalClasses.popup, " > .").concat(swalClasses.radio, " input:first-child"));
+ 
+       case 'range':
+-        return popup.querySelector(".".concat(swalClasses.popup, " > .").concat(swalClasses.range, " input"));
++        return popup.querySelector(".".concat(swalClasses.popup, " .").concat(swalClasses.range, " input"));
+ 
+       default:
+-        return popup.querySelector(".".concat(swalClasses.popup, " > .").concat(swalClasses.input));
++        return popup.querySelector(".".concat(swalClasses.popup, " .").concat(swalClasses.input));
+     }
+   };
+   /**

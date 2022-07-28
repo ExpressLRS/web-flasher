@@ -3,7 +3,6 @@ import { MismatchError, AlertError } from './error.js'
 import { initBindingPhraseGen } from './phrase.js'
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
-import { cuteDialog } from './dialog.js'
 import { autocomplete } from './autocomplete.js'
 import { SwalMUI } from './swalmui.js'
 import mui from 'muicss'
@@ -56,73 +55,64 @@ _('device-discover').onclick = async () => {
     })
     .then(mdns => {
       if (Object.keys(mdns).length === 0) {
-        throw new AlertError('No wifi devices detected', 'Auto deteection failed to find any devices on the network', 'error')
+        throw new AlertError('No wifi devices detected', 'Auto detection failed to find any devices on the network', 'error')
       }
-      let rows = ''
+      const devices = {}
       for (const key of Object.keys(mdns)) {
-        const device = key.substring(0, key.indexOf('.'))
-        rows += `<tr><td>${device}</td><td>${mdns[key].address}</td><td><button class="mui-btn mui-btn--small mui-btn--primary device-button" id="${key}">Select</button></td></tr>`
+        const device = mdns[key].address + ': ' + key.substring(0, key.indexOf('.'))
+        devices[key] = device
       }
-      const table = `
-<table class="mui-table">
-  <thead>
-    <tr>
-      <th>Product</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-      ${rows}
-  </tbody>
-  </table>
-`
-      return Promise.all([cuteDialog({ title: 'Select Device to Flash', bodyTemplate: table, closeStyle: 'circle' }), mdns])
+      // If theres only 1 then select that and move on
+
+      return Promise.all([
+        SwalMUI.select({
+          title: 'Select Device to Flash',
+          inputOptions: devices
+        }),
+        mdns
+      ])
     })
-    .then(([id, mdns]) => {
+    .then(([device, mdns]) => {
+      if (!device.isConfirmed) return [null, mdns, undefined]
+      const id = device.value
       const candidates = []
       let i = 0
-      let rows = ''
+      const rows = {}
       for (const vendor of Object.keys(hardware)) {
         for (const type of Object.keys(hardware[vendor])) {
           for (const model of Object.keys(hardware[vendor][type])) {
             if (mdns[id].properties.product !== undefined && hardware[vendor][type][model].product_name === mdns[id].properties.product) {
               candidates.push({ vendor, type, model, product: hardware[vendor][type][model].product_name })
-              rows += `<tr><td style="padding: 0px;">${hardware[vendor][type][model].product_name}</td><td style="padding: 0px;"><button class="mui-btn mui-btn--small mui-btn--primary device-button" id="${i}">Select</button></td></tr>`
+              rows[i] = hardware[vendor][type][model].product_name
               i++
             }
             if (hardware[vendor][type][model].prior_target_name === mdns[id].properties.target) {
               candidates.push({ vendor, type, model, product: hardware[vendor][type][model].product_name })
-              rows += `<tr><td style="padding: 0px;">${hardware[vendor][type][model].product_name}</td><td style="padding: 0px;"><button class="mui-btn mui-btn--small mui-btn--primary device-button" id="${i}">Select</button></td></tr>`
+              rows[i] = hardware[vendor][type][model].product_name
               i++
             }
           }
         }
       }
-      // display the candidates and ask which it is
-      const table = `
-<table class="mui-table">
-  <thead>
-    <tr>
-      <th>Device</th>
-      <th>Address</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-      ${rows}
-  </tbody>
-  </table>
-`
-      return Promise.all([candidates, mdns[id], cuteDialog({ title: 'Select Device Model', bodyTemplate: table, closeStyle: 'circle' })])
+      // If theres only 1 then select that and move on
+      return Promise.all([
+        candidates,
+        mdns[id],
+        SwalMUI.select({
+          title: 'Select Device Model',
+          inputOptions: rows
+        })
+      ])
     })
     .then(([candidates, mdns, selected]) => {
+      if (selected === undefined || !selected.isConfirmed) return
       uploadURL = null
       if (selected !== undefined) {
-        vendorSelect.value = candidates[selected].vendor
+        vendorSelect.value = candidates[selected.value].vendor
         vendorSelect.onchange()
-        typeSelect.value = candidates[selected].type
+        typeSelect.value = candidates[selected.value].type
         typeSelect.onchange()
-        modelSelect.value = candidates[selected].model
+        modelSelect.value = candidates[selected.value].product
         modelSelect.onchange()
         deviceNext.onclick()
         methodSelect.value = 'wifi'
@@ -131,6 +121,7 @@ _('device-discover').onclick = async () => {
       }
     })
     .catch((e) => {
+      console.log(e)
       return SwalMUI.fire({
         icon: e.type,
         title: e.title,
