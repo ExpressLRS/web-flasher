@@ -61,6 +61,8 @@
 
         <div class="mui-panel" id="step-device">
             <div class="mui--text-headline">Target Selection</div>
+            <div class="mui-divider"></div>
+            <br/>
             <div class="mui-select">
                 <select name="version" id="version">
                 </select>
@@ -82,10 +84,8 @@
                 </select>
                 <label>Device Type</label>
             </div>
-            <div class="mui-select">
-                <select name="model" id="model" disabled>
-                    <option value="" disabled selected></option>
-                </select>
+            <div class="mui-textfield">
+                <input name="model" id="model" type="text" autocomplete="off" placeholder="Just start typing for auto-complete..."/>
                 <label>Device Model</label>
             </div>
             <div class="mui--pull-right">
@@ -96,7 +96,8 @@
 
         <div class="mui-panel display--none" id="step-options">
             <div class="mui--text-headline">Runtime Options</div>
-
+            <div class="mui-divider"></div>
+            <br/>
             <div class="mui-textfield mui-textfield--float-label">
                 <input type="text" id="phrase" name="phrase"/>
                 <label for="phrase">Binding Phrase</label>
@@ -213,7 +214,9 @@
         </div>
 
         <div class="mui-panel display--none" id="step-flash">
-            <h3>Flash</h3>
+            <h3>Flashing</h3>
+            <div class="mui-divider"></div>
+            <br/>
             <div id="lblConnTo">Connecting to device...</div>
             <div id="product_name" class="wifi"></div>
             <div id="target" class="wifi"></div>
@@ -230,10 +233,10 @@
                         <label>Also flash bootloader?</label>
                     </div>
                 </div>
-                <input class="mui-btn mui-btn--primary" type="button" id="flashButton" value="Flash" />
+                <button class="mui-btn mui-btn--primary" id="flashButton">Flash</button>
             </div>
 
-            <input class="mui-btn mui-btn--primary display--none" type="button" id="connectButton" value="Connect" />
+            <button class="mui-btn mui-btn--primary display--none" id="connectButton">Connect</button>
             <div>
                 <h3 id="status"></h3>
                 <progress id="progressBar" value="0" max="100" style="width:100%;"></progress>

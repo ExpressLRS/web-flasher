@@ -5,6 +5,7 @@ import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
 import { cuteAlert } from './alert.js'
 import { cuteDialog } from './dialog.js'
+import { autocomplete } from './autocomplete.js'
 import mui from 'muicss'
 import Swal from 'sweetalert2'
 
@@ -21,6 +22,7 @@ const methodSelect = _('method')
 const deviceNext = _('device-next')
 
 let hardware = null
+let selectedModel = null
 let device = null
 let flasher = null
 let binary = null
@@ -178,8 +180,6 @@ versionSelect.onchange = async () => {
   vendorSelect.value = ''
   typeSelect.disabled = true
   typeSelect.value = ''
-  modelSelect.disabled = true
-  modelSelect.value = ''
 
   fetch('firmware/' + versionSelect.value + '/hardware/targets.json')
     .then(response => checkStatus(response) && response.json())
@@ -195,6 +195,19 @@ versionSelect.onchange = async () => {
       setDisplay('.uart', false)
       setDisplay('.stlink', false)
       setDisplay('.wifi', false)
+    })
+    .then(() => {
+      const models = []
+      for (const v in hardware) {
+        for (const t in hardware[v]) {
+          for (const m in hardware[v][t]) {
+            if (hardware[v][t][m].product_name !== undefined) {
+              models.push(hardware[v][t][m].product_name)
+            }
+          }
+        }
+      }
+      autocomplete(modelSelect, models)
     })
 }
 
@@ -262,26 +275,50 @@ vendorSelect.onchange = () => {
   }
   typeSelect.disabled = false
   typeSelect.value = ''
-  modelSelect.disabled = true
   modelSelect.value = ''
   deviceNext.disabled = true
+  const models = []
+  const v = vendorSelect.value
+  for (const t in hardware[v]) {
+    for (const m in hardware[v][t]) {
+      if (hardware[v][t][m].product_name !== undefined) {
+        models.push(hardware[v][t][m].product_name)
+      }
+    }
+  }
+  autocomplete(modelSelect, models)
 }
 
 typeSelect.onchange = () => {
-  modelSelect.options.length = 1
-  for (const k in hardware[vendorSelect.value][typeSelect.value]) {
-    const opt = document.createElement('option')
-    opt.value = k
-    opt.innerHTML = hardware[vendorSelect.value][typeSelect.value][k].product_name
-    modelSelect.appendChild(opt)
-  }
-  modelSelect.disabled = false
   modelSelect.value = ''
   deviceNext.disabled = true
+  const models = []
+  const v = vendorSelect.value
+  const t = typeSelect.value
+  for (const m in hardware[v][t]) {
+    if (hardware[v][t][m].product_name !== undefined) {
+      models.push(hardware[v][t][m].product_name)
+    }
+  }
+  autocomplete(modelSelect, models)
 }
 
 modelSelect.onchange = () => {
-  deviceNext.disabled = false
+  for (const v in hardware) {
+    for (const t in hardware[v]) {
+      for (const m in hardware[v][t]) {
+        if (hardware[v][t][m].product_name === modelSelect.value) {
+          vendorSelect.value = v
+          typeSelect.value = t
+          selectedModel = hardware[v][t][m]
+          typeSelect.disabled = false
+          deviceNext.disabled = false
+          return
+        }
+      }
+    }
+  }
+  modelSelect.value = ''
 }
 
 deviceNext.onclick = () => {
@@ -297,19 +334,19 @@ deviceNext.onclick = () => {
   setDisplay('.feature-sbus-uart', false)
   setDisplay('.feature-buzzer', false)
 
-  const features = hardware[vendorSelect.value][typeSelect.value][modelSelect.value].features
+  const features = selectedModel.features
   if (features) features.forEach(f => setDisplay('.feature-' + f))
 
   _('fcclbt').value = 'FCC'
   setDisplay('.' + typeSelect.value)
-  setDisplay('.' + hardware[vendorSelect.value][typeSelect.value][modelSelect.value].platform)
+  setDisplay('.' + selectedModel.platform)
 
   _('uart').disabled = true
   _('betaflight').disabled = true
   _('etx').disabled = true
   _('wifi').disabled = true
   _('stlink').disabled = true
-  hardware[vendorSelect.value][typeSelect.value][modelSelect.value].upload_methods.forEach((k) => { _(k).disabled = false })
+  selectedModel.upload_methods.forEach((k) => { _(k).disabled = false })
 
   setDisplay('#step-device', false)
   setClass('#step-2', 'active')
@@ -329,7 +366,7 @@ methodSelect.onchange = () => {
 }
 
 const getSettings = async (deviceType) => {
-  const config = hardware[vendorSelect.value][typeSelect.value][modelSelect.value]
+  const config = selectedModel
   const firmwareUrl = 'firmware/' + versionSelect.value + '/' + _('fcclbt').value + '/' + config.firmware + '/firmware.bin'
   const options = {}
 
