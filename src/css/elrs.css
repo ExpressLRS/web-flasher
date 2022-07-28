@@ -25,3 +25,8 @@ a:active, a:focus {
     outline-style: none;
     -moz-outline-style: none;
 }
+
+.lr-padding {
+    margin-left: 6px;
+    margin-right: 6px;
+}

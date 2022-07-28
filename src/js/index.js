@@ -3,10 +3,9 @@ import { MismatchError, AlertError } from './error.js'
 import { initBindingPhraseGen } from './phrase.js'
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
-import { cuteAlert } from './alert.js'
 import { cuteDialog } from './dialog.js'
 import { autocomplete } from './autocomplete.js'
-import { SwalMUI } from './global.js'
+import { SwalMUI } from './swalmui.js'
 import mui from 'muicss'
 
 const versions = ['3.x.x-maintenance']
@@ -132,7 +131,11 @@ _('device-discover').onclick = async () => {
       }
     })
     .catch((e) => {
-      return cuteAlert({ type: e.type, title: e.title, message: e.message, closeStyle: 'circle' })
+      return SwalMUI.fire({
+        icon: e.type,
+        title: e.title,
+        text: e.message
+      })
     })
 }
 
@@ -487,11 +490,10 @@ const connectUART = async () => {
               } else {
                 lblConnTo.innerHTML = 'Failed to connect to device, restart device and try again'
                 await closeDevice()
-                return await cuteAlert({
-                  type: 'error',
+                return await SwalMUI.fire({
+                  icon: 'error',
                   title: e.title,
-                  message: e.message,
-                  closeStyle: 'circle'
+                  html: e.message
                 })
               }
             })
@@ -499,11 +501,10 @@ const connectUART = async () => {
         .catch(async () => {
           lblConnTo.innerHTML = 'No device selected'
           await closeDevice()
-          return await cuteAlert({
-            type: 'error',
+          return await SwalMUI.fire({
+            icon: 'error',
             title: 'No Device Selected',
-            message: 'A serial device must be select to perform flashing',
-            closeStyle: 'circle'
+            text: 'A serial device must be select to perform flashing'
           })
         })
     })
@@ -640,11 +641,10 @@ flashButton.onclick = async () => {
     }
     p.then(() => {
       mui.overlay('off')
-      return cuteAlert({
-        type: 'success',
+      return SwalMUI.fire({
+        icon: 'success',
         title: 'Flashing Succeeded',
-        message: 'Firmware upload complete',
-        closeStyle: 'circle'
+        text: 'Firmware upload complete'
       })
     })
       .catch((e) => { errorHandler(e.message) })
@@ -712,11 +712,10 @@ function completeHandler (event) {
   const data = JSON.parse(event.target.responseText)
   if (data.status === 'ok') {
     function showMessage () {
-      cuteAlert({
-        type: 'success',
+      SwalMUI.fire({
+        icon: 'success',
         title: 'Update Succeeded',
-        message: data.msg,
-        closeStyle: 'circle'
+        text: data.msg
       })
     }
     // This is basically a delayed display of the success dialog with a fake progress
@@ -733,13 +732,12 @@ function completeHandler (event) {
       }
     }, 100)
   } else if (data.status === 'mismatch') {
-    cuteAlert({
-      type: 'question',
+    SwalMUI.fire({
+      icon: 'question',
       title: 'Targets Mismatch',
-      message: data.msg,
-      confirmText: 'Flash anyway',
-      cancelText: 'Cancel',
-      closeStyle: 'circle'
+      html: data.msg,
+      confirmButtonText: 'Flash anyway',
+      showCancelButton: true
     }).then((confirm) => {
       const xmlhttp = new XMLHttpRequest()
       xmlhttp.onreadystatechange = function () {
@@ -748,11 +746,10 @@ function completeHandler (event) {
           _('progressBar').value = 0
           if (this.status === 200) {
             const data = JSON.parse(this.responseText)
-            cuteAlert({
-              type: 'info',
+            SwalMUI.fire({
+              icon: 'info',
               title: 'Force Update',
-              message: data.msg,
-              closeStyle: 'circle'
+              html: data.msg
             })
           } else {
             errorHandler('An error occurred trying to force the update')
@@ -773,11 +770,10 @@ function errorHandler (msg) {
   _('status').innerHTML = ''
   _('progressBar').value = 0
   mui.overlay('off')
-  cuteAlert({
-    type: 'error',
+  SwalMUI.fire({
+    icon: 'error',
     title: 'Update Failed',
-    message: msg,
-    closeStyle: 'circle'
+    html: msg
   })
 }
 
@@ -785,10 +781,9 @@ function abortHandler (event) {
   _('status').innerHTML = ''
   _('progressBar').value = 0
   mui.overlay('off')
-  cuteAlert({
-    type: 'info',
+  SwalMUI.fire({
+    icon: 'info',
     title: 'Update Aborted',
-    message: event.target.responseText,
-    closeStyle: 'circle'
+    html: event.target.responseText
   })
 }
