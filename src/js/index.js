@@ -4,7 +4,7 @@ import { initBindingPhraseGen } from './phrase.js'
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
 import { autocomplete } from './autocomplete.js'
-import { SwalMUI } from './swalmui.js'
+import { SwalMUI, Toast } from './swalmui.js'
 import mui from 'muicss'
 
 const versions = ['3.x.x-maintenance']
@@ -52,11 +52,24 @@ const doDiscovery = async () => {
   fetch('http://localhost:9097/mdns')
     .then(response => check(response))
     .catch(async (e) => {
-      throw new AlertError('Auto-discovery proxy not running', 'Auto detection of wifi devices cannot be performed without the help of the ExpressLRS auto-discovery proxy', 'warning')
+      throw new AlertError(
+        'Auto-discovery proxy not running',
+        'Auto detection of wifi devices cannot be performed without the help of the ExpressLRS auto-discovery proxy.',
+        'warning'
+      )
     })
     .then(mdns => {
       if (Object.keys(mdns).length === 0) {
-        throw new AlertError('No wifi devices detected', 'Auto detection failed to find any devices on the network', 'error')
+        throw new AlertError(
+          'No wifi devices detected',
+          `
+<div style="text-align: left;">
+Auto detection failed to find any devices on the network.
+<br><br>
+Ensure the devices are powered on, running wifi mode, and they are on the same network as this computer.
+`,
+          'info'
+        )
       }
       const devices = {}
       for (const key of Object.keys(mdns)) {
@@ -129,7 +142,7 @@ const doDiscovery = async () => {
       return SwalMUI.fire({
         icon: e.type,
         title: e.title,
-        text: e.message
+        html: e.message
       })
     })
 }
@@ -155,18 +168,34 @@ You can download the proxy for your system from the <a target="_blank" href="//g
 
 deviceDiscoverButton.onclick = displayProxyHelp
 
-const checkProxy = async () => {
-  fetch('http://localhost:9097/mdns')
+const checkProxy = () => {
+  return fetch('http://localhost:9097/mdns')
     .then(response => checkStatus(response) && response.json())
     .then(() => {
-      deviceDiscoverButton.style.cursor = 'default'
-      deviceDiscoverButton.onclick = doDiscovery
+      if (deviceDiscoverButton.onclick !== doDiscovery) {
+        deviceDiscoverButton.style.cursor = 'default'
+        deviceDiscoverButton.onclick = doDiscovery
+        return Toast.fire({
+          icon: 'success',
+          title: 'Wifi auto-discovery enabled'
+        })
+      }
     })
-    .catch(async (e) => {})
+    .catch(() => {
+      if (deviceDiscoverButton.onclick !== displayProxyHelp) {
+        deviceDiscoverButton.style.cursor = 'help'
+        deviceDiscoverButton.onclick = displayProxyHelp
+        return Toast.fire({
+          icon: 'warning',
+          title: 'Wifi auto-discovery disabled'
+        })
+      }
+    })
 }
 
 function initialise () {
   checkProxy()
+  setInterval(() => { checkProxy() }, 30000)
   term = new Terminal({ cols: 80, rows: 40 })
   const fitAddon = new FitAddon()
   term.loadAddon(fitAddon)
