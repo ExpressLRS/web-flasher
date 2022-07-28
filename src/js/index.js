@@ -601,6 +601,7 @@ const closeDevice = async () => {
   }
   setDisplay(flashMode, false)
   setDisplay(connectButton)
+  lblConnTo.innerHTML = 'Not connected'
   _('progressBar').value = 0
   _('status').innerHTML = ''
 }
