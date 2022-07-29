@@ -77,15 +77,16 @@ Ensure the devices are powered on, running wifi mode, and they are on the same n
         devices[key] = device
       }
 
-      // TODO If theres only 1 then select that and move on
-
-      return Promise.all([
-        SwalMUI.select({
+      let p
+      if (Object.keys(mdns).length === 1) { // short-circuit if theres only one option
+        p = { value: Object.keys(mdns)[0], isConfirmed: true }
+      } else {
+        p = SwalMUI.select({
           title: 'Select Device to Flash',
           inputOptions: devices
-        }),
-        mdns
-      ])
+        })
+      }
+      return Promise.all([p, mdns])
     })
     .then(([device, mdns]) => {
       if (!device.isConfirmed) return [null, mdns, undefined]
@@ -110,16 +111,19 @@ Ensure the devices are powered on, running wifi mode, and they are on the same n
         }
       }
 
-      // TODO If theres only 1 then select that and move on
-
-      return Promise.all([
-        candidates,
-        mdns[id],
-        SwalMUI.select({
+      let p
+      if (i === 1) { // short-circuit if theres only one option
+        Toast.fire({ icon: 'info', title: 'Auto-detected\n' + candidates[0].product.replace(/ /g, '\u00a0') })
+        p = { value: 0, isConfirmed: true }
+      } else {
+        const footer = '<b>Device:&nbsp;</b>' + id.substring(0, id.indexOf('.')) + ' at ' + mdns[id].address
+        p = SwalMUI.select({
           title: 'Select Device Model',
-          inputOptions: rows
+          inputOptions: rows,
+          footer
         })
-      ])
+      }
+      return Promise.all([candidates, mdns[id], p])
     })
     .then(([candidates, mdns, selected]) => {
       if (selected === undefined || !selected.isConfirmed) return
@@ -168,8 +172,8 @@ You can download the proxy for your system from the <a target="_blank" href="//g
 
 deviceDiscoverButton.onclick = displayProxyHelp
 
-const checkProxy = () => {
-  return fetch('http://localhost:9097/mdns')
+const checkProxy = async () => {
+  await fetch('http://localhost:9097/mdns')
     .then(response => checkStatus(response) && response.json())
     .then(() => {
       if (deviceDiscoverButton.onclick !== doDiscovery) {

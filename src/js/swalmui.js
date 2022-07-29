@@ -9,11 +9,10 @@ export const SwalMUI = Swal.mixin({
   buttonsStyling: false
 })
 
-SwalMUI.select = ({ title, inputOptions }) => {
+SwalMUI.select = (options) => {
   const dialog = SwalMUI.fire({
-    title,
     input: 'select',
-    inputOptions
+    ...options
   })
 
   const element = document.querySelector('.swal2-select')
