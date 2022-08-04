@@ -37,7 +37,8 @@ jobs:
             mkdir firmware
             mv 3.x.x-maintenance firmware/
         env:
-          ARTIFACT_ID: "309207520"
+          # https://github.com/ExpressLRS/ExpressLRS/actions/runs/2754982118
+          ARTIFACT_ID: "312613775"
       - name: Setup Pages
         if: ${{ github.ref == 'refs/heads/master' }}
         uses: actions/configure-pages@v1
