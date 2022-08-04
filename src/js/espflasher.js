@@ -36,32 +36,29 @@ class ESPFlasher {
     if (this.method === 'uart') {
       if (this.type === 'RX') {
         await transport.connect({ baud: baudrate })
-          .then(_ => this.esploader._connect_attempt())
-          .then(ret => {
-            if (ret !== 'success') {
-              return transport.disconnect()
-                .then(_ => transport.connect({ baud: 420000 }))
-                .then(_ => passthrough.reset_to_bootloader())
-            }
-          })
+        const ret = await this.esploader._connect_attempt()
+
+        if (ret !== 'success') {
+          await transport.disconnect()
+          await transport.connect({ baud: 420000 })
+          await passthrough.reset_to_bootloader()
+        }
       } else {
         await transport.connect({ baud: 115200 })
       }
     } else if (this.method === 'betaflight') {
       await transport.connect({ baud: baudrate })
-        .then(_ => passthrough.betaflight())
-        .then(_ => passthrough.reset_to_bootloader())
+      await passthrough.betaflight()
+      await passthrough.reset_to_bootloader()
     } else if (this.method === 'etx') {
       await transport.connect({ baud: baudrate })
-        .then(_ => passthrough.edgeTX())
+      await passthrough.edgeTX()
     }
 
-    return transport.disconnect()
-      .then(_ => this.esploader.main_fn({ mode }))
-      .then(chip => {
-        console.log('Settings done for :' + chip)
-        return chip
-      })
+    await transport.disconnect()
+    const chip = await this.esploader.main_fn({ mode })
+    console.log(`Settings done for :${chip}`)
+    return chip
   }
 
   flash = async (files, erase) => {

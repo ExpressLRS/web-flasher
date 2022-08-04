@@ -122,17 +122,13 @@ export class Configure {
     return response
   }
 
-  static #fetch_file = (file, addr, transform = (e) => e) => {
-    return fetch(file)
-      .then(_ => this.#checkStatus(_).blob())
-      .then(_ => new Promise((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = function found () {
-          resolve(new Uint8Array(reader.result))
-        }
-        reader.readAsArrayBuffer(_)
-      }))
-      .then(_ => ({ data: transform(_), address: addr }))
+  static #fetch_file = async (file, address, transform = (e) => e) => {
+    const response = this.#checkStatus(await fetch(file))
+    const blob = await response.blob()
+    const arrayBuffer = await blob.arrayBuffer()
+    const dataArray = new Uint8Array(arrayBuffer)
+    const data = transform(dataArray)
+    return { data, address }
   }
 
   static #findFirmwareEnd = (binary, config) => {
@@ -191,30 +187,28 @@ export class Configure {
       return [entry.data]
     } else {
       const list = []
-      const folder = 'firmware/' + document.getElementById('version').value
-      list.push(this.#fetch_file(folder + '/hardware/' + deviceType + '/' + config.layout_file, 0))
+      const version = document.getElementById('version').value
+      const folder = `firmware/${version}`
+      const hardwareLayoutFile = await this.#fetch_file(`${folder}/hardware/${deviceType}/${config.layout_file}`, 0)
       if (config.platform === 'esp32') {
-        list.push(this.#fetch_file(folder + '/bootloader_dio_40m.bin', 0x1000))
-        list.push(this.#fetch_file(folder + '/partitions.bin', 0x8000))
-        list.push(this.#fetch_file(folder + '/boot_app0.bin', 0xE000))
+        list.push(this.#fetch_file(`${folder}/bootloader_dio_40m.bin`, 0x1000))
+        list.push(this.#fetch_file(`${folder}/partitions.bin`, 0x8000))
+        list.push(this.#fetch_file(`${folder}/boot_app0.bin`, 0xE000))
         list.push(this.#fetch_file(firmwareUrl, 0x10000, (bin) => Configure.#configureESP(bin, config, options)))
       } else if (config.platform === 'esp8285') {
         list.push(this.#fetch_file(firmwareUrl, 0x0, (bin) => Configure.#configureESP(bin, config, options)))
       }
 
-      return await Promise
-        .all(list)
-        .then(files => {
-          if (config.overlay) {
-            config.overlay = {}
-          }
-          const data = this.#bstrToUi8(JSON.stringify({
-            ...JSON.parse(this.#ui8ToBstr(files[0].data)),
-            ...config.overlay
-          }))
-          files[files.length - 1].data = this.#appendArray(files[files.length - 1].data, this.#appendArray(data, new Uint8Array([0])))
-          return files.splice(1)
-        })
+      const files = await Promise.all(list)
+      if (config.overlay) {
+        config.overlay = {}
+      }
+      const hardwareLayoutData = this.#bstrToUi8(JSON.stringify({
+        ...JSON.parse(this.#ui8ToBstr(hardwareLayoutFile.data)),
+        ...config.overlay
+      }))
+      files[files.length - 1].data = this.#appendArray(files[files.length - 1].data, this.#appendArray(hardwareLayoutData, new Uint8Array([0])))
+      return files
     }
   }
 }

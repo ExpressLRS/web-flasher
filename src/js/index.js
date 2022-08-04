@@ -73,7 +73,7 @@ Ensure the devices are powered on, running wifi mode, and they are on the same n
       }
       const devices = {}
       for (const key of Object.keys(mdns)) {
-        const device = mdns[key].address + ': ' + key.substring(0, key.indexOf('.'))
+        const device = `${mdns[key].address}: ${key.substring(0, key.indexOf('.'))}`
         devices[key] = device
       }
 
@@ -113,10 +113,10 @@ Ensure the devices are powered on, running wifi mode, and they are on the same n
 
       let p
       if (i === 1) { // short-circuit if theres only one option
-        Toast.fire({ icon: 'info', title: 'Auto-detected\n' + candidates[0].product.replace(/ /g, '\u00a0') })
+        Toast.fire({ icon: 'info', title: `Auto-detected\n${candidates[0].product.replace(/ /g, '\u00a0')}` })
         p = { value: 0, isConfirmed: true }
       } else {
-        const footer = '<b>Device:&nbsp;</b>' + id.substring(0, id.indexOf('.')) + ' at ' + mdns[id].address
+        const footer = `<b>Device:&nbsp;</b>${id.substring(0, id.indexOf('.'))} at ${mdns[id].address}`
         p = SwalMUI.select({
           title: 'Select Device Model',
           inputOptions: rows,
@@ -138,7 +138,7 @@ Ensure the devices are powered on, running wifi mode, and they are on the same n
         deviceNext.onclick()
         methodSelect.value = 'wifi'
         methodSelect.onchange()
-        uploadURL = 'http://localhost:9097/' + mdns.address
+        uploadURL = `http://localhost:9097/${mdns.address}`
       }
     })
     .catch((e) => {
@@ -226,34 +226,31 @@ versionSelect.onchange = async () => {
   typeSelect.disabled = true
   typeSelect.value = ''
 
-  fetch('firmware/' + versionSelect.value + '/hardware/targets.json')
-    .then(response => checkStatus(response) && response.json())
-    .then(json => {
-      hardware = json
-      for (const k in json) {
-        const opt = document.createElement('option')
-        opt.value = k
-        opt.innerHTML = json[k].name === undefined ? k : json[k].name
-        vendorSelect.appendChild(opt)
-      }
-      vendorSelect.disabled = false
-      setDisplay('.uart', false)
-      setDisplay('.stlink', false)
-      setDisplay('.wifi', false)
-    })
-    .then(() => {
-      const models = []
-      for (const v in hardware) {
-        for (const t in hardware[v]) {
-          for (const m in hardware[v][t]) {
-            if (hardware[v][t][m].product_name !== undefined) {
-              models.push(hardware[v][t][m].product_name)
-            }
-          }
+  const version = versionSelect.value
+  const json = await checkStatus(await fetch(`firmware/${version}/hardware/targets.json`)).json()
+  hardware = json
+  for (const k in json) {
+    const opt = document.createElement('option')
+    opt.value = k
+    opt.innerHTML = json[k].name === undefined ? k : json[k].name
+    vendorSelect.appendChild(opt)
+  }
+  vendorSelect.disabled = false
+  setDisplay('.uart', false)
+  setDisplay('.stlink', false)
+  setDisplay('.wifi', false)
+
+  const models = []
+  for (const v in hardware) {
+    for (const t in hardware[v]) {
+      for (const m in hardware[v][t]) {
+        if (hardware[v][t][m].product_name !== undefined) {
+          models.push(hardware[v][t][m].product_name)
         }
       }
-      autocomplete(modelSelect, models, true)
-    })
+    }
+  }
+  autocomplete(modelSelect, models, true)
 }
 
 function setDisplay (elementOrSelector, shown = true) {
@@ -381,11 +378,11 @@ deviceNext.onclick = () => {
   setDisplay('.feature-buzzer', false)
 
   const features = selectedModel.features
-  if (features) features.forEach(f => setDisplay('.feature-' + f))
+  if (features) features.forEach(f => setDisplay(`.feature-${f}`))
 
   _('fcclbt').value = 'FCC'
-  setDisplay('.' + typeSelect.value)
-  setDisplay('.' + selectedModel.platform)
+  setDisplay(`.${typeSelect.value}`)
+  setDisplay(`.${selectedModel.platform}`)
 
   _('uart').disabled = true
   _('betaflight').disabled = true
@@ -413,7 +410,7 @@ methodSelect.onchange = () => {
 
 const getSettings = async (deviceType) => {
   const config = selectedModel
-  const firmwareUrl = 'firmware/' + versionSelect.value + '/' + _('fcclbt').value + '/' + config.firmware + '/firmware.bin'
+  const firmwareUrl = `firmware/${versionSelect.value}/${_('fcclbt').value}/${config.firmware}/firmware.bin`
   const options = {}
 
   if (_('uid').value !== '') {
@@ -445,18 +442,16 @@ const getSettings = async (deviceType) => {
     const beeptype = Number(_('melody-type').value)
     options.beeptype = beeptype > 2 ? 2 : beeptype
 
-    options.melody = await import('./melody.js')
-      .then((_) => {
-        if (beeptype === 2) {
-          return _.MelodyParser.parseToArray('A4 20 B4 20|60|0')
-        } else if (beeptype === 3) {
-          return _.MelodyParser.parseToArray('E5 40 E5 40 C5 120 E5 40 G5 22 G4 21|20|0')
-        } else if (beeptype === 4) {
-          return _.MelodyParser.parseToArray(_('melody').value)
-        } else {
-          return []
-        }
-      })
+    const melodyModule = await import('./melody.js')
+    if (beeptype === 2) {
+      options.melody = melodyModule.MelodyParser.parseToArray('A4 20 B4 20|60|0')
+    } else if (beeptype === 3) {
+      options.melody = melodyModule.MelodyParser.parseToArray('E5 40 E5 40 C5 120 E5 40 G5 22 G4 21|20|0')
+    } else if (beeptype === 4) {
+      options.melody = melodyModule.MelodyParser.parseToArray(_('melody').value)
+    } else {
+      return []
+    }
   }
   return { config, firmwareUrl, options }
 }
@@ -465,153 +460,131 @@ const connectUART = async () => {
   const deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX'
   const radioType = typeSelect.value.endsWith('_900') ? 'sx127x' : 'sx128x'
   term.clear()
-  await getSettings(deviceType)
-    .then(({ config, firmwareUrl, options }) => {
-      Promise
-        .all([
-          navigator.serial.requestPort()
-            .then(d => {
-              device = d
-              device.addEventListener('disconnect', async (e) => {
-                device = null
-                term.clear()
-                setDisplay(flashMode, false)
-                setDisplay(connectButton)
-                _('progressBar').value = 0
-                _('status').innerHTML = ''
-              })
-              setDisplay(connectButton, false)
-            }),
-          Configure.download(deviceType, radioType, config, firmwareUrl, options)
-            .then(b => {
-              binary = b
-            })
-        ])
-        .then(_ => {
-          const method = methodSelect.value
-          let fp
-          if (config.platform === 'stm32') {
-            fp = import('./xmodem.js')
-              .then(m => new m.XmodemFlasher(device, deviceType, method, config, options, firmwareUrl, term))
-          } else {
-            fp = import('./espflasher.js')
-              .then(m => new m.ESPFlasher(device, deviceType, method, config, options, firmwareUrl, term))
-          }
-          fp
-            .then(f => {
-              flasher = f
-              return f.connect()
-            })
-            .then(chip => {
-              lblConnTo.innerHTML = 'Connected to device: ' + chip
-              setDisplay(flashMode)
-            })
-            .catch(async e => {
-              if (e instanceof MismatchError) {
-                lblConnTo.innerHTML = 'Target mismatch, flashing cancelled'
-                return closeDevice()
-              } else {
-                lblConnTo.innerHTML = 'Failed to connect to device, restart device and try again'
-                await closeDevice()
-                return await SwalMUI.fire({
-                  icon: 'error',
-                  title: e.title,
-                  html: e.message
-                })
-              }
-            })
-        })
-        .catch(async () => {
-          lblConnTo.innerHTML = 'No device selected'
-          await closeDevice()
-          return await SwalMUI.fire({
-            icon: 'error',
-            title: 'No Device Selected',
-            text: 'A serial device must be select to perform flashing'
-          })
-        })
+  const { config, firmwareUrl, options } = await getSettings(deviceType)
+  try {
+    device = await navigator.serial.requestPort()
+  } catch {
+    lblConnTo.innerHTML = 'No device selected'
+    await closeDevice()
+    return await SwalMUI.fire({
+      icon: 'error',
+      title: 'No Device Selected',
+      text: 'A serial device must be select to perform flashing'
     })
+  }
+
+  device.addEventListener('disconnect', async (e) => {
+    term.clear()
+    setDisplay(flashMode, false)
+    setDisplay(connectButton)
+    _('progressBar').value = 0
+    _('status').innerHTML = ''
+  })
+  setDisplay(connectButton, false)
+
+  binary = await Configure.download(deviceType, radioType, config, firmwareUrl, options)
+
+  const method = methodSelect.value
+
+  if (config.platform === 'stm32') {
+    const xmodemModule = await import('./xmodem.js')
+    flasher = new xmodemModule.XmodemFlasher(device, deviceType, method, config, options, firmwareUrl, term)
+  } else {
+    const espflasherModule = await import('./espflasher.js')
+    flasher = new espflasherModule.ESPFlasher(device, deviceType, method, config, options, firmwareUrl, term)
+  }
+  try {
+    const chip = await flasher.connect()
+
+    lblConnTo.innerHTML = `Connected to device: ${chip}`
+    setDisplay(flashMode)
+  } catch (e) {
+    if (e instanceof MismatchError) {
+      lblConnTo.innerHTML = 'Target mismatch, flashing cancelled'
+      return closeDevice()
+    } else {
+      lblConnTo.innerHTML = 'Failed to connect to device, restart device and try again'
+      await closeDevice()
+      return await SwalMUI.fire({
+        icon: 'error',
+        title: e.title,
+        html: e.message
+      })
+    }
+  }
 }
 
 const generateFirmware = async () => {
   const deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX'
   const radioType = typeSelect.value.endsWith('_900') ? 'sx127x' : 'sx128x'
-  return getSettings(deviceType)
-    .then(({ config, firmwareUrl, options }) => Promise.all([
-      Configure.download(deviceType, radioType, config, firmwareUrl, options),
-      { config, firmwareUrl, options }
-    ]))
+  const { config, firmwareUrl, options } = await getSettings(deviceType)
+  const firmwareFiles = await Configure.download(deviceType, radioType, config, firmwareUrl, options)
+  return [
+    firmwareFiles,
+    { config, firmwareUrl, options }
+  ]
 }
 
 const connectSTLink = async () => {
   term.clear()
-  await Promise
-    .all([
-      import('./stlink.js')
-        .then(_ => new _.STLink(term)),
-      generateFirmware()
-    ])
-    .then(([_stlink, [_bin, { config, firmwareUrl, options }]]) =>
-      _stlink.connect(config, firmwareUrl, options, e => {
-        term.clear()
-        setDisplay(flashMode, false)
-        setDisplay(connectButton)
-        _('progressBar').value = 0
-        _('status').innerHTML = ''
-      })
-        .then(version => {
-          lblConnTo.innerHTML = 'Connected to device: ' + version
-          setDisplay(connectButton, false)
-          setDisplay(flashMode)
-          binary = _bin
-          stlink = _stlink
-        })
-        .catch((e) => {
-          lblConnTo.innerHTML = 'Not connected'
-          setDisplay(flashMode, false)
-          setDisplay(connectButton)
-          return Promise.reject(e)
-        })
-    )
+  const stlinkModule = await import('./stlink.js')
+  const _stlink = new stlinkModule.STLink(term)
+  const [_bin, { config, firmwareUrl, options }] = await generateFirmware()
+
+  try {
+    const version = await _stlink.connect(config, firmwareUrl, options, e => {
+      term.clear()
+      setDisplay(flashMode, false)
+      setDisplay(connectButton)
+      _('progressBar').value = 0
+      _('status').innerHTML = ''
+    })
+
+    lblConnTo.innerHTML = `Connected to device: ${version}`
+    setDisplay(connectButton, false)
+    setDisplay(flashMode)
+    binary = _bin
+    stlink = _stlink
+  } catch (e) {
+    lblConnTo.innerHTML = 'Not connected'
+    setDisplay(flashMode, false)
+    setDisplay(connectButton)
+    return Promise.reject(e)
+  }
+}
+
+const getWifiTarget = async (url) => {
+  const response = await fetch(`${url}/target`)
+  if (!response.ok) {
+    throw Promise.reject(new Error('Failed to connect to device'))
+  }
+  return [url, await response.json()]
 }
 
 const connectWifi = async () => {
-  function check (response) {
-    if (!response.ok) {
-      throw Promise.reject(new Error('Failed to connect to device'))
-    }
-    return response.json()
-  }
   const deviceType = typeSelect.value.substring(0, 2)
   let promise
   if (uploadURL !== null) {
-    promise = fetch(uploadURL + '/target')
-      .then(response => check(response))
-      .then(_ => [uploadURL, _])
+    promise = getWifiTarget(uploadURL)
   } else {
     promise = Promise.any([
-      fetch('http://10.0.0.1/target')
-        .then(response => check(response))
-        .then(_ => ['http://10.0.0.1', _]),
-      fetch(`http://elrs_${deviceType}/target`)
-        .then(response => check(response))
-        .then(_ => [`http://elrs_${deviceType}`, _]),
-      fetch(`http://elrs_${deviceType}.local/target`)
-        .then(response => check(response))
-        .then(_ => [`http://elrs_${deviceType}`, _])
+      getWifiTarget('http://10.0.0.1'),
+      getWifiTarget(`http://elrs_${deviceType}`),
+      getWifiTarget(`http://elrs_${deviceType}.local`)
     ])
   }
-  await promise.then(([url, response]) => {
-    lblConnTo.innerHTML = 'Connected to: ' + url
-    _('product_name').innerHTML = 'Product name: ' + response.product_name
-    _('target').innerHTML = 'Target firmware: ' + response.target
-    _('firmware-version').innerHTML = 'Version: ' + response.version
+  try {
+    const [url, response] = await promise
+    lblConnTo.innerHTML = `Connected to: ${url}`
+    _('product_name').innerHTML = `Product name: ${response.product_name}`
+    _('target').innerHTML = `Target firmware: ${response.target}`
+    _('firmware-version').innerHTML = `Version: ${response.version}`
     setDisplay(flashMode)
     uploadURL = url
-  }).catch(reason => {
+  } catch (reason) {
     lblConnTo.innerHTML = 'No device found, or error connecting to device'
     console.log(reason)
-  })
+  }
 }
 
 _('options-next').onclick = async () => {
@@ -626,7 +599,7 @@ _('options-next').onclick = async () => {
     setClass('#step-2', 'editable', false)
     setDisplay('#step-flash')
 
-    setDisplay('.' + method)
+    setDisplay(`.${method}`)
 
     if (method === 'wifi') {
       connectButton.onclick = connectWifi
@@ -656,76 +629,75 @@ flashButton.onclick = async () => {
   const method = methodSelect.value
   if (method === 'wifi') await wifiUpload()
   else {
-    let p
-    if (flasher !== null) {
-      p = flasher.flash(binary, _('erase-flash').checked)
-    } else {
-      p = stlink.flash(binary, _('flash-bootloader').checked)
-    }
-    p.then(() => {
+    try {
+      if (flasher !== null) {
+        await flasher.flash(binary, _('erase-flash').checked)
+      } else {
+        await stlink.flash(binary, _('flash-bootloader').checked)
+      }
       mui.overlay('off')
       return SwalMUI.fire({
         icon: 'success',
         title: 'Flashing Succeeded',
         text: 'Firmware upload complete'
       })
-    })
-      .catch((e) => { errorHandler(e.message) })
-      .then(() => closeDevice())
+    } catch (e) {
+      errorHandler(e.message)
+    } finally {
+      closeDevice()
+    }
   }
 }
 
 const downloadFirmware = async () => {
-  await generateFirmware()
-    .then(([binary, { config, firmwareUrl, options }]) => {
-      let file = null
-      const makeFile = function () {
-        const bin = binary[binary.length - 1].data.buffer
-        const data = new Blob([bin], { type: 'application/octet-stream' })
-        if (file !== null) {
-          window.URL.revokeObjectURL(file)
-        }
-        file = window.URL.createObjectURL(data)
-        return file
-      }
+  const [binary] = await generateFirmware()
+  let file = null
+  const makeFile = function () {
+    const bin = binary[binary.length - 1].data.buffer
+    const data = new Blob([bin], { type: 'application/octet-stream' })
+    if (file !== null) {
+      window.URL.revokeObjectURL(file)
+    }
+    file = window.URL.createObjectURL(data)
+    return file
+  }
 
-      const link = document.createElement('a')
-      link.setAttribute('download', 'firmware.bin')
-      link.href = makeFile()
-      document.body.appendChild(link)
+  const link = document.createElement('a')
+  link.setAttribute('download', 'firmware.bin')
+  link.href = makeFile()
+  document.body.appendChild(link)
 
-      // wait for the link to be added to the document
-      window.requestAnimationFrame(function () {
-        const event = new MouseEvent('click')
-        link.dispatchEvent(event)
-        document.body.removeChild(link)
-      })
-    })
+  // wait for the link to be added to the document
+  window.requestAnimationFrame(function () {
+    const event = new MouseEvent('click')
+    link.dispatchEvent(event)
+    document.body.removeChild(link)
+  })
 }
 
 const wifiUpload = async () => {
-  await generateFirmware()
-    .then(([binary, { config, firmwareUrl, options }]) => {
-      const bin = binary[binary.length - 1].data.buffer
-      const data = new Blob([bin], { type: 'application/octet-stream' })
-      const formdata = new FormData()
-      formdata.append('upload', data, 'firmware.bin')
-      const ajax = new XMLHttpRequest()
-      ajax.upload.addEventListener('progress', progressHandler, false)
-      ajax.addEventListener('load', completeHandler, false)
-      ajax.addEventListener('error', (e) => errorHandler(e.target.responseText), false)
-      ajax.addEventListener('abort', abortHandler, false)
-      ajax.open('POST', uploadURL + '/update')
-      ajax.setRequestHeader('X-FileSize', data.size)
-      ajax.send(formdata)
-    })
-    .catch(() => {})
+  const [binary] = await generateFirmware()
+
+  try {
+    const bin = binary[binary.length - 1].data.buffer
+    const data = new Blob([bin], { type: 'application/octet-stream' })
+    const formdata = new FormData()
+    formdata.append('upload', data, 'firmware.bin')
+    const ajax = new XMLHttpRequest()
+    ajax.upload.addEventListener('progress', progressHandler, false)
+    ajax.addEventListener('load', completeHandler, false)
+    ajax.addEventListener('error', (e) => errorHandler(e.target.responseText), false)
+    ajax.addEventListener('abort', abortHandler, false)
+    ajax.open('POST', `${uploadURL}/update`)
+    ajax.setRequestHeader('X-FileSize', data.size)
+    ajax.send(formdata)
+  } catch (error) {}
 }
 
 function progressHandler (event) {
   const percent = Math.round((event.loaded / event.total) * 100)
   _('progressBar').value = percent
-  _('status').innerHTML = percent + '% uploaded... please wait'
+  _('status').innerHTML = `${percent}% uploaded... please wait`
 }
 
 function completeHandler (event) {
@@ -746,7 +718,7 @@ function completeHandler (event) {
     const interval = setInterval(() => {
       percent = percent + 2
       _('progressBar').value = percent
-      _('status').innerHTML = percent + '% flashed... please wait'
+      _('status').innerHTML = `${percent}% flashed... please wait`
       if (percent === 100) {
         clearInterval(interval)
         _('status').innerHTML = ''
@@ -779,12 +751,13 @@ function completeHandler (event) {
           }
         }
       }
-      xmlhttp.open('POST', uploadURL + '/forceupdate', true)
+      xmlhttp.open('POST', `${uploadURL}/forceupdate`, true)
       const data = new FormData()
       data.append('action', confirm)
       xmlhttp.send(data)
     })
   } else {
+    console.log(data)
     errorHandler(data.msg)
   }
 }
