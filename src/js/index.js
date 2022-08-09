@@ -7,7 +7,7 @@ import { autocomplete } from './autocomplete.js'
 import { SwalMUI, Toast } from './swalmui.js'
 import mui from 'muicss'
 
-const versions = ['3.x.x-maintenance']
+const versions = ['3.0.0-RC2']
 const versionSelect = _('version')
 const flashMode = _('flash-mode')
 const flashButton = _('flashButton')
