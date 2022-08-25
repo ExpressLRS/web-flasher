@@ -60,38 +60,40 @@
         </div>
 
         <div class="mui-panel" id="step-device">
-            <div class="mui--text-headline">Target Selection</div>
-            <div class="mui-divider"></div>
-            <br/>
-            <div class="mui-select">
-                <select name="version" id="version">
-                </select>
-                <label>Version</label>
-            </div>
-            <div class="mui-select">
-                <select name="vendor" id="vendor" disabled>
-                    <option value="" disabled selected></option>
-                </select>
-                <label>Vendor</label>
-            </div>
-            <div class="mui-select">
-                <select name="type" id="type" disabled>
-                    <option value="" disabled selected></option>
-                    <option value="tx_2400" id="tx_2400" disabled>2.4GHz Transmitter</option>
-                    <option value="rx_2400" id="rx_2400" disabled>2.4GHz Receiver</option>
-                    <option value="tx_900" id="tx_900" disabled>900MHz Transmitter</option>
-                    <option value="rx_900" id="rx_900" disabled>900MHz Receiver</option>
-                </select>
-                <label>Device Type</label>
-            </div>
-            <div class="mui-textfield">
-                <input name="model" id="model" type="text" autocomplete="off" placeholder="Start typing for auto-complete..."/>
-                <label>Device Model</label>
-            </div>
-            <div class="mui--pull-right">
-                <button class="mui-btn" id="device-discover" style="cursor: help;">Wifi Auto Discover</button>
-                <button class="mui-btn mui-btn--primary" id="device-next" disabled>Next</button>
-            </div>
+            <form class="mui-form" autocomplete="off">
+                <div class="mui--text-headline">Target Selection</div>
+                <div class="mui-divider"></div>
+                <br/>
+                <div class="mui-select">
+                    <select name="version" id="version">
+                    </select>
+                    <label>Version</label>
+                </div>
+                <div class="mui-select">
+                    <select name="vendor" id="vendor" disabled>
+                        <option value="" disabled selected></option>
+                    </select>
+                    <label>Vendor</label>
+                </div>
+                <div class="mui-select">
+                    <select name="type" id="type" disabled>
+                        <option value="" disabled selected></option>
+                        <option value="tx_2400" id="tx_2400" disabled>2.4GHz Transmitter</option>
+                        <option value="rx_2400" id="rx_2400" disabled>2.4GHz Receiver</option>
+                        <option value="tx_900" id="tx_900" disabled>900MHz Transmitter</option>
+                        <option value="rx_900" id="rx_900" disabled>900MHz Receiver</option>
+                    </select>
+                    <label>Device Type</label>
+                </div>
+                <div class="mui-textfield">
+                    <input name="model" id="model" type="text" autocomplete="off" placeholder="Start typing for auto-complete..."/>
+                    <label>Device Model</label>
+                </div>
+                <div class="mui--pull-right">
+                    <button class="mui-btn" id="device-discover" style="cursor: help;">Wifi Auto Discover</button>
+                    <button class="mui-btn mui-btn--primary" id="device-next" disabled>Next</button>
+                </div>
+            </form>
         </div>
 
         <div class="mui-panel display--none" id="step-options">

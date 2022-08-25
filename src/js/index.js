@@ -42,7 +42,8 @@ function checkStatus (response) {
   return response
 }
 
-const doDiscovery = async () => {
+const doDiscovery = async (e) => {
+  e.preventDefault()
   function check (response) {
     if (!response.ok) {
       throw Promise.reject(new Error('Failed to connect to device'))
@@ -135,7 +136,7 @@ Ensure the devices are powered on, running wifi mode, and they are on the same n
         typeSelect.onchange()
         modelSelect.value = candidates[selected.value].product
         modelSelect.onchange()
-        deviceNext.onclick()
+        deviceNext.onclick(e)
         methodSelect.value = 'wifi'
         methodSelect.onchange()
         uploadURL = `http://localhost:9097/${mdns.address}`
@@ -274,7 +275,8 @@ function setClass (elementOrSelector, className, enabled = true) {
   }
 }
 
-_('step-1').onclick = () => {
+_('step-1').onclick = (e) => {
+  e.preventDefault()
   setDisplay('#step-device')
   setDisplay('#step-options', false)
   setDisplay('#step-flash', false)
@@ -292,7 +294,8 @@ _('step-1').onclick = () => {
   setClass('#step-3', 'done', false)
 }
 
-_('step-2').onclick = () => {
+_('step-2').onclick = (e) => {
+  e.preventDefault()
   if (_('step-flash').style.display === 'block') {
     setDisplay('#step-options')
     setDisplay('#step-flash', false)
@@ -364,7 +367,8 @@ modelSelect.onchange = () => {
   modelSelect.value = ''
 }
 
-deviceNext.onclick = () => {
+deviceNext.onclick = (e) => {
+  e.preventDefault()
   setDisplay('.tx_2400', false)
   setDisplay('.rx_2400', false)
   setDisplay('.tx_900', false)
@@ -456,7 +460,8 @@ const getSettings = async (deviceType) => {
   return { config, firmwareUrl, options }
 }
 
-const connectUART = async () => {
+const connectUART = async (e) => {
+  e.preventDefault()
   const deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX'
   const radioType = typeSelect.value.endsWith('_900') ? 'sx127x' : 'sx128x'
   term.clear()
@@ -525,7 +530,8 @@ const generateFirmware = async () => {
   ]
 }
 
-const connectSTLink = async () => {
+const connectSTLink = async (e) => {
+  e.preventDefault()
   term.clear()
   const stlinkModule = await import('./stlink.js')
   const _stlink = new stlinkModule.STLink(term)
@@ -561,7 +567,8 @@ const getWifiTarget = async (url) => {
   return [url, await response.json()]
 }
 
-const connectWifi = async () => {
+const connectWifi = async (e) => {
+  e.preventDefault()
   const deviceType = typeSelect.value.substring(0, 2)
   let promise
   if (uploadURL !== null) {
@@ -587,7 +594,8 @@ const connectWifi = async () => {
   }
 }
 
-_('options-next').onclick = async () => {
+_('options-next').onclick = async (e) => {
+  e.preventDefault()
   const method = methodSelect.value
   if (method === 'download') {
     await downloadFirmware()
@@ -608,7 +616,7 @@ _('options-next').onclick = async () => {
     } else {
       connectButton.onclick = connectUART
     }
-    await connectButton.onclick()
+    await connectButton.onclick(e)
   }
 }
 
@@ -624,7 +632,8 @@ const closeDevice = async () => {
   _('status').innerHTML = ''
 }
 
-flashButton.onclick = async () => {
+flashButton.onclick = async (e) => {
+  e.preventDefault()
   mui.overlay('on', { keyboard: false, static: true })
   const method = methodSelect.value
   if (method === 'wifi') await wifiUpload()
