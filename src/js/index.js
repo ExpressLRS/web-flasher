@@ -491,7 +491,7 @@ const connectUART = async (e) => {
 
   const method = methodSelect.value
 
-  if (config.platform === 'stm32') {
+  if (config.platform === 'stm32' || (config.platform === 'esp32' && deviceType === 'RX')) {
     const xmodemModule = await import('./xmodem.js')
     flasher = new xmodemModule.XmodemFlasher(device, deviceType, method, config, options, firmwareUrl, term)
   } else {
