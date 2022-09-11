@@ -36,10 +36,10 @@ jobs:
             unzip firmware.zip
             rm firmware.zip
             mv firmware 3.x.x-maintenance
-            curl -H "Accept: application/vnd.github+json" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -L -o firmware.zip "https://api.github.com/repos/ExpressLRS/ExpressLRS/actions/artifacts/323902939/zip"
+            curl -H "Accept: application/vnd.github+json" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -L -o firmware.zip "https://api.github.com/repos/ExpressLRS/ExpressLRS/actions/artifacts/357703416/zip"
             unzip firmware.zip
             rm firmware.zip
-            mv firmware 3.0.0-RC2
+            mv firmware 3.0.0
       - name: Setup Pages
         if: ${{ github.ref == 'refs/heads/master' }}
         uses: actions/configure-pages@v1
