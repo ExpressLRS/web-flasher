@@ -24,7 +24,7 @@ class ESPFlasher {
     } else if (this.method === 'etx') {
       baudrate = 230400
       mode = 'no_reset'
-    } else if (this.method === 'uart' && this.type === 'TX') {
+    } else if (this.method === 'uart' && this.config.platform === 'esp32') {
       initbaud = 115200
     }
 
@@ -34,7 +34,7 @@ class ESPFlasher {
 
     const passthrough = new Passthrough(transport, this.term, this.config.firmware, baudrate)
     if (this.method === 'uart') {
-      if (this.type === 'RX') {
+      if (this.type === 'RX' && this.config.platform !== 'esp32') {
         await transport.connect({ baud: baudrate })
         const ret = await this.esploader._connect_attempt()
 
