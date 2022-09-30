@@ -18,9 +18,13 @@ class ESPFlasher {
     let mode = 'default_reset'
     let baudrate = 460800
     let initbaud
+    let stub = 'yes'
     if (this.method === 'betaflight') {
       baudrate = 420000
       mode = 'no_reset'
+      if (this.config.platform === 'esp32') {
+        stub = 'no'
+      }
     } else if (this.method === 'etx') {
       baudrate = 230400
       mode = 'no_reset'
@@ -56,7 +60,7 @@ class ESPFlasher {
     }
 
     await transport.disconnect()
-    const chip = await this.esploader.main_fn({ mode })
+    const chip = await this.esploader.main_fn({ mode, stub })
     console.log(`Settings done for :${chip}`)
     return chip
   }
@@ -65,9 +69,13 @@ class ESPFlasher {
     const loader = this.esploader
     if (this.method === 'etx' || this.method === 'betaflight') {
       loader.FLASH_WRITE_SIZE = 0x0800
+      if (this.config.platform === 'esp32') {
+        files = files.slice(-1)
+      }
     }
 
     const fileArray = files.map(v => ({ data: loader.ui8ToBstr(v.data), address: v.address }))
+    loader.IS_STUB = true
     return loader.write_flash({
       fileArray,
       flash_size: 'keep',

@@ -1,0 +1,24 @@
+--- node_modules/esptool-js/ESPLoader.js
++++ node_modules/esptool-js/ESPLoader.js
+@@ -666,7 +666,7 @@ class ESPLoader {
+         }
+     }
+
+-    async main_fn({mode='default_reset'} = {}) {
++    async main_fn({mode='default_reset', stub='yes'} = {}) {
+         await this.detect_chip({mode});
+
+         var chip = await this.chip.get_chip_description(this);
+@@ -680,9 +680,10 @@ class ESPLoader {
+             await this.chip._post_connect(this);
+         }
+
+-        await this.run_stub();
+-
+-        await this.change_baud();
++        if (stub == 'yes') {
++            await this.run_stub();
++            await this.change_baud();
++        }
+         return chip;
+     }
