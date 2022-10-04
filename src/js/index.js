@@ -296,7 +296,7 @@ _('step-1').onclick = (e) => {
 
 _('step-2').onclick = (e) => {
   e.preventDefault()
-  if (_('step-flash').style.display === 'block') {
+  if (!_('step-flash').classList.contains('display--none')) {
     setDisplay('#step-options')
     setDisplay('#step-flash', false)
 
