@@ -454,7 +454,7 @@ const getSettings = async (deviceType) => {
     } else if (beeptype === 4) {
       options.melody = melodyModule.MelodyParser.parseToArray(_('melody').value)
     } else {
-      return []
+      options.melody = []
     }
   }
   return { config, firmwareUrl, options }
@@ -662,7 +662,7 @@ const downloadFirmware = async () => {
   const [binary] = await generateFirmware()
   let file = null
   const makeFile = function () {
-    const bin = binary[binary.length - 1].data.buffer
+    const bin = binary[binary.length - 1].buffer
     const data = new Blob([bin], { type: 'application/octet-stream' })
     if (file !== null) {
       window.URL.revokeObjectURL(file)
@@ -688,7 +688,7 @@ const wifiUpload = async () => {
   const [binary] = await generateFirmware()
 
   try {
-    const bin = binary[binary.length - 1].data.buffer
+    const bin = binary[binary.length - 1].buffer
     const data = new Blob([bin], { type: 'application/octet-stream' })
     const formdata = new FormData()
     formdata.append('upload', data, 'firmware.bin')
