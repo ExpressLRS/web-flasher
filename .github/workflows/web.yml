@@ -32,10 +32,10 @@ jobs:
             cd dist
             mkdir firmware
             cd firmware
-            curl -H "Accept: application/vnd.github+json" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -L -o firmware.zip "https://api.github.com/repos/ExpressLRS/ExpressLRS/actions/artifacts/312613775/zip"
+            curl -H "Accept: application/vnd.github+json" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -L -o firmware.zip "https://api.github.com/repos/ExpressLRS/ExpressLRS/actions/artifacts/406542513/zip"
             unzip firmware.zip
             rm firmware.zip
-            mv firmware 3.x.x-maintenance
+            mv firmware 3.0.1
             curl -H "Accept: application/vnd.github+json" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -L -o firmware.zip "https://api.github.com/repos/ExpressLRS/ExpressLRS/actions/artifacts/357703416/zip"
             unzip firmware.zip
             rm firmware.zip
