@@ -5,6 +5,7 @@ import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
 import { autocomplete } from './autocomplete.js'
 import { SwalMUI, Toast } from './swalmui.js'
+import FileSaver, { saveAs } from 'file-saver'
 import mui from 'muicss'
 
 const versions = ['3.0.1', '3.0.0']
@@ -660,35 +661,17 @@ flashButton.onclick = async (e) => {
 
 const downloadFirmware = async () => {
   const [binary] = await generateFirmware()
-  let file = null
-  const makeFile = function () {
-    const bin = binary[binary.length - 1].buffer
-    const data = new Blob([bin], { type: 'application/octet-stream' })
-    if (file !== null) {
-      window.URL.revokeObjectURL(file)
-    }
-    file = window.URL.createObjectURL(data)
-    return file
-  }
+  const bin = binary[binary.length - 1].data.buffer
+  const data = new Blob([bin], { type: 'application/octet-stream' })
 
-  const link = document.createElement('a')
-  link.setAttribute('download', 'firmware.bin')
-  link.href = makeFile()
-  document.body.appendChild(link)
-
-  // wait for the link to be added to the document
-  window.requestAnimationFrame(function () {
-    const event = new MouseEvent('click')
-    link.dispatchEvent(event)
-    document.body.removeChild(link)
-  })
+  FileSaver.saveAs(data, 'firmware.bin')
 }
 
 const wifiUpload = async () => {
   const [binary] = await generateFirmware()
 
   try {
-    const bin = binary[binary.length - 1].buffer
+    const bin = binary[binary.length - 1].data.buffer
     const data = new Blob([bin], { type: 'application/octet-stream' })
     const formdata = new FormData()
     formdata.append('upload', data, 'firmware.bin')
