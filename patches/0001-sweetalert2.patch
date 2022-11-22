@@ -1,27 +1,22 @@
---- node_modules/sweetalert2/dist/sweetalert2.js	2022-07-29 08:03:47.000000000 +1200
-+++ node_modules/sweetalert2/dist/sweetalert2.js	2022-07-29 08:02:17.000000000 +1200
-@@ -501,19 +501,19 @@
+--- node_modules/sweetalert2/dist/sweetalert2.js	2022-11-23 07:20:19
++++ node_modules/sweetalert2/dist/sweetalert2.js	2022-11-23 07:24:00
+@@ -398,15 +398,15 @@
        case 'select':
        case 'textarea':
        case 'file':
--        return popup.querySelector(".".concat(swalClasses.popup, " > .").concat(swalClasses[inputClass]));
-+        return popup.querySelector(".".concat(swalClasses.popup, " .").concat(swalClasses[inputClass]));
- 
+-        return popup.querySelector(`.${swalClasses.popup} > .${swalClasses[inputClass]}`);
++        return popup.querySelector(`.${swalClasses.popup} .${swalClasses[inputClass]}`);
        case 'checkbox':
--        return popup.querySelector(".".concat(swalClasses.popup, " > .").concat(swalClasses.checkbox, " input"));
-+        return popup.querySelector(".".concat(swalClasses.popup, " .").concat(swalClasses.checkbox, " input"));
- 
+-        return popup.querySelector(`.${swalClasses.popup} > .${swalClasses.checkbox} input`);
++        return popup.querySelector(`.${swalClasses.popup} .${swalClasses.checkbox} input`);
        case 'radio':
--        return popup.querySelector(".".concat(swalClasses.popup, " > .").concat(swalClasses.radio, " input:checked")) || popup.querySelector(".".concat(swalClasses.popup, " > .").concat(swalClasses.radio, " input:first-child"));
-+        return popup.querySelector(".".concat(swalClasses.popup, " .").concat(swalClasses.radio, " input:checked")) || popup.querySelector(".".concat(swalClasses.popup, " > .").concat(swalClasses.radio, " input:first-child"));
- 
+-        return popup.querySelector(`.${swalClasses.popup} > .${swalClasses.radio} input:checked`) || popup.querySelector(`.${swalClasses.popup} > .${swalClasses.radio} input:first-child`);
++        return popup.querySelector(`.${swalClasses.popup} .${swalClasses.radio} input:checked`) || popup.querySelector(`.${swalClasses.popup} .${swalClasses.radio} input:first-child`);
        case 'range':
--        return popup.querySelector(".".concat(swalClasses.popup, " > .").concat(swalClasses.range, " input"));
-+        return popup.querySelector(".".concat(swalClasses.popup, " .").concat(swalClasses.range, " input"));
- 
+-        return popup.querySelector(`.${swalClasses.popup} > .${swalClasses.range} input`);
++        return popup.querySelector(`.${swalClasses.popup} .${swalClasses.range} input`);
        default:
--        return popup.querySelector(".".concat(swalClasses.popup, " > .").concat(swalClasses.input));
-+        return popup.querySelector(".".concat(swalClasses.popup, " .").concat(swalClasses.input));
+-        return popup.querySelector(`.${swalClasses.popup} > .${swalClasses.input}`);
++        return popup.querySelector(`.${swalClasses.popup} .${swalClasses.input}`);
      }
    };
-   /**
