@@ -407,9 +407,9 @@ deviceNext.onclick = (e) => {
 methodSelect.onchange = () => {
   _('options-next').disabled = false
   if (methodSelect.value === 'download') {
-    _('options-next').value = 'Download'
+    _('options-next').innerText = 'Download'
   } else {
-    _('options-next').value = 'Next'
+    _('options-next').innerText = 'Next'
   }
 }
 
