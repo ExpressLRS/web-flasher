@@ -161,10 +161,10 @@ class Passthrough {
     if (!await this._validate_serialrx('serialrx_halfduplex', ['OFF', 'AUTO'])) {
       serialCheck.push('Serial Receiver UART is not in full duplex! Hint: set serialrx_halfduplex = OFF')
     }
-    if (await this._validate_serialrx('rx_spi_protocol', ['EXPRESSLRS'])) {
-      serialCheck.push('ExpressLRS SPI RX detected\n\nUpdate via betaflight to flash your RX\nhttps://www.expresslrs.org/2.0/hardware/spi-receivers/')
-    }
     if (serialCheck.length > 0) {
+      if (await this._validate_serialrx('rx_spi_protocol', ['EXPRESSLRS'])) {
+        serialCheck.push('ExpressLRS SPI RX detected\n\nUpdate via betaflight to flash your RX\nhttps://www.expresslrs.org/2.0/hardware/spi-receivers/')
+      }
       let msg = ''
       this.log('[ERROR] Invalid serial RX configuration detected:\n')
       for (const err of serialCheck) {
