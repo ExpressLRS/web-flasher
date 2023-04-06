@@ -40,7 +40,7 @@ class ESPFlasher {
     if (this.method === 'uart') {
       if (this.type === 'RX' && this.config.platform !== 'esp32') {
         await transport.connect({ baud: baudrate })
-        const ret = await this.esploader._connect_attempt()
+        const ret = await this.esploader._connect_attempt({ mode: 'no_reset' })
 
         if (ret !== 'success') {
           await transport.disconnect()
