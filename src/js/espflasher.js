@@ -69,7 +69,7 @@ class ESPFlasher {
     const loader = this.esploader
     if (this.method === 'etx' || this.method === 'betaflight') {
       loader.FLASH_WRITE_SIZE = 0x0800
-      if (this.config.platform === 'esp32') {
+      if (this.config.platform === 'esp32' && this.method === 'betaflight') {
         files = files.slice(-1)
       }
     }
