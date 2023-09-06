@@ -163,10 +163,13 @@ const displayProxyHelp = async (e) => {
 Wifi auto-discover is current <b>disabled</b> because the ExpressLRS auto-discovery proxy is not running on the local computer.
 <br><br>
 Wifi auto-discovery allows the flasher application to discover ExpressLRS wifi enabled devices on your network using mDNS.
-It also allows flashing these devices via HTTP proxying.
+It also allows flashing these devices via the auto-discovery proxy.
 <br><br>
-To enable Wifi auto-discovery the ExpressLRS auto-discovery proxy must be running on the local computer.
-You can download the proxy for your system from the <a target="_blank" href="//github.com/pkendall64/elrs-web-flasher">github</a> project page.
+If you do not have the auto-discovery application running, you can still flash the device via wifi by choosing the "local download"
+option as the flashing method and upload the binary file via the devices web-ui.
+<br><br>
+To enable Wifi auto-discovery and flashing, the ExpressLRS auto-discovery proxy must be running on the local computer.
+You can download the proxy for your system from the <a target="_blank" href="//github.com/ExpressLRS/web-flasher">web-flasher github</a> project page.
 </div>
 `
   })
