@@ -169,7 +169,7 @@ If you do not have the auto-discovery application running, you can still flash t
 option as the flashing method and upload the binary file via the devices web-ui.
 <br><br>
 To enable Wifi auto-discovery and flashing, the ExpressLRS auto-discovery proxy must be running on the local computer.
-You can download the proxy for your system from the <a target="_blank" href="//github.com/ExpressLRS/web-flasher">web-flasher github</a> project page.
+You can download the proxy for your system from the <a target="_blank" href="//github.com/ExpressLRS/web-flasher/releases">web-flasher github</a> project page.
 </div>
 `
   })
