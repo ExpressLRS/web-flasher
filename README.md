@@ -23,10 +23,10 @@ To build the distribution for stuffing on a web server
 npm run dist
 ```
 # Firmware
-To actually test the code you will need a firmware folder in the same directory as `index.html` and friends.
-The firmware folder, with all it's acoutrements can be downloaded from the ExpressLRS github repository.
-1. Browse to `https://github.com/ExpressLRS/ExpressLRS/actions/workflows/build.yml?query=branch%3A3.x.x-maintenance+`
-2. Find the latest `3.x.x-maintenance` build, and click on that build
-3. At the bottom of the page you will find `firmware`, this is the firmware zip that you need to download
-4. For development, unzip `firmware.zip` in the root folder, next to this `README.md` file.
-5. For deployment, unzip `firmware.zip` in the same folder as `index.html`.
+To actually test the code you will need a firmware folder at the root of the project.
+The firmware folder, with all it's accoutrements can be downloaded from the ExpressLRS artifact repository by
+executing the `get_artifacts.sh` command. This will download all the release artifacts and put all the versions
+into the `index.js` file for testing locally.
+When committing you changes, you will note that there is a comment above where the versions were placed in the
+`index.js` file telling you not to commit changes to that line. So it is very important to revert the changes
+to the `versions` line before committing you changes.

@@ -8,7 +8,9 @@ import { SwalMUI, Toast } from './swalmui.js'
 import FileSaver from 'file-saver'
 import mui from 'muicss'
 
+// DO NOT COMMIT CHANGES TO THE FOLLOWING LINE!!!
 const versions = ['@VERSIONS@']
+//
 const versionSelect = _('version')
 const flashMode = _('flash-mode')
 const flashButton = _('flashButton')
