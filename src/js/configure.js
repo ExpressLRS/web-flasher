@@ -191,9 +191,9 @@ export class Configure {
       const folder = `firmware/${version}`
       const hardwareLayoutFile = await this.#fetch_file(`${folder}/hardware/${deviceType}/${config.layout_file}`, 0)
       if (config.platform === 'esp32') {
-        list.push(this.#fetch_file(`${folder}/bootloader_dio_40m.bin`, 0x1000))
-        list.push(this.#fetch_file(`${folder}/partitions.bin`, 0x8000))
-        list.push(this.#fetch_file(`${folder}/boot_app0.bin`, 0xE000))
+        list.push(this.#fetch_file(firmwareUrl.replace('firmware.bin', 'bootloader.bin'), 0x1000))
+        list.push(this.#fetch_file(firmwareUrl.replace('firmware.bin', 'partitions.bin'), 0x8000))
+        list.push(this.#fetch_file(firmwareUrl.replace('firmware.bin', 'boot_app0.bin'), 0xE000))
         list.push(this.#fetch_file(firmwareUrl, 0x10000, (bin) => Configure.#configureESP(bin, config, options)))
       } else if (config.platform === 'esp8285') {
         list.push(this.#fetch_file(firmwareUrl, 0x0, (bin) => Configure.#configureESP(bin, config, options)))

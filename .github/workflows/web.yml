@@ -32,12 +32,15 @@ jobs:
             cd dist
             mkdir firmware
             cd firmware
+            curl -L -o index.json https://artifactory.expresslrs.org/ExpressLRS/index.json
             for i in 3.0.0 3.0.1 3.1.0 3.1.1 3.1.2 3.2.0 3.2.1 3.3.0 ; do
-              curl -L -o firmware.zip "http://vps.pkendall.cloudns.org/firmware-$i.zip"
+              HASH=`grep \"$i\" index.json | sed 's/.* "//' | sed 's/".*//'`
+              curl -L -o firmware.zip "https://artifactory.expresslrs.org/ExpressLRS/$HASH/firmware.zip"
               unzip firmware.zip
               rm firmware.zip
               mv firmware $i
             done
+            rm -f index.json
       - name: Setup Pages
         if: ${{ github.ref == 'refs/heads/master' }}
         uses: actions/configure-pages@v1
