@@ -147,10 +147,13 @@ export class Configure {
     return pos
   }
 
-  static #appendArray = (arr1, arr2) => {
-    const c = new Uint8Array(arr1.length + arr2.length)
-    c.set(arr1, 0)
-    c.set(arr2, arr1.length)
+  static #appendArray = (...args) => {
+    const totalLength = args.reduce((acc, value) => acc + value.length, 0);
+    const c = new Uint8Array(totalLength)
+    args.reduce((acc, value) => {
+      c.set(value, acc)
+      return acc + value.length
+    }, 0)
     return c
   }
 
@@ -174,11 +177,12 @@ export class Configure {
 
   static #configureESP = (binary, config, options) => {
     const end = this.#findFirmwareEnd(binary, config)
-    binary = binary.slice(0, end)
-    binary = this.#appendArray(binary, this.#bstrToUi8(config.product_name.padEnd(128, '\x00')))
-    binary = this.#appendArray(binary, this.#bstrToUi8(config.lua_name.padEnd(16, '\x00')))
-    binary = this.#appendArray(binary, this.#bstrToUi8(JSON.stringify(options).padEnd(512, '\x00')))
-    return binary
+    return this.#appendArray(
+      binary.slice(0, end),
+      this.#bstrToUi8(config.product_name.padEnd(128, '\x00')),
+      this.#bstrToUi8(config.lua_name.padEnd(16, '\x00')),
+      this.#bstrToUi8(JSON.stringify(options).padEnd(512, '\x00'))
+    ) 
   }
 
   static download = async (deviceType, radioType, config, firmwareUrl, options) => {
@@ -207,7 +211,16 @@ export class Configure {
         ...JSON.parse(this.#ui8ToBstr(hardwareLayoutFile.data)),
         ...config.overlay
       }))
-      files[files.length - 1].data = this.#appendArray(files[files.length - 1].data, this.#appendArray(hardwareLayoutData, new Uint8Array([0])))
+      var logoFile = { data: new Uint8Array(0), address: 0 }
+      if (config.logo_file !== undefined) {
+        logoFile = await this.#fetch_file(`${folder}/hardware/logo/${config.logo_file}`, 0)
+      }
+      files[files.length - 1].data = this.#appendArray(
+        files[files.length - 1].data,
+        hardwareLayoutData,
+        (new Uint8Array(2048-hardwareLayoutData.length)).fill(0),
+        logoFile.data
+      )
       return files
     }
   }
