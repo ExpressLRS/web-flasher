@@ -448,7 +448,9 @@ methodSelect.onchange = () => {
 const getSettings = async (deviceType) => {
   const config = selectedModel
   const firmwareUrl = `firmware/${versionSelect.value}/${_('fcclbt').value}/${config.firmware}/firmware.bin`
-  const options = {}
+  const options = {
+    'flash-discriminator': Math.floor(Math.random()*((2**31)-2)+1)
+  }
 
   if (_('uid').value !== '') {
     options.uid = _('uid').value.split(',').map((element) => {
