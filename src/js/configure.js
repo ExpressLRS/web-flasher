@@ -193,7 +193,22 @@ export class Configure {
       const list = []
       const version = document.getElementById('version').value
       const folder = `firmware/${version}`
-      const hardwareLayoutFile = await this.#fetch_file(`${folder}/hardware/${deviceType}/${config.layout_file}`, 0)
+
+      var hardwareLayoutData
+      if (config.custom_layout) {
+        hardwareLayoutData = this.#bstrToUi8(JSON.stringify(config.custom_layout))
+      } else {
+        const hardwareLayoutFile = await this.#fetch_file(`${folder}/hardware/${deviceType}/${config.layout_file}`, 0)
+        if (config.overlay === undefined) {
+          hardwareLayoutData = hardwareLayoutFile.data
+        } else {
+          hardwareLayoutData = this.#bstrToUi8(JSON.stringify({
+            ...JSON.parse(this.#ui8ToBstr(hardwareLayoutFile.data)),
+            ...config.overlay
+          }))
+        }
+      }
+
       if (config.platform === 'esp32') {
         list.push(this.#fetch_file(firmwareUrl.replace('firmware.bin', 'bootloader.bin'), 0x1000))
         list.push(this.#fetch_file(firmwareUrl.replace('firmware.bin', 'partitions.bin'), 0x8000))
@@ -204,13 +219,6 @@ export class Configure {
       }
 
       const files = await Promise.all(list)
-      if (config.overlay === undefined) {
-        config.overlay = {}
-      }
-      const hardwareLayoutData = this.#bstrToUi8(JSON.stringify({
-        ...JSON.parse(this.#ui8ToBstr(hardwareLayoutFile.data)),
-        ...config.overlay
-      }))
       var logoFile = { data: new Uint8Array(0), address: 0 }
       if (config.logo_file !== undefined) {
         logoFile = await this.#fetch_file(`${folder}/hardware/logo/${config.logo_file}`, 0)
