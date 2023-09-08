@@ -200,7 +200,7 @@ export class Configure {
       }
 
       const files = await Promise.all(list)
-      if (config.overlay) {
+      if (config.overlay === undefined) {
         config.overlay = {}
       }
       const hardwareLayoutData = this.#bstrToUi8(JSON.stringify({
