@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "postinstall": "patch -Ntu -p0 < patches/0001-sweetalert2.patch; patch -Ntu -p0 < patches/0002-esptool-js.patch",
+    "postinstall": "patch -Ntu -p0 < patches/0001-sweetalert2.patch",
     "dev": "webpack serve --open --config webpack.dev.js",
     "dist": "webpack --config webpack.dist.js"
   },
@@ -13,13 +13,13 @@
     "@sweetalert2/theme-material-ui": "^5.0.15",
     "bluejay-rtttl-parse": "^2.0.2",
     "crypto-js": "^4.1.1",
-    "esptool-js": "github:pkendall64/esptool-js#elrs",
+    "esptool-js": "github:pkendall64/esptool-js#elrs-latest",
     "file-saver": "^2.0.5",
     "muicss": "^0.10.3",
     "pako": "^2.1.0",
     "sweetalert2": "^11.6.11",
     "xterm": "^5.0.0",
-    "xterm-addon-fit": "^0.6.0"
+    "xterm-addon-fit": "^0.8.0"
   },
   "devDependencies": {
     "css-loader": "^6.7.2",
