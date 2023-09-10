@@ -148,7 +148,7 @@ export class Configure {
   }
 
   static #appendArray = (...args) => {
-    const totalLength = args.reduce((acc, value) => acc + value.length, 0);
+    const totalLength = args.reduce((acc, value) => acc + value.length, 0)
     const c = new Uint8Array(totalLength)
     args.reduce((acc, value) => {
       c.set(value, acc)
@@ -182,7 +182,7 @@ export class Configure {
       this.#bstrToUi8(config.product_name.padEnd(128, '\x00')),
       this.#bstrToUi8(config.lua_name.padEnd(16, '\x00')),
       this.#bstrToUi8(JSON.stringify(options).padEnd(512, '\x00'))
-    ) 
+    )
   }
 
   static download = async (deviceType, radioType, config, firmwareUrl, options) => {
@@ -194,11 +194,13 @@ export class Configure {
       const version = document.getElementById('version').value
       const folder = `firmware/${version}`
 
-      var hardwareLayoutData
+      let hardwareLayoutData
       if (config.custom_layout) {
         hardwareLayoutData = this.#bstrToUi8(JSON.stringify(config.custom_layout))
       } else {
+        // get layout from version specific folder OR fall back to global folder
         const hardwareLayoutFile = await this.#fetch_file(`${folder}/hardware/${deviceType}/${config.layout_file}`, 0)
+          .catch(() => this.#fetch_file(`firmware/hardware/${deviceType}/${config.layout_file}`, 0))
         if (config.overlay === undefined) {
           hardwareLayoutData = hardwareLayoutFile.data
         } else {
@@ -219,14 +221,16 @@ export class Configure {
       }
 
       const files = await Promise.all(list)
-      var logoFile = { data: new Uint8Array(0), address: 0 }
+      let logoFile = { data: new Uint8Array(0), address: 0 }
       if (config.logo_file !== undefined) {
+        // get logo from version specific folder OR fall back to global folder
         logoFile = await this.#fetch_file(`${folder}/hardware/logo/${config.logo_file}`, 0)
+          .catch(() => this.#fetch_file(`firmware/hardware/logo/${config.logo_file}`, 0))
       }
       files[files.length - 1].data = this.#appendArray(
         files[files.length - 1].data,
         hardwareLayoutData,
-        (new Uint8Array(2048-hardwareLayoutData.length)).fill(0),
+        (new Uint8Array(2048 - hardwareLayoutData.length)).fill(0),
         logoFile.data
       )
       return files

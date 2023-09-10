@@ -245,6 +245,10 @@ const compareSemanticVersions = (a, b) => {
   return b1.length - a1.length
 }
 
+const compareSemanticVersionsRC = (a, b) => {
+  return compareSemanticVersions(a.replace(/-.*/, ''), b.replace(/-.*/, ''))
+}
+
 async function initialise () {
   checkProxy()
   setInterval(() => { checkProxy() }, 30000)
@@ -281,13 +285,11 @@ versionSelect.onchange = async () => {
   typeSelect.disabled = true
   typeSelect.value = ''
 
-  const version = versionSelect.value
-  const json = await checkStatus(await fetch(`firmware/${version}/hardware/targets.json`)).json()
-  hardware = json
-  for (const k in json) {
+  hardware = await checkStatus(await fetch('firmware/hardware/targets.json')).json()
+  for (const k in hardware) {
     const opt = document.createElement('option')
     opt.value = k
-    opt.innerHTML = json[k].name === undefined ? k : json[k].name
+    opt.innerHTML = hardware[k].name === undefined ? k : hardware[k].name
     vendorSelect.appendChild(opt)
   }
   vendorSelect.disabled = false
@@ -295,11 +297,12 @@ versionSelect.onchange = async () => {
   setDisplay('.stlink', false)
   setDisplay('.wifi', false)
 
+  const version = versionSelect.options[versionSelect.selectedIndex].text
   const models = []
   for (const v in hardware) {
     for (const t in hardware[v]) {
       for (const m in hardware[v][t]) {
-        if (hardware[v][t][m].product_name !== undefined) {
+        if (hardware[v][t][m].product_name !== undefined && compareSemanticVersionsRC(version, hardware[v][t][m].min_version) >= 0) {
           models.push(hardware[v][t][m].product_name)
         }
       }
@@ -377,10 +380,11 @@ vendorSelect.onchange = () => {
   modelSelect.value = ''
   deviceNext.disabled = true
   const models = []
+  const version = versionSelect.options[versionSelect.selectedIndex].text
   const v = vendorSelect.value
   for (const t in hardware[v]) {
     for (const m in hardware[v][t]) {
-      if (hardware[v][t][m].product_name !== undefined) {
+      if (hardware[v][t][m].product_name !== undefined && compareSemanticVersionsRC(version, hardware[v][t][m].min_version) >= 0) {
         models.push(hardware[v][t][m].product_name)
       }
     }
@@ -392,10 +396,11 @@ typeSelect.onchange = () => {
   modelSelect.value = ''
   deviceNext.disabled = true
   const models = []
+  const version = versionSelect.options[versionSelect.selectedIndex].text
   const v = vendorSelect.value
   const t = typeSelect.value
   for (const m in hardware[v][t]) {
-    if (hardware[v][t][m].product_name !== undefined) {
+    if (hardware[v][t][m].product_name !== undefined && compareSemanticVersionsRC(version, hardware[v][t][m].min_version) >= 0) {
       models.push(hardware[v][t][m].product_name)
     }
   }
