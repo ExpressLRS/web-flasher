@@ -32,7 +32,7 @@ class ESPFlasher {
       initbaud = 115200
     }
 
-    const transport = new TransportEx(this.device, true)
+    const transport = new TransportEx(this.device, false)
     this.esploader = new ESPLoader(transport, baudrate, this.term, initbaud === undefined ? baudrate : initbaud)
     this.esploader.ESP_RAM_BLOCK = 0x0800 // we override otherwise flashing on BF will fail
 

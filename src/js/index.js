@@ -234,11 +234,14 @@ async function downloadFile (url, filename) {
 function initialise () {
   checkProxy()
   setInterval(() => { checkProxy() }, 30000)
-  term = new Terminal({ cols: 80, rows: 40 })
+  term = new Terminal()
+  term.open(_('serial-monitor'))
   const fitAddon = new FitAddon()
   term.loadAddon(fitAddon)
   fitAddon.fit()
-  term.open(_('serial-monitor'))
+  window.onresize = () => {
+    fitAddon.fit()
+  }
 
   initBindingPhraseGen()
   let selected = true
