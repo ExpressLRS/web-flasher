@@ -44,6 +44,8 @@ jobs:
             rm -f index.json
             VERSIONS=`echo $VERSIONS|sed 's/, //'`
             sed -i~ "s/\"@VERSIONS@\"/$VERSIONS/" ../main*.js
+            GITHASH=`git rev-parse --short HEAD`
+            sed -i~ "s/@GITHASH@/$GITHASH/" ../index.html
       - name: Setup Pages
         if: ${{ github.ref == 'refs/heads/master' }}
         uses: actions/configure-pages@v1
