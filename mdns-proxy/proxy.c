@@ -111,7 +111,7 @@ int connect_client(int conn, const char *dest)
 
     if(inet_pton(AF_INET, dest, &serv_addr.sin_addr)<=0)
     {
-        printf("inet_pton error occured\n");
+        printf("inet_pton error occurred\n");
         return -1;
     }
 
@@ -188,12 +188,14 @@ int process_response(int conn)
         int peer = connection[conn].peer;
         // forward data to peer
         if (!connection[conn].started) {
-            // add in CORS header
-            const char *header = "\r\nAccess-Control-Allow-Origin: *";
-            const char *end = strstr(buffer, "\r\n\r\n");
-            if (output(peer, buffer, end - buffer) == -1) return -1;
-            if (output(peer, header, strlen(header)) == -1) return -1;
-            return output(peer, end, nbytes - (end - buffer));
+            // add in CORS header if theres not one already
+            if (strstr(buffer, "Access-Control-Allow-Origin:") == 0) {
+                const char *header = "\r\nAccess-Control-Allow-Origin: *";
+                const char *end = strstr(buffer, "\r\n\r\n");
+                if (output(peer, buffer, end - buffer) == -1) return -1;
+                if (output(peer, header, strlen(header)) == -1) return -1;
+                return output(peer, end, nbytes - (end - buffer));
+            }
         }
         return output(peer, buffer, nbytes);
     }
