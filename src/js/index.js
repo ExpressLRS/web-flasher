@@ -237,8 +237,8 @@ function initialise () {
   term = new Terminal({ cols: 80, rows: 40 })
   const fitAddon = new FitAddon()
   term.loadAddon(fitAddon)
-  term.open(_('serial-monitor'))
   fitAddon.fit()
+  term.open(_('serial-monitor'))
 
   initBindingPhraseGen()
   let selected = true
