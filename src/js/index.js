@@ -816,26 +816,27 @@ function abortHandler (event) {
 
 // Allow dropping of JSON file on "Next" button
 
-function fileDragHover(e) {
+function fileDragHover (e) {
   e.stopPropagation()
   e.preventDefault()
-  if (e.type == 'dragenter')
+  if (e.type === 'dragenter') {
     e.target.classList.add('hover')
-  else
+  } else {
     e.target.classList.remove('hover')
-}
-
-async function fileSelectHandler(e) {
-  fileDragHover(e)
-  const files = e.target.files || e.dataTransfer.files
-  for (let i = 0, f; f = files[i]; i++) {
-    parseFile(f)
   }
 }
 
-async function parseFile(file) {
+async function fileSelectHandler (e) {
+  fileDragHover(e)
+  const files = e.target.files || e.dataTransfer.files
+  if (files.length > 0) {
+    parseFile(files[0])
+  }
+}
+
+async function parseFile (file) {
   const reader = new FileReader()
-  reader.onload = async function(e) {
+  reader.onload = async function (e) {
     const customLayout = JSON.parse(e.target.result)
     SwalMUI.select({
       title: 'Select device type to flash',
@@ -847,27 +848,27 @@ async function parseFile(file) {
         'ESP8285 2.4GHz TX',
         'ESP8285 2.4GHz RX',
         'ESP8285 900GHz TX',
-        'ESP8285 900GHz RX',
+        'ESP8285 900GHz RX'
       ]
     }).then((p) => {
-      var v = p.value
-      const platform = (v<4) ? 'esp32' : 'esp8285'
+      const v = p.value
+      const platform = (v < 4) ? 'esp32' : 'esp8285'
       selectedModel = {
-        product_name: "Custom Target",
-        lua_name: "Custom",
-        upload_methods: (v%2 === 0) ? ["uart", "etx", "wifi"] :["uart", "betaflight", "wifi"],
-        platform: platform,
-        firmware: `Unified_${platform.toUpperCase()}_${((v/2)%2)===0 ? '2400' : '900'}_${(v%2 === 0) ? 'TX' : 'RX'}`,
+        product_name: 'Custom Target',
+        lua_name: 'Custom',
+        upload_methods: (v % 2 === 0) ? ['uart', 'etx', 'wifi'] : ['uart', 'betaflight', 'wifi'],
+        platform,
+        firmware: `Unified_${platform.toUpperCase()}_${((v / 2) % 2) === 0 ? '2400' : '900'}_${(v % 2 === 0) ? 'TX' : 'RX'}`,
         custom_layout: customLayout
       }
-      typeSelect.value = `${(v%2 === 0) ? 'tx' : 'rx'}_${((v/2)%2)===0 ? '2400' : '900'}`
+      typeSelect.value = `${(v % 2 === 0) ? 'tx' : 'rx'}_${((v / 2) % 2) === 0 ? '2400' : '900'}`
       deviceNext.onclick(e)
     })
   }
   reader.readAsText(file)
 }
 
-function initFiledrag() {
+function initFiledrag () {
   const filedrag = _('custom-drop')
   filedrag.addEventListener('dragover', fileDragHover, false)
   filedrag.addEventListener('dragenter', fileDragHover, false)
