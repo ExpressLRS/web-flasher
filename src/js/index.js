@@ -8,9 +8,6 @@ import { SwalMUI, Toast } from './swalmui.js'
 import FileSaver from 'file-saver'
 import mui from 'muicss'
 
-// DO NOT COMMIT CHANGES TO THE FOLLOWING LINE!!!
-const versions = ['@VERSIONS@']
-//
 const versionSelect = _('version')
 const flashMode = _('flash-mode')
 const flashButton = _('flashButton')
@@ -23,6 +20,9 @@ const methodSelect = _('method')
 const deviceNext = _('device-next')
 const deviceDiscoverButton = _('device-discover')
 
+const mode = 'tags'
+const showRCs = true
+let index = null
 let hardware = null
 let selectedModel = null
 let device = null
@@ -231,7 +231,21 @@ async function downloadFile (url, filename) {
   }
 }
 
-function initialise () {
+const compareSemanticVersions = (a, b) => {
+  const a1 = a.split(/[.-]/)
+  const b1 = b.split(/[.-]/)
+  const len = Math.min(a1.length, b1.length)
+  for (let i = 0; i < len; i++) {
+    const a2 = +a1[i] || 0
+    const b2 = +b1[i] || 0
+    if (a2 !== b2) {
+      return a2 > b2 ? 1 : -1
+    }
+  }
+  return b1.length - a1.length
+}
+
+async function initialise () {
   checkProxy()
   setInterval(() => { checkProxy() }, 30000)
   term = new Terminal()
@@ -244,15 +258,18 @@ function initialise () {
   }
 
   initBindingPhraseGen()
+  index = await checkStatus(await fetch('firmware/index.json')).json()
   let selected = true
-  for (const v in versions) {
+  Object.keys(index[mode]).sort(compareSemanticVersions).reverse().forEach((version, i) => {
     const opt = document.createElement('option')
-    opt.value = versions[v]
-    opt.innerHTML = versions[v]
-    opt.selected = selected
-    versionSelect.appendChild(opt)
-    selected = false
-  }
+    if (version.indexOf('-RC') === -1 || showRCs) {
+      opt.value = index[mode][version]
+      opt.innerHTML = version
+      opt.selected = selected
+      versionSelect.appendChild(opt)
+      selected = false
+    }
+  })
   versionSelect.onchange()
   initFiledrag()
 }
@@ -453,7 +470,7 @@ const getSettings = async (deviceType) => {
   const config = selectedModel
   const firmwareUrl = `firmware/${versionSelect.value}/${_('fcclbt').value}/${config.firmware}/firmware.bin`
   const options = {
-    'flash-discriminator': Math.floor(Math.random()*((2**31)-2)+1)
+    'flash-discriminator': Math.floor(Math.random() * ((2 ** 31) - 2) + 1)
   }
 
   if (_('uid').value !== '') {
