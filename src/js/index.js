@@ -452,7 +452,7 @@ deviceNext.onclick = (e) => {
   _('etx').disabled = true
   _('wifi').disabled = true
   _('stlink').disabled = true
-  selectedModel.upload_methods.forEach((k) => { _(k).disabled = false })
+  selectedModel.upload_methods.forEach((k) => { if (_(k)) _(k).disabled = false })
 
   setDisplay('#step-device', false)
   setClass('#step-2', 'active')

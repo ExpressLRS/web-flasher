@@ -188,7 +188,7 @@ export class Configure {
   static download = async (deviceType, radioType, config, firmwareUrl, options) => {
     if (config.platform === 'stm32') {
       const entry = await this.#fetch_file(firmwareUrl, 0, (bin) => this.#configureSTM32(bin, deviceType, radioType, options))
-      return [entry.data]
+      return [entry]
     } else {
       const list = []
       const version = document.getElementById('version').value
