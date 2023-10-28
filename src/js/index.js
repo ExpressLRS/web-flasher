@@ -712,7 +712,7 @@ flashButton.onclick = async (e) => {
         text: 'Firmware upload complete'
       })
     } catch (e) {
-      errorHandler(e.message)
+      return errorHandler(e.message)
     } finally {
       closeDevice()
     }
@@ -818,7 +818,7 @@ function errorHandler (msg) {
   _('status').innerHTML = ''
   _('progressBar').value = 0
   mui.overlay('off')
-  SwalMUI.fire({
+  return SwalMUI.fire({
     icon: 'error',
     title: 'Update Failed',
     html: msg
@@ -829,7 +829,7 @@ function abortHandler (event) {
   _('status').innerHTML = ''
   _('progressBar').value = 0
   mui.overlay('off')
-  SwalMUI.fire({
+  return SwalMUI.fire({
     icon: 'info',
     title: 'Update Aborted',
     html: event.target.responseText

@@ -269,12 +269,7 @@ class XmodemFlasher {
         while (!gotBootloader) {
           currAttempt++
           if (currAttempt > 10) {
-            await SwalMUI.fire({
-              icon: 'error',
-              title: 'Flashing Failed',
-              text: 'Failed to enter bootloader mode in a reasonable time'
-            })
-            throw new Error('[FAILED] to get to BL in reasonable time')
+            throw new Error('Failed to enter bootloader mode in a reasonable time')
           }
           this.log(`[${currAttempt}] retry...`)
 
