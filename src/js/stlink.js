@@ -155,6 +155,7 @@ class STLink {
       this.device = device
     } catch (err) {
       this.error(err)
+      throw err
     }
     if (this.stlink !== null) {
       await this.on_successful_attach(this.stlink, this.device)
@@ -204,7 +205,7 @@ class STLink {
       this.log('================')
       try {
         await this.stlink.halt()
-        await this.stlink.flash(this.target.flash_start + addr, binary[0])
+        await this.stlink.flash(this.target.flash_start + addr, binary[0].data)
       } catch (err) {
         this.error(err)
         throw err
