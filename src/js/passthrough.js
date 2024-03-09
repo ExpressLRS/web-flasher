@@ -186,9 +186,9 @@ class Passthrough {
         break
       }
       if (line.startsWith('serial')) {
-        const regexp = /serial (?<port>[0-9]+) 64 /
+        const regexp = /serial (?<port>[0-9]+) (?<port_cfg>[0-9]+) /
         const config = line.match(regexp)
-        if (config && config.groups && config.groups.port) {
+        if (config && config.groups && config.groups.port && config.groups.port_cfg && (config.groups.port_cfg & 64)) {
           index = config.groups.port
           break
         }
