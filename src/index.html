@@ -85,6 +85,8 @@
                         <option value="rx_2400" id="rx_2400" disabled>2.4GHz Receiver</option>
                         <option value="tx_900" id="tx_900" disabled>900MHz Transmitter</option>
                         <option value="rx_900" id="rx_900" disabled>900MHz Receiver</option>
+                        <option value="tx_dual" id="tx_dual" disabled>Dual Frequency 2.4GHz/900Mhz Transmitter</option>
+                        <option value="rx_dual" id="rx_dual" disabled>Dual Frequency 2.4GHz/900Mhz Receiver</option>
                     </select>
                     <label>Device Type</label>
                 </div>
@@ -117,13 +119,13 @@
             </div>
 
             <div class="mui-select tx_2400 rx_2400 display--none">
-                <label>Region</label>
                 <select id='fcclbt' name='fcclbt'>
                     <option value='FCC' selected>FCC</option>
                     <option value='LBT'>LBT</option>
                 </select>
+                <label>Region</label>
             </div>
-            <div class="mui-select tx_900 rx_900 display--none">
+            <div class="mui-select tx_900 rx_900 tx_dual rx_dual display--none">
                 <select id='domain' name='domain'>
                     <option value='0'>AU915</option>
                     <option value='1' selected>FCC915</option>

@@ -370,8 +370,10 @@ _('step-2').onclick = (e) => {
 vendorSelect.onchange = () => {
   _('tx_2400').disabled = true
   _('tx_900').disabled = true
+  _('tx_dual').disabled = true
   _('rx_2400').disabled = true
   _('rx_900').disabled = true
+  _('rx_dual').disabled = true
   for (const k in hardware[vendorSelect.value]) {
     if (_(k) !== null) _(k).disabled = false
   }
@@ -432,6 +434,8 @@ deviceNext.onclick = (e) => {
   setDisplay('.rx_2400', false)
   setDisplay('.tx_900', false)
   setDisplay('.rx_900', false)
+  setDisplay('.tx_dual', false)
+  setDisplay('.rx_dual', false)
   setDisplay('.esp8285', false)
   setDisplay('.esp32', false)
   setDisplay('.stm32', false)
@@ -500,7 +504,7 @@ const getSettings = async (deviceType) => {
     options['uart-inverted'] = _('uart-inverted').checked
     options['unlock-higher-power'] = _('unlock-higher-power').checked
   }
-  if (typeSelect.value === 'rx_900' || typeSelect.value === 'tx_900') {
+  if (typeSelect.value.endsWith('_900') || typeSelect.value.endsWith('_dual')) {
     options.domain = +_('domain').value
   }
   if (config.features !== undefined && config.features.indexOf('buzzer') !== -1) {
@@ -524,7 +528,7 @@ const getSettings = async (deviceType) => {
 const connectUART = async (e) => {
   e.preventDefault()
   const deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX'
-  const radioType = typeSelect.value.endsWith('_900') ? 'sx127x' : 'sx128x'
+  const radioType = typeSelect.value.endsWith('_900') ? 'sx127x' : (typeSelect.value.endsWith('_2400') ? 'sx128x' : 'lr1121')
   term.clear()
   const { config, firmwareUrl, options } = await getSettings(deviceType)
   try {
@@ -582,7 +586,7 @@ const connectUART = async (e) => {
 
 const generateFirmware = async () => {
   const deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX'
-  const radioType = typeSelect.value.endsWith('_900') ? 'sx127x' : 'sx128x'
+  const radioType = typeSelect.value.endsWith('_900') ? 'sx127x' : (typeSelect.value.endsWith('_2400') ? 'sx128x' : 'lr1121')
   const { config, firmwareUrl, options } = await getSettings(deviceType)
   const firmwareFiles = await Configure.download(deviceType, radioType, config, firmwareUrl, options)
   return [
@@ -856,6 +860,7 @@ async function fileSelectHandler (e) {
   }
 }
 
+// Need to do something about C3 & LR1121
 async function parseFile (file) {
   const reader = new FileReader()
   reader.onload = async function (e) {
