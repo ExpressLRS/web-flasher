@@ -204,33 +204,6 @@ const checkProxy = async () => {
     })
 }
 
-_('download-lua').onclick = async () => {
-  downloadFile(`firmware/${versionSelect.value}/lua/elrsV3.lua`, 'elrsV3.lua')
-}
-
-async function downloadFile (url, filename) {
-  try {
-    const response = await fetch(url)
-    if (response.status !== 200) {
-      throw new Error(`Unable to download file. HTTP status: ${response.status}`)
-    }
-    const blob = await response.blob()
-    const downloadLink = document.createElement('a')
-    downloadLink.href = URL.createObjectURL(blob)
-    downloadLink.download = filename
-
-    document.body.appendChild(downloadLink)
-    downloadLink.click()
-
-    setTimeout(() => {
-      URL.revokeObjectURL(downloadLink.href)
-      document.body.removeChild(downloadLink)
-    }, 100)
-  } catch (error) {
-    console.error('Error downloading the file:', error.message)
-  }
-}
-
 const compareSemanticVersions = (a, b) => {
   const a1 = a.split(/[.-]/)
   const b1 = b.split(/[.-]/)
@@ -284,6 +257,8 @@ versionSelect.onchange = async () => {
   vendorSelect.value = ''
   typeSelect.disabled = true
   typeSelect.value = ''
+
+  _('download-lua').href = `firmware/${versionSelect.value}/lua/elrsV3.lua`
 
   hardware = await checkStatus(await fetch('firmware/hardware/targets.json')).json()
   for (const k in hardware) {
