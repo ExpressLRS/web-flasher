@@ -24,7 +24,7 @@ class ESPFlasher {
     } else if (this.method === 'etx') {
       baudrate = 230400
       mode = 'no_reset'
-    } else if (this.method === 'uart' && this.config.platform === 'esp32') {
+    } else if (this.method === 'uart' && this.config.platform.startsWith('esp32')) {
       initbaud = 115200
     }
 
@@ -44,7 +44,7 @@ class ESPFlasher {
 
     const passthrough = new Passthrough(transport, this.term, this.config.firmware, baudrate)
     if (this.method === 'uart') {
-      if (this.type === 'RX' && this.config.platform !== 'esp32') {
+      if (this.type === 'RX' && !this.config.platform.startsWith('esp32')) {
         await transport.connect(baudrate)
         const ret = await this.esploader._connectAttempt(mode = 'no_reset')
 
@@ -76,7 +76,7 @@ class ESPFlasher {
     const loader = this.esploader
     if (this.method === 'etx' || this.method === 'betaflight') {
       loader.FLASH_WRITE_SIZE = 0x0800
-      if (this.config.platform === 'esp32' && this.method === 'betaflight') {
+      if (this.config.platform.startsWith('esp32') && this.method === 'betaflight') {
         files = files.slice(-1)
       }
     }
@@ -98,7 +98,7 @@ class ESPFlasher {
       .then(_ => {
         document.getElementById('progressBar').value = 100
         document.getElementById('status').innerHTML = 'Flashing complete'
-        if (this.config.platform === 'esp32') {
+        if (this.config.platform.startsWith('esp32')) {
           return loader.hardReset().catch(() => {})
         } else {
           return loader.softReset().catch(() => {})

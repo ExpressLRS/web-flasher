@@ -136,14 +136,14 @@ export class Configure {
     if (config.platform === 'esp8285') pos = 0x1000
     if (binary[pos] !== 0xE9) throw new Error('The file provided does not the right magic for a firmware file!')
     let segments = binary[pos + 1]
-    if (config.platform === 'esp32') pos = 24
+    if (config.platform.startsWith('esp32')) pos = 24
     else pos = 0x1008
     while (segments--) {
       const size = binary[pos + 4] + (binary[pos + 5] << 8) + (binary[pos + 6] << 16) + (binary[pos + 7] << 24)
       pos += 8 + size
     }
     pos = (pos + 16) & ~15
-    if (config.platform === 'esp32') pos += 32
+    if (config.platform.startsWith('esp32')) pos += 32
     return pos
   }
 
@@ -211,8 +211,12 @@ export class Configure {
         }
       }
 
-      if (config.platform === 'esp32') {
-        list.push(this.#fetch_file(firmwareUrl.replace('firmware.bin', 'bootloader.bin'), 0x1000))
+      if (config.platform.startsWith('esp32')) {
+        let startAddress = 0x1000
+        if (config.platform.startsWith('esp32-')) {
+          startAddress = 0x0000
+        }
+        list.push(this.#fetch_file(firmwareUrl.replace('firmware.bin', 'bootloader.bin'), startAddress))
         list.push(this.#fetch_file(firmwareUrl.replace('firmware.bin', 'partitions.bin'), 0x8000))
         list.push(this.#fetch_file(firmwareUrl.replace('firmware.bin', 'boot_app0.bin'), 0xE000))
         list.push(this.#fetch_file(firmwareUrl, 0x10000, (bin) => Configure.#configureESP(bin, config, options)))
