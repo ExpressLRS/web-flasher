@@ -223,8 +223,8 @@ const compareSemanticVersions = (a, b) => {
   }
 
   // If main versions are equal, compare discriminators
-  if (d1 && !d2) return 1 // v1 is greater if it has a discriminator
-  if (!d1 && d2) return -1 // v2 is greater if it has a discriminator
+  if (!d1 && d2) return 1 // v1 is greater if it does not have discriminator
+  if (d1 && !d2) return -1 // v2 is greater if it does not have a discriminator
   if (d1 && d2) return d1.localeCompare(d2) // Compare discriminators
   return 0 // Versions are equal
 }
