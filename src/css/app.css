@@ -1,6 +1,6 @@
 @import 'muicss/dist/css/mui.css';
 @import '@sweetalert2/theme-material-ui/material-ui.css';
-@import 'xterm';
+@import '@xterm/xterm';
 @import './global.css';
 @import './stepper.css';
 @import './autocomplete.css';

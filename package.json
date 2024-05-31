@@ -18,8 +18,8 @@
     "muicss": "^0.10.3",
     "pako": "^2.1.0",
     "sweetalert2": "^11.11.0",
-    "xterm": "^5.3.0",
-    "xterm-addon-fit": "^0.8.0"
+    "@xterm/xterm": "^5.5.0",
+    "@xterm/addon-fit": "^0.10.0"
   },
   "devDependencies": {
     "css-loader": "^7.1.2",
