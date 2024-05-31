@@ -1,4 +1,4 @@
-import { Transport } from 'esptool-js/webserial'
+import { Transport } from 'esptool-js'
 
 class TransportEx extends Transport {
   ui8ToBstr (u8Array) {
@@ -28,8 +28,8 @@ class TransportEx extends Transport {
   read_line = async ({ timeout = 0 } = {}) => {
     console.log('Read with timeout ' + timeout)
     let t
-    let packet = this.left_over
-    this.left_over = new Uint8Array()
+    let packet = this.leftOver
+    this.leftOver = new Uint8Array()
     const delimiters = this.delimiters
     function findDelimeter (packet) {
       const index = packet.findIndex((_, i, a) => {
@@ -72,11 +72,11 @@ class TransportEx extends Transport {
         }
       }
     }
-    this.left_over = packet.slice(index)
+    this.leftOver = packet.slice(index)
     packet = packet.slice(0, index)
     if (this.tracing) {
       console.log('Read bytes')
-      console.log(this.hexdump(packet))
+      console.log(this.hexConvert(packet))
     }
     return this.ui8ToBstr(packet)
   }
@@ -86,7 +86,7 @@ class TransportEx extends Transport {
     const out = this.bstrToUi8(data)
     if (this.tracing) {
       console.log('Write bytes')
-      console.log(this.hexdump(out))
+      console.log(this.hexConvert(out))
     }
     await writer.write(out.buffer)
     writer.releaseLock()
@@ -96,7 +96,7 @@ class TransportEx extends Transport {
     const writer = this.device.writable.getWriter()
     if (this.tracing) {
       console.log('Write bytes')
-      console.log(this.hexdump(data))
+      console.log(this.hexConvert(data))
     }
     await writer.write(data.buffer)
     writer.releaseLock()

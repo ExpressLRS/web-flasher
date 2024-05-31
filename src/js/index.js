@@ -560,7 +560,9 @@ const connectUART = async (e) => {
       return closeDevice()
     } else {
       lblConnTo.innerHTML = 'Failed to connect to device, restart device and try again'
-      await closeDevice()
+      try {
+        await closeDevice()
+      } catch {}
       return await SwalMUI.fire({
         icon: 'error',
         title: e.title,
