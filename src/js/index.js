@@ -1,12 +1,16 @@
-import { Configure } from './configure.js'
-import { MismatchError, AlertError } from './error.js'
-import { initBindingPhraseGen } from './phrase.js'
+// External imports
 import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
-import { autocomplete } from './autocomplete.js'
-import { SwalMUI, Toast } from './swalmui.js'
 import FileSaver from 'file-saver'
 import mui from 'muicss'
+import pako from 'pako'
+
+// Local imports
+import { Configure } from './configure'
+import { MismatchError, AlertError } from './error'
+import { initBindingPhraseGen } from './phrase'
+import { autocomplete } from './autocomplete'
+import { SwalMUI, Toast } from './swalmui'
 
 const versionSelect = _('version')
 const flashMode = _('flash-mode')
@@ -712,11 +716,16 @@ flashButton.onclick = async (e) => {
 }
 
 const downloadFirmware = async () => {
-  const [binary] = await generateFirmware()
-  const bin = binary[binary.length - 1].data.buffer
-  const data = new Blob([bin], { type: 'application/octet-stream' })
-
-  FileSaver.saveAs(data, 'firmware.bin')
+  const [binary, {config, firmwareUrl, options}] = await generateFirmware()
+  if (config.platform === 'esp8285') {
+    const bin = pako.gzip(binary[binary.length - 1].data)
+    const data = new Blob([bin], { type: 'application/octet-stream' })
+    FileSaver.saveAs(data, 'firmware.bin.gz')
+  } else {
+    const bin = binary[binary.length - 1].data.buffer
+    const data = new Blob([bin], { type: 'application/octet-stream' })
+    FileSaver.saveAs(data, 'firmware.bin')
+  }
 }
 
 const wifiUpload = async () => {
