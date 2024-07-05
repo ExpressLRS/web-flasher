@@ -185,7 +185,8 @@ export class Configure {
     )
   }
 
-  static download = async (deviceType, radioType, config, firmwareUrl, options) => {
+  static download = async (deviceType, rxAsTxType, radioType, config, firmwareUrl, options) => {
+    if (rxAsTxType !== undefined) firmwareUrl = firmwareUrl.replace('_RX', '_TX')
     if (config.platform === 'stm32') {
       const entry = await this.#fetch_file(firmwareUrl, 0, (bin) => this.#configureSTM32(bin, deviceType, radioType, options))
       return [entry]
@@ -201,14 +202,15 @@ export class Configure {
         // get layout from version specific folder OR fall back to global folder
         const hardwareLayoutFile = await this.#fetch_file(`${folder}/hardware/${deviceType}/${config.layout_file}`, 0)
           .catch(() => this.#fetch_file(`firmware/hardware/${deviceType}/${config.layout_file}`, 0))
-        if (config.overlay === undefined) {
-          hardwareLayoutData = hardwareLayoutFile.data
-        } else {
-          hardwareLayoutData = this.#bstrToUi8(JSON.stringify({
-            ...JSON.parse(this.#ui8ToBstr(hardwareLayoutFile.data)),
+        let layout = JSON.parse(this.#ui8ToBstr(hardwareLayoutFile.data))
+        if (config.overlay !== undefined) {
+          layout = {
+            ...layout,
             ...config.overlay
-          }))
+          }
         }
+        if (rxAsTxType === 'external') layout['serial_rx'] = layout['serial_tx']
+        hardwareLayoutData = this.#bstrToUi8(JSON.stringify(layout))
       }
 
       if (config.platform.startsWith('esp32')) {

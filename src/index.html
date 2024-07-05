@@ -70,13 +70,13 @@
                 <div class="mui-select">
                     <select name="version" id="version">
                     </select>
-                    <label>Version</label>
+                    <label for="version">Version</label>
                 </div>
                 <div class="mui-select">
                     <select name="vendor" id="vendor" disabled>
                         <option value="" disabled selected></option>
                     </select>
-                    <label>Vendor</label>
+                    <label for="vendor">Vendor</label>
                 </div>
                 <div class="mui-select">
                     <select name="type" id="type" disabled>
@@ -88,11 +88,22 @@
                         <option value="tx_dual" id="tx_dual" disabled>Dual Frequency 2.4GHz/900Mhz Transmitter</option>
                         <option value="rx_dual" id="rx_dual" disabled>Dual Frequency 2.4GHz/900Mhz Receiver</option>
                     </select>
-                    <label>Device Type</label>
+                    <label for="type">Device Type</label>
                 </div>
                 <div class="mui-textfield">
                     <input name="model" id="model" type="text" autocomplete="off" placeholder="Start typing for auto-complete..."/>
-                    <label>Device Model</label>
+                    <label for="model">Device Model</label>
+                </div>
+                <div class="mui-checkbox rx-as-tx display--none" >
+                    <input name="rx-as-tx" id="rx-as-tx" type="checkbox">
+                    <label for="rx-as-tx">Flash Recevier as a Transmitter</label>
+                </div>
+                <div class="mui-select rx-as-tx-connection display--none">
+                    <select name="connection" id="connection">
+                        <option value="internal" id="internal" selected>Internal (Full duplex)</option>
+                        <option value="external" id="external">External (Half duplex)</option>
+                    </select>
+                    <label for="connection">Connection Type</label>
                 </div>
                 <div class="mui--pull-left">
                     <a class="mui-btn" href="" download="elrsV3.lua" id="download-lua">Download ELRS Lua Script</a>
@@ -115,7 +126,7 @@
             </div>
             <div class="mui-textfield">
                 <input size='40' id='uid' name='uid' type='text' class='array' readonly />
-                <label>UID (Auto updated by changing the bind-phrase above)</label>
+                <label for="uid">UID (Auto updated by changing the bind-phrase above)</label>
             </div>
 
             <div class="mui-select tx_2400 rx_2400 display--none">
@@ -123,7 +134,7 @@
                     <option value='FCC' selected>FCC</option>
                     <option value='LBT'>LBT</option>
                 </select>
-                <label>Region</label>
+                <label for="fcclbt">Region</label>
             </div>
             <div class="mui-select tx_900 rx_900 tx_dual rx_dual display--none">
                 <select id='domain' name='domain'>
@@ -134,40 +145,40 @@
                     <option value='4'>AU433</option>
                     <option value='5'>EU433</option>
                 </select>
-                <label>Regulatory domain</label>
+                <label for="domain">Regulatory domain</label>
             </div>
 
             <div class="esp8285 esp32 display--none">
                 <div class="mui-textfield mui-textfield--float-label">
                     <input size='32' id='wifi-ssid' name='wifi-ssid' type='text' value="" />
-                    <label>WiFi SSID</label>
+                    <label for="wifi-ssid">WiFi SSID</label>
                 </div>
                 <div class="mui-textfield mui-textfield--float-label">
                     <input size='64' id='wifi-password' name='wifi-password' type='password' value="" />
-                    <label>WiFi Password</label>
+                    <label for="wifi-password">WiFi Password</label>
                 </div>
                 <div class="mui-textfield mui-textfield--float-label">
                     <input size='3' id='wifi-on-interval' name='wifi-on-interval' type='text' value="60" />
-                    <label>WiFi "auto on" interval (s)</label>
+                    <label for="wifi-on-interval">WiFi "auto on" interval (s)</label>
                 </div>
             </div>
 
             <div class="tx_2400 tx_900 display--none">
                 <div class="mui-textfield mui-textfield--float-label">
                     <input size='5' id='tlm-interval' name='tlm-interval' type='text' value="240" />
-                    <label>TLM report interval (ms)</label>
+                    <label for="tlm-interval">TLM report interval (ms)</label>
                 </div>
                 <div class="mui-checkbox esp32">
                     <input id='uart-inverted' name='uart-inverted' type='checkbox' checked />
-                    <label>UART inverted</label>
+                    <label for="uart-inverted">UART inverted</label>
                 </div>
                 <div class="mui-textfield mui-textfield--float-label feature-fan">
                     <input size='3' id='fan-runtime' name='fan-runtime' type='text' value="30" />
-                    <label>Fan runtime (s)</label>
+                    <label for="fan-runtime">Fan runtime (s)</label>
                 </div>
                 <div class="mui-checkbox feature-unlock-higher-power">
                     <input id='unlock-higher-power' name='unlock-higher-power' type='checkbox' />
-                    <label>Unlock higher power</label>
+                    <label for="unlock-higher-power">Unlock higher power</label>
                 </div>
                 <div class="feature-buzzer">
                     <div class="mui-select">
@@ -182,7 +193,7 @@
                     </div>
                     <div class="mui-textfield mui-textfield--float-label">
                         <input id='melody' name='melody' type='text' value="" />
-                        <label>Melody</label>
+                        <label for="melody">Melody</label>
                     </div>
                 </div>
             </div>
@@ -190,19 +201,19 @@
             <div class="rx_900 rx_2400 display--none">
                 <div class="mui-textfield mui-textfield--float-label">
                     <input size='7' id='rcvr-uart-baud' name='rcvr-uart-baud' type='text' value="420000" />
-                    <label>UART baud</label>
+                    <label for="rcvr-uart-baud">UART baud</label>
                 </div>
                 <div class="mui-checkbox feature-sbus-uart">
                     <input id='r9mm-mini-sbus' name='r9mm-mini-sbus' type='checkbox' />
-                    <label>Use SBUS Pins as UART</label>
+                    <label for="r9mm-mini-sbus">Use SBUS Pins as UART</label>
                 </div>
                 <div class="mui-checkbox esp8285 esp32">
                     <input id='rcvr-invert-tx' name='rcvr-invert-tx' type='checkbox' />
-                    <label>Invert TX pin</label>
+                    <label for="rcvr-invert-tx">Invert TX pin</label>
                 </div>
                 <div class="mui-checkbox">
                     <input id='lock-on-first-connection' name='lock-on-first-connection' type='checkbox' checked />
-                    <label>Lock on first connection</label>
+                    <label for="lock-on-first-connection">Lock on first connection</label>
                 </div>
             </div>
 
@@ -216,7 +227,7 @@
                     <option value="wifi" id="wifi">WiFi</option>
                     <option value="stlink" id="stlink">STLink</option>
                 </select>
-                <label>Flashing Method</label>
+                <label for="method">Flashing Method</label>
             </div>
 
             <div class="mui--pull-right">
@@ -238,11 +249,11 @@
                 <div class="uart betaflight etx stlink display--none">
                     <div class="mui-checkbox esp8285 esp32 display--none">
                         <input id='erase-flash' type='checkbox' />
-                        <label>Erase flash first?</label>
+                        <label for="erase-flash">Erase flash first?</label>
                     </div>
                     <div class="mui-checkbox stlink display--none">
                         <input id='flash-bootloader' type='checkbox' />
-                        <label>Also flash bootloader?</label>
+                        <label for="flash-bootloader">Also flash bootloader?</label>
                     </div>
                 </div>
                 <button class="mui-btn mui-btn--primary" id="flashButton">Flash</button>

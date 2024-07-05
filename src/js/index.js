@@ -35,6 +35,7 @@ let binary = null
 let term = null
 let stlink = null
 let uploadURL = null
+let expertMode = false
 
 document.addEventListener('DOMContentLoaded', initialise, false)
 
@@ -238,6 +239,8 @@ const compareSemanticVersionsRC = (a, b) => {
 }
 
 async function initialise () {
+  expertMode = new URLSearchParams(location.search).has("expert")
+  console.log("Expert mode: %s", expertMode)
   checkProxy()
   setInterval(() => { checkProxy() }, 30000)
   term = new Terminal()
@@ -396,6 +399,8 @@ typeSelect.onchange = () => {
       models.push(hardware[v][t][m].product_name)
     }
   }
+  if (t.startsWith('rx_')) setDisplay('.rx-as-tx', expertMode)
+  else setDisplay('.rx-as-tx', false)
   autocomplete(modelSelect, models, true)
 }
 
@@ -406,6 +411,12 @@ modelSelect.onchange = () => {
         if (hardware[v][t][m].product_name === modelSelect.value) {
           vendorSelect.value = v
           typeSelect.value = t
+          if (t.startsWith('rx_')) {
+            setDisplay('.rx-as-tx', expertMode)
+          }
+          else {
+            setDisplay('.rx-as-tx', false)
+          }
           selectedModel = hardware[v][t][m]
           typeSelect.disabled = false
           deviceNext.disabled = false
@@ -416,6 +427,33 @@ modelSelect.onchange = () => {
     }
   }
   modelSelect.value = ''
+}
+
+_('rx-as-tx').onchange = (e) => {
+  if (e.target.checked) {
+    for (const v in hardware) {
+      for (const t in hardware[v]) {
+        for (const m in hardware[v][t]) {
+          if (hardware[v][t][m].product_name === modelSelect.value) {
+            if (hardware[v][t][m].platform === 'esp8285') {
+              setDisplay('.rx-as-tx-connection', false)
+              _('connection').value = 'internal'
+            } else {
+              setDisplay('.rx-as-tx-connection', true)
+              _('connection').value = 'internal'
+            }
+          }
+        }
+      }
+    }
+  }
+  else {
+    setDisplay('.rx-as-tx-connection', false)
+  }
+}
+
+function adjustedType() {
+  return _('rx-as-tx').checked ? typeSelect.value.replace('rx_', 'tx_') : typeSelect.value
 }
 
 deviceNext.onclick = (e) => {
@@ -438,7 +476,7 @@ deviceNext.onclick = (e) => {
   if (features) features.forEach(f => setDisplay(`.feature-${f}`))
 
   _('fcclbt').value = 'FCC'
-  setDisplay(`.${typeSelect.value}`)
+  setDisplay(`.${adjustedType()}`)
   setDisplay(`.${selectedModel.platform}`)
 
   _('uart').disabled = true
@@ -446,7 +484,13 @@ deviceNext.onclick = (e) => {
   _('etx').disabled = true
   _('wifi').disabled = true
   _('stlink').disabled = true
-  selectedModel.upload_methods.forEach((k) => { if (_(k)) _(k).disabled = false })
+  if (_('rx-as-tx').checked) {
+    _('uart').disabled = false
+    _('wifi').disabled = false
+  }
+  else {
+    selectedModel.upload_methods.forEach((k) => { if (_(k)) _(k).disabled = false })
+  }
 
   setDisplay('#step-device', false)
   setClass('#step-2', 'active')
@@ -484,7 +528,7 @@ const getSettings = async (deviceType) => {
       options['wifi-password'] = _('wifi-password').value
     }
   }
-  if (deviceType === 'RX') {
+  if (deviceType === 'RX' && !_('rx-as-tx').checked) {
     options['rcvr-uart-baud'] = +_('rcvr-uart-baud').value
     options['rcvr-invert-tx'] = _('rcvr-invert-tx').checked
     options['lock-on-first-connection'] = _('lock-on-first-connection').checked
@@ -542,7 +586,8 @@ const connectUART = async (e) => {
   })
   setDisplay(connectButton, false)
 
-  binary = await Configure.download(deviceType, radioType, config, firmwareUrl, options)
+  const txType = _('rx-as-tx').checked ? _('connection').value : undefined
+  binary = await Configure.download(deviceType, txType, radioType, config, firmwareUrl, options)
 
   const method = methodSelect.value
 
@@ -580,7 +625,8 @@ const generateFirmware = async () => {
   const deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX'
   const radioType = typeSelect.value.endsWith('_900') ? 'sx127x' : (typeSelect.value.endsWith('_2400') ? 'sx128x' : 'lr1121')
   const { config, firmwareUrl, options } = await getSettings(deviceType)
-  const firmwareFiles = await Configure.download(deviceType, radioType, config, firmwareUrl, options)
+  const txType = _('rx-as-tx').checked ? _('connection').value : undefined
+  const firmwareFiles = await Configure.download(deviceType, txType, radioType, config, firmwareUrl, options)
   return [
     firmwareFiles,
     { config, firmwareUrl, options }
