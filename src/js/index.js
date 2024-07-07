@@ -467,12 +467,6 @@ modelSelect.onchange = () => {
         if (hardware[v][t][m].product_name === modelSelect.value) {
           vendorSelect.value = v
           typeSelect.value = t
-          // if (t.startsWith('rx_')) {
-          //   setDisplay('.rx-as-tx', expertMode())
-          // }
-          // else {
-          //   setDisplay('.rx-as-tx', false)
-          // }
           selectedModel = hardware[v][t][m]
           typeSelect.disabled = false
           deviceNext.disabled = false
@@ -940,32 +934,63 @@ async function parseFile (file) {
   const reader = new FileReader()
   reader.onload = async function (e) {
     const customLayout = JSON.parse(e.target.result)
-    SwalMUI.select({
-      title: 'Select device type to flash',
-      inputOptions: [
-        'ESP32 2.4GHz TX',
-        'ESP32 2.4GHz RX',
-        'ESP32 900GHz TX',
-        'ESP32 900GHz RX',
-        'ESP8285 2.4GHz TX',
-        'ESP8285 2.4GHz RX',
-        'ESP8285 900GHz TX',
-        'ESP8285 900GHz RX'
-      ]
+    SwalMUI.fire({
+      title: "Select device type to flash",
+      html: `
+      <div style="text-align:left">
+        <div class="mui-select">
+          <select id="custom-type">
+            <option value="TX">Transmitter</option>
+            <option value="RX">Receiver</option>
+          </select>
+          <label for="custom-type">Target Firmware</label>
+        </div>
+        <div class="mui-select">
+          <select id="custom-mcu">
+            <option value="ESP32">ESP32</option>
+            <option value="ESP32S3">ESP32-S3</option>
+            <option value="ESP32C3">ESP32-C3</option>
+            <option value="ESP8285">ESP8285</option>
+          </select>
+          <label for="custom-mcu">Target MCU</label>
+        </div>
+        <div class="mui-select">
+          <select id="custom-radio">
+            <option value="2400">SX128x</option>
+            <option value="900">SX127x</option>
+            <option value="LR1121">LR1121</option>
+          </select>
+          <label for="custom-radio">Target Radio</label>
+        </div>
+      </div>
+      `,
+      focusConfirm: false,
+      preConfirm: () => {
+        return [
+          document.getElementById("custom-type").value,
+          document.getElementById("custom-mcu").value,
+          document.getElementById("custom-radio").value
+        ];
+      }
     }).then((p) => {
       const v = p.value
-      const platform = (v < 4) ? 'esp32' : 'esp8285'
-      selectedModel = {
-        product_name: 'Custom Target',
-        lua_name: 'Custom',
-        upload_methods: (v % 2 === 0) ? ['uart', 'etx', 'wifi'] : ['uart', 'betaflight', 'wifi'],
-        platform,
-        firmware: `Unified_${platform.toUpperCase()}_${((v / 2) % 2) === 0 ? '2400' : '900'}_${(v % 2 === 0) ? 'TX' : 'RX'}`,
-        custom_layout: customLayout
+      if (v !== undefined) {
+        const platform = v[1]
+        selectedModel = {
+          product_name: 'Custom Target',
+          lua_name: 'Custom',
+          upload_methods: v[0] === 'TX' ? ['uart', 'etx', 'wifi'] : ['uart', 'betaflight', 'wifi'],
+          platform: platform.toLowerCase(),
+          firmware: `Unified_${platform}_${v[2]}_${v[0]}`,
+          custom_layout: customLayout
+        }
+        typeSelect.value = `${v[0].toLowerCase()}_${v[2] === 'LR1121' ? 'dual' : v[2]}`
+        deviceNext.onclick(e)
       }
-      typeSelect.value = `${(v % 2 === 0) ? 'tx' : 'rx'}_${((v / 2) % 2) === 0 ? '2400' : '900'}`
-      deviceNext.onclick(e)
     })
+    const element = document.querySelector('.swal2-html-container')
+    element.style.overflow = 'visible'
+    element.style.zIndex = 2
   }
   reader.readAsText(file)
 }
