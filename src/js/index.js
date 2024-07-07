@@ -35,12 +35,70 @@ let binary = null
 let term = null
 let stlink = null
 let uploadURL = null
-let expertMode = false
+
+const hideables = [
+  '.tx_2400',
+  '.rx_2400',
+  '.tx_900',
+  '.rx_900',
+  '.tx_dual',
+  '.rx_dual',
+  '.esp32',
+  '.esp8285',
+  '.stm32',
+  '.expert-esp32',
+  '.expert-esp8285',
+  '.expert-stm32',
+  '.rx-as-tx',
+  '.rx-as-tx-connection'
+]
 
 document.addEventListener('DOMContentLoaded', initialise, false)
 
 function _ (el) {
   return document.getElementById(el)
+}
+
+function expertMode() {
+  return _('expert').checked
+}
+
+function showHideFeatures() {
+  hideables.forEach(f => setDisplay(`${f}`, false))
+  if (!expertMode()) {
+    _('rx-as-tx').checked = false
+  }
+  setDisplay('.expert', expertMode())
+  if (typeSelect.value.startsWith('rx_')) {
+    setDisplay('.rx-as-tx', expertMode())
+  }
+  if (selectedModel) {
+    if (typeSelect.value.startsWith('rx_') && expertMode()) {
+      if (selectedModel.platform === 'esp8285') {
+        _('connection').value = 'internal'
+      } else {
+        setDisplay('.rx-as-tx-connection', true)
+      }
+    }
+    const features = selectedModel.features
+    if (features) {
+      features.forEach(f => setDisplay(`.feature-${f}`, expertMode()))
+    }
+    setDisplay(`.${selectedModel.platform}`)
+    setDisplay(`.expert-${selectedModel.platform}`, expertMode())
+    setDisplay(`.${adjustedType()}`)
+    if (_('rx-as-tx').checked) {
+      _('uart').disabled = false
+      _('wifi').disabled = false
+    }
+    else {
+      selectedModel.upload_methods.forEach((k) => { if (_(k)) _(k).disabled = false })
+    }
+  }
+}
+
+_('expert').onchange = (e) => {
+  showHideFeatures()
 }
 
 function checkStatus (response) {
@@ -239,8 +297,6 @@ const compareSemanticVersionsRC = (a, b) => {
 }
 
 async function initialise () {
-  expertMode = new URLSearchParams(location.search).has("expert")
-  console.log("Expert mode: %s", expertMode)
   checkProxy()
   setInterval(() => { checkProxy() }, 30000)
   term = new Terminal()
@@ -399,7 +455,7 @@ typeSelect.onchange = () => {
       models.push(hardware[v][t][m].product_name)
     }
   }
-  if (t.startsWith('rx_')) setDisplay('.rx-as-tx', expertMode)
+  if (t.startsWith('rx_')) setDisplay('.rx-as-tx', expertMode())
   else setDisplay('.rx-as-tx', false)
   autocomplete(modelSelect, models, true)
 }
@@ -411,16 +467,17 @@ modelSelect.onchange = () => {
         if (hardware[v][t][m].product_name === modelSelect.value) {
           vendorSelect.value = v
           typeSelect.value = t
-          if (t.startsWith('rx_')) {
-            setDisplay('.rx-as-tx', expertMode)
-          }
-          else {
-            setDisplay('.rx-as-tx', false)
-          }
+          // if (t.startsWith('rx_')) {
+          //   setDisplay('.rx-as-tx', expertMode())
+          // }
+          // else {
+          //   setDisplay('.rx-as-tx', false)
+          // }
           selectedModel = hardware[v][t][m]
           typeSelect.disabled = false
           deviceNext.disabled = false
           document.querySelectorAll('.product-name').forEach(e => { e.innerHTML = selectedModel.product_name })
+          showHideFeatures()
           return
         }
       }
@@ -458,40 +515,15 @@ function adjustedType() {
 
 deviceNext.onclick = (e) => {
   e.preventDefault()
-  setDisplay('.tx_2400', false)
-  setDisplay('.rx_2400', false)
-  setDisplay('.tx_900', false)
-  setDisplay('.rx_900', false)
-  setDisplay('.tx_dual', false)
-  setDisplay('.rx_dual', false)
-  setDisplay('.esp8285', false)
-  setDisplay('.esp32', false)
-  setDisplay('.stm32', false)
-  setDisplay('.feature-fan', false)
-  setDisplay('.feature-unlock-higher-power', false)
-  setDisplay('.feature-sbus-uart', false)
-  setDisplay('.feature-buzzer', false)
-
-  const features = selectedModel.features
-  if (features) features.forEach(f => setDisplay(`.feature-${f}`))
-
   _('fcclbt').value = 'FCC'
-  setDisplay(`.${adjustedType()}`)
-  setDisplay(`.${selectedModel.platform}`)
-
+  
   _('uart').disabled = true
   _('betaflight').disabled = true
   _('etx').disabled = true
   _('wifi').disabled = true
   _('stlink').disabled = true
-  if (_('rx-as-tx').checked) {
-    _('uart').disabled = false
-    _('wifi').disabled = false
-  }
-  else {
-    selectedModel.upload_methods.forEach((k) => { if (_(k)) _(k).disabled = false })
-  }
-
+  showHideFeatures()
+  
   setDisplay('#step-device', false)
   setClass('#step-2', 'active')
   setClass('#step-2', 'editable')

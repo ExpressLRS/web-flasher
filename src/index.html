@@ -41,11 +41,14 @@
     </header>
     <br />
     <div class="mui-container-fluid" id="main">
+        <div class="mui--pull-right">
+            <input id="expert" type="checkbox">
+            <label for="expert">Expert mode</label>
+        </div>
         <div class="md-stepper-horizontal blue">
             <div id="step-1" class="md-step active editable">
                 <div class="md-step-circle"><span>1</span></div>
                 <div class="md-step-title">Select Device</div>
-                <div class="md-step-bar-left"></div>
                 <div class="md-step-bar-right"></div>
             </div>
             <div id="step-2" class="md-step">
@@ -58,7 +61,6 @@
                 <div class="md-step-circle"><span>3</span></div>
                 <div class="md-step-title">Flashing</div>
                 <div class="md-step-bar-left"></div>
-                <div class="md-step-bar-right"></div>
             </div>
         </div>
 
@@ -157,30 +159,30 @@
                     <input size='64' id='wifi-password' name='wifi-password' type='password' value="" />
                     <label for="wifi-password">WiFi Password</label>
                 </div>
-                <div class="mui-textfield mui-textfield--float-label">
+                <div class="expert display--none mui-textfield mui-textfield--float-label">
                     <input size='3' id='wifi-on-interval' name='wifi-on-interval' type='text' value="60" />
                     <label for="wifi-on-interval">WiFi "auto on" interval (s)</label>
                 </div>
             </div>
 
             <div class="tx_2400 tx_900 display--none">
-                <div class="mui-textfield mui-textfield--float-label">
+                <div class="expert display--none mui-textfield mui-textfield--float-label">
                     <input size='5' id='tlm-interval' name='tlm-interval' type='text' value="240" />
                     <label for="tlm-interval">TLM report interval (ms)</label>
                 </div>
-                <div class="mui-checkbox esp32">
+                <div class="expert-esp32 display--none mui-checkbox">
                     <input id='uart-inverted' name='uart-inverted' type='checkbox' checked />
                     <label for="uart-inverted">UART inverted</label>
                 </div>
-                <div class="mui-textfield mui-textfield--float-label feature-fan">
+                <div class="feature-fan display--none mui-textfield mui-textfield--float-label">
                     <input size='3' id='fan-runtime' name='fan-runtime' type='text' value="30" />
                     <label for="fan-runtime">Fan runtime (s)</label>
                 </div>
-                <div class="mui-checkbox feature-unlock-higher-power">
+                <div class="feature-unlock-higher-power display--none mui-checkbox">
                     <input id='unlock-higher-power' name='unlock-higher-power' type='checkbox' />
                     <label for="unlock-higher-power">Unlock higher power</label>
                 </div>
-                <div class="feature-buzzer">
+                <div class="feature-buzzer display--none">
                     <div class="mui-select">
                         <select id="melody-type">
                             <option value="" disabled selected>Select melody</option>
@@ -199,19 +201,19 @@
             </div>
 
             <div class="rx_900 rx_2400 display--none">
-                <div class="mui-textfield mui-textfield--float-label">
+                <div class="expert display--none mui-textfield mui-textfield--float-label">
                     <input size='7' id='rcvr-uart-baud' name='rcvr-uart-baud' type='text' value="420000" />
                     <label for="rcvr-uart-baud">UART baud</label>
                 </div>
-                <div class="mui-checkbox feature-sbus-uart">
+                <div class="feature-sbus-uart display--none mui-checkbox">
                     <input id='r9mm-mini-sbus' name='r9mm-mini-sbus' type='checkbox' />
                     <label for="r9mm-mini-sbus">Use SBUS Pins as UART</label>
                 </div>
-                <div class="mui-checkbox esp8285 esp32">
+                <div class="expert-esp8285 expert-esp32 display--none mui-checkbox">
                     <input id='rcvr-invert-tx' name='rcvr-invert-tx' type='checkbox' />
                     <label for="rcvr-invert-tx">Invert TX pin</label>
                 </div>
-                <div class="mui-checkbox">
+                <div class="expert display--none mui-checkbox">
                     <input id='lock-on-first-connection' name='lock-on-first-connection' type='checkbox' checked />
                     <label for="lock-on-first-connection">Lock on first connection</label>
                 </div>
