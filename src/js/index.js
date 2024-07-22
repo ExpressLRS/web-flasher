@@ -97,7 +97,7 @@ function showHideFeatures() {
   }
 }
 
-_('expert').onchange = (e) => {
+_('expert').onchange = (_e) => {
   showHideFeatures()
 }
 
@@ -118,7 +118,7 @@ const doDiscovery = async (e) => {
   }
   fetch('http://localhost:9097/mdns')
     .then(response => check(response))
-    .catch(async (e) => {
+    .catch(async (_e) => {
       throw new AlertError(
         'Auto-discovery proxy not running',
         'Auto detection of wifi devices cannot be performed without the help of the ExpressLRS auto-discovery proxy.',
@@ -140,8 +140,7 @@ Ensure the devices are powered on, running wifi mode, and they are on the same n
       }
       const devices = {}
       for (const key of Object.keys(mdns)) {
-        const device = `${mdns[key].address}: ${key.substring(0, key.indexOf('.'))}`
-        devices[key] = device
+        devices[key] = `${mdns[key].address}: ${key.substring(0, key.indexOf('.'))}`
       }
 
       let p
@@ -169,7 +168,7 @@ Ensure the devices are powered on, running wifi mode, and they are on the same n
               rows[i] = hardware[vendor][type][model].product_name
               i++
             }
-            if (hardware[vendor][type][model].prior_target_name === mdns[id].properties.target) {
+            if (hardware[vendor][type][model]['prior_target_name'] === mdns[id].properties.target) {
               candidates.push({ vendor, type, model, product: hardware[vendor][type][model].product_name })
               rows[i] = hardware[vendor][type][model].product_name
               i++
@@ -195,18 +194,16 @@ Ensure the devices are powered on, running wifi mode, and they are on the same n
     .then(([candidates, mdns, selected]) => {
       if (selected === undefined || !selected.isConfirmed) return
       uploadURL = null
-      if (selected !== undefined) {
-        vendorSelect.value = candidates[selected.value].vendor
-        vendorSelect.onchange()
-        typeSelect.value = candidates[selected.value].type
-        typeSelect.onchange()
-        modelSelect.value = candidates[selected.value].product
-        modelSelect.onchange()
-        deviceNext.onclick(e)
-        methodSelect.value = 'wifi'
-        methodSelect.onchange()
-        uploadURL = `http://localhost:9097/${mdns.address}`
-      }
+      vendorSelect.value = candidates[selected.value].vendor
+      vendorSelect.onchange(undefined)
+      typeSelect.value = candidates[selected.value].type
+      typeSelect.onchange(undefined)
+      modelSelect.value = candidates[selected.value].product
+      modelSelect.onchange(undefined)
+      deviceNext.onclick(e)
+      methodSelect.value = 'wifi'
+      methodSelect.onchange(undefined)
+      uploadURL = `http://localhost:9097/${mdns.address}`
     })
     .catch((e) => {
       console.log(e)
@@ -297,7 +294,6 @@ const compareSemanticVersionsRC = (a, b) => {
 }
 
 async function initialise () {
-  checkProxy()
   setInterval(() => { checkProxy() }, 30000)
   term = new Terminal()
   term.open(_('serial-monitor'))
@@ -311,7 +307,7 @@ async function initialise () {
   initBindingPhraseGen()
   index = await checkStatus(await fetch('firmware/index.json')).json()
   let selected = true
-  Object.keys(index[mode]).sort(compareSemanticVersions).reverse().forEach((version, i) => {
+  Object.keys(index[mode]).sort(compareSemanticVersions).reverse().forEach((version, _unused) => {
     const opt = document.createElement('option')
     if (version.indexOf('-RC') === -1 || showRCs) {
       opt.value = index[mode][version]
@@ -321,8 +317,9 @@ async function initialise () {
       selected = false
     }
   })
-  versionSelect.onchange()
+  versionSelect.onchange(undefined)
   initFiledrag()
+  return checkProxy()
 }
 
 versionSelect.onchange = async () => {
@@ -351,7 +348,7 @@ versionSelect.onchange = async () => {
   for (const v in hardware) {
     for (const t in hardware[v]) {
       for (const m in hardware[v][t]) {
-        if (hardware[v][t][m].product_name !== undefined && compareSemanticVersionsRC(version, hardware[v][t][m].min_version) >= 0) {
+        if (hardware[v][t][m].product_name !== undefined && compareSemanticVersionsRC(version, hardware[v][t][m]['min_version']) >= 0) {
           models.push(hardware[v][t][m].product_name)
         }
       }
@@ -435,7 +432,7 @@ vendorSelect.onchange = () => {
   const v = vendorSelect.value
   for (const t in hardware[v]) {
     for (const m in hardware[v][t]) {
-      if (hardware[v][t][m].product_name !== undefined && compareSemanticVersionsRC(version, hardware[v][t][m].min_version) >= 0) {
+      if (hardware[v][t][m].product_name !== undefined && compareSemanticVersionsRC(version, hardware[v][t][m]['min_version']) >= 0) {
         models.push(hardware[v][t][m].product_name)
       }
     }
@@ -451,7 +448,7 @@ typeSelect.onchange = () => {
   const v = vendorSelect.value
   const t = typeSelect.value
   for (const m in hardware[v][t]) {
-    if (hardware[v][t][m].product_name !== undefined && compareSemanticVersionsRC(version, hardware[v][t][m].min_version) >= 0) {
+    if (hardware[v][t][m].product_name !== undefined && compareSemanticVersionsRC(version, hardware[v][t][m]['min_version']) >= 0) {
       models.push(hardware[v][t][m].product_name)
     }
   }
@@ -480,8 +477,8 @@ modelSelect.onchange = () => {
   modelSelect.value = ''
 }
 
-_('rx-as-tx').onchange = (e) => {
-  if (e.target.checked) {
+_('rx-as-tx').onchange = (_e) => {
+  if (_('rx-as-tx').checked) {
     for (const v in hardware) {
       for (const t in hardware[v]) {
         for (const m in hardware[v][t]) {
@@ -603,7 +600,7 @@ const connectUART = async (e) => {
     })
   }
 
-  device.addEventListener('disconnect', async (e) => {
+  device.addEventListener('disconnect', async (_e) => {
     term.clear()
     setDisplay(flashMode, false)
     setDisplay(connectButton)
@@ -667,7 +664,7 @@ const connectSTLink = async (e) => {
   const [_bin, { config, firmwareUrl, options }] = await generateFirmware()
 
   try {
-    const version = await _stlink.connect(config, firmwareUrl, options, e => {
+    const version = await _stlink.connect(config, firmwareUrl, options, _e => {
       term.clear()
       setDisplay(flashMode, false)
       setDisplay(connectButton)
@@ -691,7 +688,7 @@ const connectSTLink = async (e) => {
 const getWifiTarget = async (url) => {
   const response = await fetch(`${url}/target`)
   if (!response.ok) {
-    throw Promise.reject(new Error('Failed to connect to device'))
+    throw await Promise.reject(new Error('Failed to connect to device'))
   }
   return [url, await response.json()]
 }
@@ -782,13 +779,13 @@ flashButton.onclick = async (e) => {
     } catch (e) {
       return errorHandler(e.message)
     } finally {
-      closeDevice()
+      await closeDevice()
     }
   }
 }
 
 const downloadFirmware = async () => {
-  const [binary, {config, firmwareUrl, options}] = await generateFirmware()
+  const [binary, {config}] = await generateFirmware()
   if (config.platform === 'esp8285') {
     const bin = pako.gzip(binary[binary.length - 1].data)
     const data = new Blob([bin], { type: 'application/octet-stream' })
@@ -814,7 +811,7 @@ const wifiUpload = async () => {
     ajax.addEventListener('error', (e) => errorHandler(e.target.responseText), false)
     ajax.addEventListener('abort', abortHandler, false)
     ajax.open('POST', `${uploadURL}/update`)
-    ajax.setRequestHeader('X-FileSize', data.size)
+    ajax.setRequestHeader('X-FileSize', data.size.toString())
     ajax.send(formdata)
   } catch (error) {}
 }
@@ -832,7 +829,7 @@ function completeHandler (event) {
   const data = JSON.parse(event.target.responseText)
   if (data.status === 'ok') {
     function showMessage () {
-      SwalMUI.fire({
+      return SwalMUI.fire({
         icon: 'success',
         title: 'Update Succeeded',
         text: data.msg
@@ -866,7 +863,7 @@ function completeHandler (event) {
           _('progressBar').value = 0
           if (this.status === 200) {
             const data = JSON.parse(this.responseText)
-            SwalMUI.fire({
+            return SwalMUI.fire({
               icon: 'info',
               title: 'Force Update',
               html: data.msg
@@ -925,7 +922,7 @@ async function fileSelectHandler (e) {
   fileDragHover(e)
   const files = e.target.files || e.dataTransfer.files
   if (files.length > 0) {
-    parseFile(files[0])
+    return parseFile(files[0])
   }
 }
 
