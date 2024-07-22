@@ -13,7 +13,7 @@
     "@sweetalert2/theme-material-ui": "^5.0.16",
     "bluejay-rtttl-parse": "^2.0.2",
     "crypto-js": "^4.2.0",
-    "esptool-js": "github:espressif/esptool-js#265ece52991871afeab4824c6b687310d8c3f445",
+    "esptool-js": "^0.4.5",
     "file-saver": "^2.0.5",
     "muicss": "^0.10.3",
     "pako": "^2.1.0",
