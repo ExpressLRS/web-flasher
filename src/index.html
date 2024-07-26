@@ -41,31 +41,33 @@
     </header>
     <br />
     <div class="mui-container-fluid" id="main">
-        <div>
-            <span class="left">
+        <div class="mui-row">
+            <div class="mui--pull-left mui-col-md-2">
                 <button id="whats-new" class="mui-btn mui-btn--small mui-btn--raised">Whats New</button>
-            </span>
-            <span class="mui--pull-right">
-                <input id="expert" type="checkbox">
-                <label for="expert">Expert mode</label>
-            </span>
-        </div>
-        <div class="md-stepper-horizontal blue">
-            <div id="step-1" class="md-step active editable">
-                <div class="md-step-circle"><span>1</span></div>
-                <div class="md-step-title">Select Device</div>
-                <div class="md-step-bar-right"></div>
             </div>
-            <div id="step-2" class="md-step">
-                <div class="md-step-circle"><span>2</span></div>
-                <div class="md-step-title">Options</div>
-                <div class="md-step-bar-left"></div>
-                <div class="md-step-bar-right"></div>
+            <div class="md-stepper-horizontal blue mui-col-md-8">
+                <div id="step-1" class="md-step active editable">
+                    <div class="md-step-circle"><span>1</span></div>
+                    <div class="md-step-title">Select Device</div>
+                    <div class="md-step-bar-right"></div>
+                </div>
+                <div id="step-2" class="md-step">
+                    <div class="md-step-circle"><span>2</span></div>
+                    <div class="md-step-title">Options</div>
+                    <div class="md-step-bar-left"></div>
+                    <div class="md-step-bar-right"></div>
+                </div>
+                <div id="step-3" class="md-step">
+                    <div class="md-step-circle"><span>3</span></div>
+                    <div class="md-step-title">Flashing</div>
+                    <div class="md-step-bar-left"></div>
+                </div>
             </div>
-            <div id="step-3" class="md-step">
-                <div class="md-step-circle"><span>3</span></div>
-                <div class="md-step-title">Flashing</div>
-                <div class="md-step-bar-left"></div>
+            <div class="mui-col-md-2">
+                <div class="mui--pull-right">
+                    <input id="expert" type="checkbox">
+                    <label for="expert">Expert mode</label>
+                </div>
             </div>
         </div>
 
