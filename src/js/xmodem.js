@@ -2,7 +2,9 @@ import { TransportEx } from './serialex.js'
 import { Bootloader, Passthrough } from './passthrough.js'
 import { SwalMUI } from './swalmui.js'
 
-const log = { info: function () {}, warn: function () {}, error: function () {}, debug: function () {} }
+const log = {
+  info: function () {}, warn: function () {}
+}
 
 const SOH = 0x01
 const EOT = 0x04
@@ -12,12 +14,8 @@ const FILLER = 0x1A
 const CRC_MODE = 0x43 // 'C'
 
 class Xmodem {
-  XMODEM_MAX_TIMEOUTS = 5
-  XMODEM_MAX_ERRORS = 10
-  XMODEM_CRC_ATTEMPTS = 3
   XMODEM_OP_MODE = 'crc'
   XMODEM_START_BLOCK = 1
-  timeout_seconds = 10
   block_size = 128
 
   constructor (device, logger) {
@@ -75,11 +73,6 @@ class Xmodem {
 
     let sending = true
 
-    /**
-     * Ready to send event, buffer has been broken into individual blocks to be sent.
-     * @event Xmodem#ready
-     * @property {integer} - Indicates how many blocks are ready for transmission
-     */
     _self.emit('ready', packagedBuffer.length - 1) // We don't count the filler
 
     const sendBlock = this.sendBlock
@@ -246,21 +239,21 @@ class XmodemFlasher {
     }
 
     this.transport = new TransportEx(this.device, true)
-    await this.transport.connect({ baud: 420000 })
-    this.passthrough = new Passthrough(this.transport, this.terminal, this.config.firmware)
+    await this.transport.connect(420000)
+    this.passthrough = new Passthrough(this.transport, this.terminal, this.config.firmware, 420000)
     return 'XModem Flasher'
   }
 
   flash = async (binary, force = false) => {
     this.log('Beginning flash...')
     this.transport.set_delimiters(['CCC'])
-    const data = await this.transport.read_line({ timeout: 2000 })
+    const data = await this.transport.read_line(2000)
     let gotBootloader = data.endsWith('CCC')
     if (!gotBootloader) {
       let delaySeq2 = 500
       await this.passthrough.betaflight()
       this.transport.set_delimiters(['CCC'])
-      const data = await this.transport.read_line({ timeout: 2000 })
+      const data = await this.transport.read_line(2000)
       gotBootloader = data.endsWith('CCC')
       if (!gotBootloader) {
         this.transport.set_delimiters(['\n', 'CCC'])
@@ -277,7 +270,7 @@ class XmodemFlasher {
 
           const start = Date.now()
           do {
-            const line = await this.transport.read_line({ timeout: 2000 })
+            const line = await this.transport.read_line(2000)
             if (line === '') { continue }
 
             if (line.indexOf('BL_TYPE') !== -1) {
@@ -291,7 +284,7 @@ class XmodemFlasher {
             if (versionMatch && versionMatch.groups && versionMatch.groups.version) {
               this.log(`    Bootloader version found : '${versionMatch.groups.version}'`)
             } else if (line.indexOf('hold down button') !== -1) {
-              this._sleep(delaySeq2)
+              await this._sleep(delaySeq2)
               await this.transport.write_string('bbbbbb')
               gotBootloader = true
               break
@@ -309,7 +302,7 @@ class XmodemFlasher {
                   confirmButtonText: 'Flash anyway',
                   showCancelButton: true
                 })
-                if (e === 'confirm') {
+                if (e.isConfirmed) {
                   force = true
                   continue
                 }
@@ -324,7 +317,7 @@ class XmodemFlasher {
         this.log(`    Got into bootloader after: ${currAttempt} attempts`)
         this.log('Wait sync...')
         this.transport.set_delimiters(['CCC'])
-        const data = await this.transport.read_line({ timeout: 15000 })
+        const data = await this.transport.read_line(15000)
         if (data.indexOf('CCC') === -1) {
           await SwalMUI.fire({
             icon: 'error',
@@ -349,19 +342,6 @@ class XmodemFlasher {
       throw new Error(`HTTP ${response.status} - ${response.statusText}`)
     }
     return response
-  }
-
-  fetchFile = async (file, transform = (e) => e) => {
-    const response = await fetch(file)
-    const blob = await this.checkStatus(response).blob()
-    const binary = await new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = function found () {
-        resolve(new Uint8Array(reader.result))
-      }
-      reader.readAsArrayBuffer(blob)
-    })
-    return transform(binary)
   }
 }
 

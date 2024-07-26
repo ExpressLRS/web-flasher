@@ -174,7 +174,7 @@ class STLink {
   fetch_file = async (file, transform = (e) => e) => {
     const response = await fetch(file)
     const blob = await this.checkStatus(response).blob()
-    const binary = await new Promise((resolve, reject) => {
+    const binary = await new Promise((resolve, _reject) => {
       const reader = new FileReader()
       reader.onload = function found () {
         resolve(reader.result)

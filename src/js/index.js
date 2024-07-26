@@ -150,7 +150,7 @@ const doDiscovery = async (e) => {
 <div style="text-align: left;">
 Auto detection failed to find any devices on the network.
 <br><br>
-Ensure the devices are powered on, running wifi mode, and they are on the same network as this computer.
+Ensure the devices are powered on, running Wi-Fi mode, and they are on the same network as this computer.
 `,
           'info'
         )
@@ -161,7 +161,7 @@ Ensure the devices are powered on, running wifi mode, and they are on the same n
       }
 
       let p
-      if (Object.keys(mdns).length === 1) { // short-circuit if theres only one option
+      if (Object.keys(mdns).length === 1) { // short-circuit if there's only one option
         p = { value: Object.keys(mdns)[0], isConfirmed: true }
       } else {
         p = SwalMUI.select({
@@ -195,7 +195,7 @@ Ensure the devices are powered on, running wifi mode, and they are on the same n
       }
 
       let p
-      if (i === 1) { // short-circuit if theres only one option
+      if (i === 1) { // short-circuit if there's only one option
         Toast.fire({ icon: 'info', title: `Auto-detected\n${candidates[0].product.replace(/ /g, '\u00a0')}` })
         p = { value: 0, isConfirmed: true }
       } else {
@@ -241,14 +241,14 @@ const displayProxyHelp = async (e) => {
 <div style="text-align: left;">
 Wifi auto-discover is current <b>disabled</b> because the ExpressLRS auto-discovery proxy is not running on the local computer.
 <br><br>
-Wifi auto-discovery allows the flasher application to discover ExpressLRS wifi enabled devices on your network using mDNS.
+Wi-Fi auto-discovery allows the flasher application to discover ExpressLRS Wi-Fi enabled devices on your network using mDNS.
 It also allows flashing these devices via the auto-discovery proxy.
 <br><br>
-If you do not have the auto-discovery application running, you can still flash the device via wifi by choosing the "local download"
+If you do not have the auto-discovery application running, you can still flash the device via Wi-Fi by choosing the "local download"
 option as the flashing method and upload the binary file via the devices web-ui.
 <br><br>
-To enable Wifi auto-discovery and flashing, the ExpressLRS auto-discovery proxy must be running on the local computer.
-You can download the proxy for your system from the <a target="_blank" href="//github.com/ExpressLRS/web-flasher/releases">web-flasher github</a> project page.
+To enable Wi-Fi auto-discovery and flashing, the ExpressLRS auto-discovery proxy must be running on the local computer.
+You can download the proxy for your system from the <a target="_blank" href="//github.com/ExpressLRS/web-flasher/releases">web-flasher GitHub</a> project page.
 </div>
 `
   })
@@ -999,7 +999,7 @@ async function parseFile (file) {
           custom_layout: customLayout
         }
         typeSelect.value = `${v[0].toLowerCase()}_${v[2] === 'LR1121' ? 'dual' : v[2]}`
-        deviceNext.onclick(e)
+        deviceNext.onclick(undefined)
       }
     })
     const element = document.querySelector('.swal2-html-container')

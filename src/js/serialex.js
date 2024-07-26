@@ -25,11 +25,11 @@ class TransportEx extends Transport {
     }
   }
 
-  read_line = async ({ timeout = 0 } = {}) => {
+  read_line = async (timeout = 0) => {
     console.log('Read with timeout ' + timeout)
     let t
     let packet = this.leftOver
-    this.leftOver = new Uint8Array()
+    this.leftOver = new Uint8Array(0)
     const delimiters = this.delimiters
     function findDelimeter (packet) {
       const index = packet.findIndex((_, i, a) => {

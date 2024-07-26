@@ -67,9 +67,7 @@ const md5 = (function () {
 function uidBytesFromText (text) {
   const bindingPhraseFull = `-DMY_BINDING_PHRASE="${text}"`
   const bindingPhraseHashed = md5(bindingPhraseFull)
-  const uidBytes = bindingPhraseHashed.subarray(0, 6)
-
-  return uidBytes
+  return bindingPhraseHashed.subarray(0, 6)
 }
 
 function initBindingPhraseGen () {
@@ -79,8 +77,7 @@ function initBindingPhraseGen () {
     if (text === '') {
       uid.value = ''
     } else {
-      const uidBytes = uidBytesFromText(text)
-      uid.value = uidBytes
+      uid.value = uidBytesFromText(text)
     }
   }
 

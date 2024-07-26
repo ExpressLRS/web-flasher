@@ -33,7 +33,7 @@ class Bootloader {
 
   static get_telemetry_seq (seq, key = null) {
     const payload = new Uint8Array(seq)
-    let u8array = new Uint8Array()
+    let u8array = new Uint8Array(0)
     if (key != null) {
       const len = key.length
       u8array = new Uint8Array(len)
@@ -71,7 +71,7 @@ class Passthrough {
 
   _validate_serialrx = async (config, expected) => {
     await this.transport.write_string(`get ${config}\r\n`)
-    const line = await this.transport.read_line({ timeout: 100 })
+    const line = await this.transport.read_line(100)
     console.log(line)
     for (const key of expected) {
       if (line.trim().indexOf(` = ${key}`) !== -1) {
@@ -96,7 +96,7 @@ class Passthrough {
 
     const sendExpect = async (send, expect, delay) => {
       await this.transport.write_string(send)
-      const line = await this.transport.read_line({ timeout: 100 })
+      const line = await this.transport.read_line(100)
 
       if (line.indexOf(expect) === -1) {
         throw new AlertError('Failed Passthrough Initialisation', `Wanted '${expect}', but not found in response '${line}'`)
@@ -117,7 +117,7 @@ class Passthrough {
       const cmd = `serialpassthrough rfmod 0 ${this.transport.baudrate.toString()}`
       this.log(`  CMD: '${cmd}`)
       await this.transport.write_string(`${cmd}\n`)
-      await this.transport.read_line({ timeout: 200 })
+      await this.transport.read_line(200)
 
       this.log('======== PASSTHROUGH DONE ========')
     } catch (e) {
@@ -132,7 +132,7 @@ class Passthrough {
 
     await this.transport.write_string('#\r\n')
     this.transport.set_delimiters(['# ', 'CCC'])
-    const line = await this.transport.read_line({ timeout: 200 })
+    const line = await this.transport.read_line(200)
     if (line.indexOf('CCC') !== -1) {
       this.log('Passthrough already enabled and bootloader active')
       return
@@ -144,7 +144,7 @@ class Passthrough {
 
     this.transport.set_delimiters(['# '])
 
-    let waitfor = []
+    let waitfor
     if (this.half_duplex) {
       waitfor = ['GHST']
     } else {
@@ -181,14 +181,14 @@ class Passthrough {
     this.transport.set_delimiters(['\n'])
     let index = false
     while (true) {
-      const line = await this.transport.read_line({ timeout: 200 })
+      const line = await this.transport.read_line(200)
       if (line === '') {
         break
       }
       if (line.startsWith('serial')) {
         const regexp = /serial (?<port>[0-9]+) (?<port_cfg>[0-9]+) /
         const config = line.match(regexp)
-        if (config && config.groups && config.groups.port && config.groups.port_cfg && (config.groups.port_cfg & 64)) {
+        if (config && config.groups && config.groups.port && config.groups.port_cfg && (config.groups.port_cfg & 64) === 64) {
           index = config.groups.port
           break
         }
@@ -203,7 +203,7 @@ class Passthrough {
     await this._sleep(200)
 
     try {
-      for (let i = 0; i < 10; i++) { await this.transport.read_line({ timeout: 200 }) }
+      for (let i = 0; i < 10; i++) { await this.transport.read_line(200) }
     } catch (e) {
     }
     this.log('======== PASSTHROUGH DONE ========')
@@ -223,14 +223,14 @@ class Passthrough {
       await this.transport.write_array(train)
       await this._sleep(200)
       try {
-        await this.transport.rawRead({ timeout: 1 })
+        await this.transport.rawRead(1)
       } catch {}
       await this.transport.write_array(Bootloader.get_init_seq('CRSF'))
       await this._sleep(200)
     }
 
     this.transport.set_delimiters(['\n'])
-    const rxTarget = (await this.transport.read_line({ timeout: 200 })).trim()
+    const rxTarget = (await this.transport.read_line(200)).trim()
 
     console.log(`rxtarget ${rxTarget}`)
 
@@ -246,7 +246,7 @@ class Passthrough {
         confirmButtonText: 'Flash anyway',
         showCancelButton: true
       })
-      if (e !== 'confirm') {
+      if (e.isConfirmed) {
         this.log(`Wrong target selected your RX is '${rxTarget}', trying to flash '${this.flash_target}'`)
         throw new MismatchError()
       }

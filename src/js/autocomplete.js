@@ -5,7 +5,7 @@ export function autocomplete (inp, arr, includes = false) {
   let currentFocus
 
   /* execute a function when someone writes in the text field: */
-  function handler (e) {
+  function handler (_e) {
     let b
     const val = this.value
 
@@ -21,19 +21,19 @@ export function autocomplete (inp, arr, includes = false) {
     /* for each item in the array... */
     for (let i = 0; i < arr.length; i++) {
       /* check if the item starts with the same letters as the text field value : */
-      if ((!includes && arr[i].substr(0, val.length).toUpperCase() === val.toUpperCase()) ||
+      if ((!includes && arr[i].slice(0, val.length).toUpperCase() === val.toUpperCase()) ||
           (includes && arr[i].toUpperCase().includes(val.toUpperCase()))) {
         /* create a DIV element for each matching element: */
         b = document.createElement('DIV')
         const start = arr[i].toUpperCase().indexOf(val.toUpperCase())
-        b.innerHTML = arr[i].substr(0, start)
+        b.innerHTML = arr[i].slice(0, start)
         /* make the matching letters bold : */
         b.innerHTML += '<strong>' + arr[i].substring(start, start + val.length) + '</strong>'
-        b.innerHTML += arr[i].substr(start + val.length)
-        /* insert a input field that will hold the current array item's value: */
+        b.innerHTML += arr[i].slice(start + val.length)
+        /* insert an input field that will hold the current array item's value: */
         b.innerHTML += '<input type="hidden" value="' + arr[i] + '">'
         /* execute a function when someone clicks on the item value (DIV element): */
-        b.addEventListener('click', ((arg) => (e) => {
+        b.addEventListener('click', ((arg) => (_e) => {
           /* insert the value for the autocomplete text field: */
           inp.value = arg.getElementsByTagName('input')[0].value
           /* close the list of autocompleted values,
@@ -56,13 +56,13 @@ export function autocomplete (inp, arr, includes = false) {
       /* If the arrow DOWN key is pressed,
         increase the currentFocus variable: */
       currentFocus++
-      /* and and make the current item more visible: */
+      /* and make the current item more visible: */
       addActive(x)
     } else if (e.keyCode === 38) { // up
       /* If the arrow UP key is pressed,
         decrease the currentFocus variable: */
       currentFocus--
-      /* and and make the current item more visible: */
+      /* and make the current item more visible: */
       addActive(x)
     } else if (e.keyCode === 13) {
       /* If the ENTER key is pressed, prevent the form from being submitted, */
@@ -93,12 +93,12 @@ export function autocomplete (inp, arr, includes = false) {
       x[i].classList.remove('autocomplete-active')
     }
   }
-  function closeAllLists (elmnt) {
+  function closeAllLists (element) {
     /* close all autocomplete lists in the document,
       except the one passed as an argument: */
     const x = document.getElementsByClassName('autocomplete-items')
     for (let i = 0; i < x.length; i++) {
-      if (elmnt !== x[i] && elmnt !== inp) {
+      if (element !== x[i] && element !== inp) {
         x[i].parentNode.removeChild(x[i])
       }
     }
