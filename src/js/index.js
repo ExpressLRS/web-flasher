@@ -11,6 +11,8 @@ import { MismatchError, AlertError } from './error'
 import { initBindingPhraseGen } from './phrase'
 import { autocomplete } from './autocomplete'
 import { SwalMUI, Toast } from './swalmui'
+import { _, setDisplay, setClass } from './helpers'
+import { Stepper } from './stepper'
 
 const versionSelect = _('version')
 const flashMode = _('flash-mode')
@@ -35,6 +37,7 @@ let binary = null
 let term = null
 let stlink = null
 let uploadURL = null
+let stepper = null
 
 const hideables = [
   '.tx_2400',
@@ -54,10 +57,6 @@ const hideables = [
 ]
 
 document.addEventListener('DOMContentLoaded', initialise, false)
-
-function _ (el) {
-  return document.getElementById(el)
-}
 
 function expertMode() {
   return _('expert').checked
@@ -312,6 +311,7 @@ const compareSemanticVersionsRC = (a, b) => {
 
 async function initialise () {
   setInterval(() => { checkProxy() }, 30000)
+  stepper = new Stepper(3)
   term = new Terminal()
   term.open(_('serial-monitor'))
   const fitAddon = new FitAddon()
@@ -372,62 +372,6 @@ versionSelect.onchange = async () => {
     }
   }
   autocomplete(modelSelect, models, true)
-}
-
-function setDisplay (elementOrSelector, shown = true) {
-  if (typeof elementOrSelector === 'string') {
-    const elements = document.querySelectorAll(elementOrSelector)
-    elements.forEach(element => {
-      setClass(element, 'display--none', !shown)
-    })
-  } else if (typeof elementOrSelector === 'object') {
-    setClass(elementOrSelector, 'display--none', !shown)
-  }
-}
-
-function setClass (elementOrSelector, className, enabled = true) {
-  const element = (typeof elementOrSelector === 'string') ? document.querySelector(elementOrSelector) : elementOrSelector
-
-  if (enabled) {
-    element.classList.add(className)
-  } else {
-    element.classList.remove(className)
-  }
-}
-
-_('step-1').onclick = (e) => {
-  e.preventDefault()
-  setDisplay('#step-device')
-  setDisplay('#step-options', false)
-  setDisplay('#step-flash', false)
-
-  setClass('#step-1', 'done', false)
-  setClass('#step-1', 'active')
-  setClass('#step-1', 'editable')
-
-  setClass('#step-2', 'active', false)
-  setClass('#step-2', 'editable', false)
-  setClass('#step-2', 'done', false)
-
-  setClass('#step-3', 'active', false)
-  setClass('#step-3', 'editable', false)
-  setClass('#step-3', 'done', false)
-}
-
-_('step-2').onclick = (e) => {
-  e.preventDefault()
-  if (!_('step-flash').classList.contains('display--none')) {
-    setDisplay('#step-options')
-    setDisplay('#step-flash', false)
-
-    setClass('#step-2', 'done', false)
-    setClass('#step-2', 'active')
-    setClass('#step-2', 'editable')
-
-    setClass('#step-3', 'active', false)
-    setClass('#step-3', 'editable', false)
-    setClass('#step-3', 'done', false)
-  }
 }
 
 vendorSelect.onchange = () => {
@@ -531,13 +475,7 @@ deviceNext.onclick = (e) => {
   _('wifi').disabled = true
   _('stlink').disabled = true
   showHideFeatures()
-  
-  setDisplay('#step-device', false)
-  setClass('#step-2', 'active')
-  setClass('#step-2', 'editable')
-  setClass('#step-1', 'done')
-  setClass('#step-1', 'editable', false)
-  setDisplay('#step-options')
+  stepper.next()
 }
 
 methodSelect.onchange = () => {
@@ -743,13 +681,7 @@ _('options-next').onclick = async (e) => {
   if (method === 'download') {
     await downloadFirmware()
   } else {
-    setDisplay('#step-options', false)
-    setClass('#step-3', 'active')
-    setClass('#step-3', 'editable')
-    setClass('#step-2', 'done')
-    setClass('#step-2', 'editable', false)
-    setDisplay('#step-flash')
-
+    stepper.next()
     setDisplay(`.${method}`)
 
     if (method === 'wifi') {
