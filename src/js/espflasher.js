@@ -1,5 +1,5 @@
 import { TransportEx } from './serialex.js'
-import { ESPLoader } from 'esptool-js'
+import { ESPLoader, FlashOptions } from 'esptool-js'
 import { Passthrough } from './passthrough.js'
 import CryptoJS from 'crypto-js'
 
@@ -12,6 +12,7 @@ class ESPFlasher {
     this.options = options
     this.firmwareUrl = firmwareUrl
     this.term = term
+    this.mainFirmware = type === 'TX' || type === 'RX'
   }
 
   connect = async () => {
@@ -22,6 +23,11 @@ class ESPFlasher {
       baudrate = 420000
       mode = 'no_reset'
     } else if (this.method === 'etx') {
+      if (this.mainFirmware) {
+        baudrate = 230400
+      }
+      mode = 'no_reset'
+    } else if (this.method === 'passthru') {
       baudrate = 230400
       mode = 'no_reset'
     } else if (this.method === 'uart' && this.config.platform.startsWith('esp32')) {
@@ -62,7 +68,21 @@ class ESPFlasher {
       await passthrough.reset_to_bootloader()
     } else if (this.method === 'etx') {
       await transport.connect(baudrate)
-      await passthrough.edgeTX()
+      if (this.mainFirmware) {
+        await passthrough.edgeTX()
+      } else {
+        await passthrough.edgeTXBP()
+      }
+    } else if (this.method === 'passthru') {
+      await transport.connect(baudrate)
+      await transport.setDTR(false)
+      await transport.sleep(100)
+      await transport.setRTS(false)
+      await transport.sleep(5000)
+      await transport.setDTR(true)
+      await transport.sleep(200)
+      await transport.setDTR(false)
+      await transport.sleep(100)
     }
 
     await transport.disconnect()
@@ -86,6 +106,8 @@ class ESPFlasher {
     return loader.writeFlash({
       fileArray,
       flashSize: 'keep',
+      flashMode: 'keep',
+      flashFreq: 'keep',
       eraseAll: erase,
       compress: true,
       reportProgress: (fileIndex, written, total) => {

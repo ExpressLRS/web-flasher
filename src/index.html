@@ -48,19 +48,25 @@
             <div class="md-stepper-horizontal blue mui-col-md-8">
                 <div id="step-1" class="md-step active editable">
                     <div class="md-step-circle"><span>1</span></div>
-                    <div class="md-step-title">Select Device</div>
+                    <div class="md-step-title">Device</div>
                     <div class="md-step-bar-right"></div>
                 </div>
                 <div id="step-2" class="md-step">
-                    <div class="md-step-circle"><span>2</span></div>
-                    <div class="md-step-title">Options</div>
                     <div class="md-step-bar-left"></div>
+                    <div class="md-step-circle"><span>2</span></div>
+                    <div class="md-step-title">Target</div>
                     <div class="md-step-bar-right"></div>
                 </div>
                 <div id="step-3" class="md-step">
-                    <div class="md-step-circle"><span>3</span></div>
-                    <div class="md-step-title">Flashing</div>
                     <div class="md-step-bar-left"></div>
+                    <div class="md-step-circle"><span>3</span></div>
+                    <div class="md-step-title">Options</div>
+                    <div class="md-step-bar-right"></div>
+                </div>
+                <div id="step-4" class="md-step">
+                    <div class="md-step-bar-left"></div>
+                    <div class="md-step-circle"><span>4</span></div>
+                    <div class="md-step-title">Flashing</div>
                 </div>
             </div>
             <div class="mui-col-md-2">
@@ -71,59 +77,77 @@
             </div>
         </div>
 
-        <div class="mui-panel" id="step-1-panel">
-            <form class="mui-form" autocomplete="off">
-                <div class="mui--text-headline">Target Selection</div>
-                <div class="mui-divider"></div>
-                <br/>
-                <div class="mui-select">
-                    <select name="version" id="version"></select>
-                    <label for="version">Version</label>
-                </div>
-                <div class="mui-select">
-                    <select name="vendor" id="vendor" disabled>
-                        <option value="" disabled selected></option>
-                    </select>
-                    <label for="vendor">Vendor</label>
-                </div>
-                <div class="mui-select">
-                    <select name="type" id="type" disabled>
-                        <option value="" disabled selected></option>
-                        <option value="tx_2400" id="tx_2400" disabled>2.4GHz Transmitter</option>
-                        <option value="rx_2400" id="rx_2400" disabled>2.4GHz Receiver</option>
-                        <option value="tx_900" id="tx_900" disabled>900MHz Transmitter</option>
-                        <option value="rx_900" id="rx_900" disabled>900MHz Receiver</option>
-                        <option value="tx_dual" id="tx_dual" disabled>Dual Frequency 2.4GHz/900Mhz Transmitter</option>
-                        <option value="rx_dual" id="rx_dual" disabled>Dual Frequency 2.4GHz/900Mhz Receiver</option>
-                    </select>
-                    <label for="type">Device Type</label>
-                </div>
-                <div class="mui-textfield">
-                    <input name="model" id="model" type="text" autocomplete="off" placeholder="Start typing for auto-complete..."/>
-                    <label for="model">Device Model</label>
-                </div>
-                <div class="mui-checkbox rx-as-tx display--none" >
-                    <input name="rx-as-tx" id="rx-as-tx" type="checkbox">
-                    <label for="rx-as-tx">Flash Recevier as a Transmitter</label>
-                </div>
-                <div class="mui-select rx-as-tx-connection display--none">
-                    <select name="connection" id="connection">
-                        <option value="internal" id="internal" selected>Internal (Full duplex)</option>
-                        <option value="external" id="external">External (Half duplex)</option>
-                    </select>
-                    <label for="connection">Connection Type</label>
-                </div>
-                <div class="mui--pull-left">
-                    <a class="mui-btn" href="" download="elrsV3.lua" id="download-lua">Download ELRS Lua Script</a>
-                </div>
-                <div class="mui--pull-right">
-                    <button class="mui-btn" id="device-discover" style="cursor: help;">Wifi Auto Discover</button>
-                    <button class="mui-btn mui-btn--primary" id="device-next" disabled>Next</button>
-                </div>
-            </form>
+        <div class="mui-panel display--none" id="step-1-panel">
+            <div class="mui--text-headline">Device Selection</div>
+            <div class="mui-divider"></div>
+            <br/>
+            <div class="mui-select">
+                <select name="device-type" id="device-type">
+                    <option value="dev-rx" selected>Receiver</option>
+                    <option value="dev-tx">Transmitter</option>
+                    <option value="dev-txbp">Transmitter Backpack</option>
+                    <option value="dev-vrx">Video Receiver/Goggle Backpack</option>
+                    <option value="dev-aat">Antenna Tracker</option>
+                    <option value="dev-timer">RotorHazard Timer</option>
+                </select>
+                <label for="device-type">Device Type</label>
+            </div>
+            <div class="mui--pull-right">
+                <button class="mui-btn mui-btn--primary" id="device-next">Next</button>
+            </div>
         </div>
 
         <div class="mui-panel display--none" id="step-2-panel">
+            <div class="mui--text-headline">Target Selection</div>
+            <div class="mui-divider"></div>
+            <br/>
+            <div class="mui-select">
+                <select name="version" id="version"></select>
+                <label for="version">Version</label>
+            </div>
+            <div class="mui-select">
+                <select name="vendor" id="vendor" disabled>
+                    <option value="" disabled selected></option>
+                </select>
+                <label for="vendor">Vendor</label>
+            </div>
+            <div class="mui-select dev-rx dev-tx display-none">
+                <select name="type" id="type" disabled>
+                    <option value="" disabled selected></option>
+                    <option value="tx_2400" id="tx_2400" disabled class="dev-tx">2.4GHz Transmitter</option>
+                    <option value="tx_900" id="tx_900" disabled class="dev-tx">900MHz Transmitter</option>
+                    <option value="tx_dual" id="tx_dual" disabled class="dev-tx">Dual Frequency 2.4GHz/900Mhz Transmitter</option>
+                    <option value="rx_2400" id="rx_2400" disabled class="dev-rx">2.4GHz Receiver</option>
+                    <option value="rx_900" id="rx_900" disabled class="dev-rx">900MHz Receiver</option>
+                    <option value="rx_dual" id="rx_dual" disabled class="dev-rx">Dual Frequency 2.4GHz/900Mhz Receiver</option>
+                </select>
+                <label for="type">Frequency</label>
+            </div>
+            <div class="mui-textfield">
+                <input name="model" id="model" type="text" autocomplete="off" placeholder="Start typing for auto-complete..."/>
+                <label for="model">Device Hardware</label>
+            </div>
+            <div class="mui-checkbox rx-as-tx display--none" >
+                <input name="rx-as-tx" id="rx-as-tx" type="checkbox">
+                <label for="rx-as-tx">Flash Recevier as a Transmitter</label>
+            </div>
+            <div class="mui-select rx-as-tx-connection display--none">
+                <select name="connection" id="connection">
+                    <option value="internal" id="internal" selected>Internal (Full duplex)</option>
+                    <option value="external" id="external">External (Half duplex)</option>
+                </select>
+                <label for="connection">Connection Type</label>
+            </div>
+            <div class="mui--pull-left">
+                <a class="mui-btn" href="" download="elrsV3.lua" id="download-lua">Download ELRS Lua Script</a>
+            </div>
+            <div class="mui--pull-right">
+                <button class="mui-btn" id="target-discover" style="cursor: help;">Wifi Auto Discover</button>
+                <button class="mui-btn mui-btn--primary" id="target-next" disabled>Next</button>
+            </div>
+        </div>
+
+        <div class="mui-panel display--none" id="step-3-panel">
             <div class="mui--text-headline">Runtime Options</div>
             <div class="mui--text-dark-secondary mui--text-subhead product-name"></div>
             <div class="mui-divider"></div>
@@ -233,6 +257,7 @@
                     <option value="uart" id="uart">Serial UART</option>
                     <option value="betaflight" id="betaflight">Betaflight Passthrough</option>
                     <option value="etx" id="etx">EdgeTX Passthrough</option>
+                    <option value="passthru" id="passthru">Passthrough</option>
                     <option value="wifi" id="wifi">WiFi</option>
                     <option value="stlink" id="stlink">STLink</option>
                 </select>
@@ -244,7 +269,7 @@
             </div>
         </div>
 
-        <div class="mui-panel display--none" id="step-3-panel">
+        <div class="mui-panel display--none" id="step-4-panel">
             <div class="mui--text-headline">Flashing</div>
             <div class="mui--text-dark-secondary mui--text-subhead product-name"></div>
             <div class="mui-divider"></div>
@@ -255,7 +280,7 @@
             <div id="firmware-version" class="wifi"></div>
             <br/>
             <div id="flash-mode" class="display--none">
-                <div class="uart betaflight etx stlink display--none">
+                <div class="uart betaflight etx stlink passthru display--none">
                     <div class="mui-checkbox esp8285 esp32 display--none">
                         <input id='erase-flash' type='checkbox' />
                         <label for="erase-flash">Erase flash first?</label>
@@ -274,11 +299,12 @@
                 <progress id="progressBar" value="0" max="100" style="width:100%;"></progress>
             </div>
 
-            <div class="mui-panel uart betaflight etx stlink display--none">
+            <div class="mui-panel uart betaflight etx stlink passthru display--none">
                 <div id="serial-monitor"></div>
             </div>
         </div>
     </div>
+
     <script>
         // Safari 3.0+ "[object HTMLElementConstructor]"
         const isSafari = /constructor/i.test(window.HTMLElement) || (function (p) { return p.toString() === "[object SafariRemoteNotification]"; })(!window['safari'] || (typeof safari !== 'undefined' && window['safari'].pushNotification));

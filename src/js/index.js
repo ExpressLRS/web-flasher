@@ -11,7 +11,7 @@ import { MismatchError, AlertError } from './error'
 import { initBindingPhraseGen } from './phrase'
 import { autocomplete } from './autocomplete'
 import { SwalMUI, Toast } from './swalmui'
-import { _, setDisplay, setClass } from './helpers'
+import {_, setDisplay, setHidden} from './helpers'
 import { Stepper } from './stepper'
 
 const versionSelect = _('version')
@@ -23,8 +23,8 @@ const typeSelect = _('type')
 const modelSelect = _('model')
 const lblConnTo = _('lblConnTo')
 const methodSelect = _('method')
-const deviceNext = _('device-next')
-const deviceDiscoverButton = _('device-discover')
+const targetNext = _('target-next')
+const targetDiscoverButton = _('target-discover')
 
 const mode = 'tags'
 const showRCs = true
@@ -38,6 +38,7 @@ let term = null
 let stlink = null
 let uploadURL = null
 let stepper = null
+let mainFirmware = true
 
 const hideables = [
   '.tx_2400',
@@ -216,7 +217,7 @@ Ensure the devices are powered on, running Wi-Fi mode, and they are on the same 
       typeSelect.onchange(undefined)
       modelSelect.value = candidates[selected.value].product
       modelSelect.onchange(undefined)
-      deviceNext.onclick(e)
+      targetNext.onclick(e)
       methodSelect.value = 'wifi'
       methodSelect.onchange(undefined)
       uploadURL = `http://localhost:9097/${mdns.address}`
@@ -253,15 +254,15 @@ You can download the proxy for your system from the <a target="_blank" href="//g
   })
 }
 
-deviceDiscoverButton.onclick = displayProxyHelp
+targetDiscoverButton.onclick = displayProxyHelp
 
 const checkProxy = async () => {
   await fetch('http://localhost:9097/mdns')
     .then(response => checkStatus(response) && response.json())
     .then(() => {
-      if (deviceDiscoverButton.onclick !== doDiscovery) {
-        deviceDiscoverButton.style.cursor = 'default'
-        deviceDiscoverButton.onclick = doDiscovery
+      if (targetDiscoverButton.onclick !== doDiscovery) {
+        targetDiscoverButton.style.cursor = 'default'
+        targetDiscoverButton.onclick = doDiscovery
         return Toast.fire({
           icon: 'success',
           title: 'Wifi auto-discovery enabled'
@@ -269,9 +270,9 @@ const checkProxy = async () => {
       }
     })
     .catch(() => {
-      if (deviceDiscoverButton.onclick !== displayProxyHelp) {
-        deviceDiscoverButton.style.cursor = 'help'
-        deviceDiscoverButton.onclick = displayProxyHelp
+      if (targetDiscoverButton.onclick !== displayProxyHelp) {
+        targetDiscoverButton.style.cursor = 'help'
+        targetDiscoverButton.onclick = displayProxyHelp
         return Toast.fire({
           icon: 'warning',
           title: 'Wifi auto-discovery disabled'
@@ -306,12 +307,13 @@ const compareSemanticVersions = (a, b) => {
 }
 
 const compareSemanticVersionsRC = (a, b) => {
+  if (a === undefined || b === undefined) return 0;
   return compareSemanticVersions(a.replace(/-.*/, ''), b.replace(/-.*/, ''))
 }
 
 async function initialise () {
   setInterval(() => { checkProxy() }, 30000)
-  stepper = new Stepper(3)
+  stepper = new Stepper(4)
   term = new Terminal()
   term.open(_('serial-monitor'))
   const fitAddon = new FitAddon()
@@ -322,8 +324,28 @@ async function initialise () {
   }
 
   initBindingPhraseGen()
-  index = await checkStatus(await fetch('firmware/index.json')).json()
+  initFiledrag()
+  return checkProxy()
+}
+
+_('device-next').onclick = async (e) => {
+  e.preventDefault();
+  setHidden(`.dev-tx,.dev-rx`, true)
+  setDisplay(`.dev-tx,.dev-rx`, false)
+  setHidden(`.${_('device-type').value}`, false)
+  setDisplay(`.${_('device-type').value}`)
+
+  if (_('device-type').value === 'dev-tx' || _('device-type').value === 'dev-rx') {
+    index = await checkStatus(await fetch('firmware/index.json')).json()
+    mainFirmware = true
+  } else {
+    index = await checkStatus(await fetch('backpack/index.json')).json()
+    mainFirmware = false
+  }
   let selected = true
+  while (versionSelect.options.length > 0) {
+    versionSelect.options.remove(0);
+  }
   Object.keys(index[mode]).sort(compareSemanticVersions).reverse().forEach((version, _unused) => {
     const opt = document.createElement('option')
     if (version.indexOf('-RC') === -1 || showRCs) {
@@ -335,8 +357,8 @@ async function initialise () {
     }
   })
   versionSelect.onchange(undefined)
-  initFiledrag()
-  return checkProxy()
+
+  stepper.next()
 }
 
 versionSelect.onchange = async () => {
@@ -347,13 +369,27 @@ versionSelect.onchange = async () => {
   typeSelect.value = ''
 
   _('download-lua').href = `firmware/${versionSelect.value}/lua/elrsV3.lua`
-
-  hardware = await checkStatus(await fetch('firmware/hardware/targets.json')).json()
-  for (const k in hardware) {
-    const opt = document.createElement('option')
-    opt.value = k
-    opt.innerHTML = hardware[k].name === undefined ? k : hardware[k].name
-    vendorSelect.appendChild(opt)
+  if (mainFirmware) {
+    hardware = await checkStatus(await fetch('firmware/hardware/targets.json')).json()
+  } else {
+    hardware = await checkStatus(await fetch(`backpack/${versionSelect.value}/hardware/targets.json`)).json()
+  }
+  if (mainFirmware) {
+    for (const k in hardware) {
+      const opt = document.createElement('option')
+      opt.value = k
+      opt.innerHTML = hardware[k].name === undefined ? k : hardware[k].name
+      vendorSelect.appendChild(opt)
+    }
+  } else {
+    for (const k in hardware) {
+      if (hardware[k][_('device-type').value.slice(4)] !== undefined) {
+        const opt = document.createElement('option')
+        opt.value = k
+        opt.innerHTML = hardware[k].name === undefined ? k : hardware[k].name
+        vendorSelect.appendChild(opt)
+      }
+    }
   }
   vendorSelect.disabled = false
   setDisplay('.uart', false)
@@ -362,11 +398,13 @@ versionSelect.onchange = async () => {
 
   const version = versionSelect.options[versionSelect.selectedIndex].text
   const models = []
-  for (const v in hardware) {
-    for (const t in hardware[v]) {
-      for (const m in hardware[v][t]) {
-        if (hardware[v][t][m].product_name !== undefined && compareSemanticVersionsRC(version, hardware[v][t][m]['min_version']) >= 0) {
-          models.push(hardware[v][t][m].product_name)
+  if (mainFirmware || _('device-type').value === 'dev-txbp') {
+    for (const v in hardware) {
+      for (const t in hardware[v]) {
+        for (const m in hardware[v][t]) {
+          if (hardware[v][t][m].product_name !== undefined && compareSemanticVersionsRC(version, hardware[v][t][m]['min_version']) >= 0) {
+            models.push(hardware[v][t][m].product_name)
+          }
         }
       }
     }
@@ -387,13 +425,22 @@ vendorSelect.onchange = () => {
   typeSelect.disabled = false
   typeSelect.value = ''
   modelSelect.value = ''
-  deviceNext.disabled = true
+  targetNext.disabled = true
   const models = []
   const version = versionSelect.options[versionSelect.selectedIndex].text
   const v = vendorSelect.value
-  for (const t in hardware[v]) {
+  if (mainFirmware) {
+    for (const t in hardware[v]) {
+      for (const m in hardware[v][t]) {
+        if (hardware[v][t][m].product_name !== undefined && compareSemanticVersionsRC(version, hardware[v][t][m]['min_version']) >= 0) {
+          models.push(hardware[v][t][m].product_name)
+        }
+      }
+    }
+  } else {
+    let t = _('device-type').value.slice(4)
     for (const m in hardware[v][t]) {
-      if (hardware[v][t][m].product_name !== undefined && compareSemanticVersionsRC(version, hardware[v][t][m]['min_version']) >= 0) {
+      if (hardware[v][t][m].product_name !== undefined) {
         models.push(hardware[v][t][m].product_name)
       }
     }
@@ -403,7 +450,7 @@ vendorSelect.onchange = () => {
 
 typeSelect.onchange = () => {
   modelSelect.value = ''
-  deviceNext.disabled = true
+  targetNext.disabled = true
   const models = []
   const version = versionSelect.options[versionSelect.selectedIndex].text
   const v = vendorSelect.value
@@ -419,19 +466,40 @@ typeSelect.onchange = () => {
 }
 
 modelSelect.onchange = () => {
-  for (const v in hardware) {
-    for (const t in hardware[v]) {
-      for (const m in hardware[v][t]) {
-        if (hardware[v][t][m].product_name === modelSelect.value) {
-          vendorSelect.value = v
-          typeSelect.value = t
-          selectedModel = hardware[v][t][m]
-          typeSelect.disabled = false
-          deviceNext.disabled = false
-          document.querySelectorAll('.product-name').forEach(e => { e.innerHTML = selectedModel.product_name })
-          showHideFeatures()
-          return
+  if (mainFirmware || _('device-type').value === 'dev-txbp') {
+    for (const v in hardware) {
+      for (const t in hardware[v]) {
+        for (const m in hardware[v][t]) {
+          if (hardware[v][t][m].product_name === modelSelect.value) {
+            vendorSelect.value = v
+            typeSelect.value = t
+            selectedModel = hardware[v][t][m]
+            typeSelect.disabled = false
+            targetNext.disabled = false
+            document.querySelectorAll('.product-name').forEach(e => { e.innerHTML = selectedModel.product_name })
+            showHideFeatures()
+            return
+          }
         }
+      }
+    }
+  } else {
+    let t = _('device-type').value.slice(4)
+    for (const m in hardware[vendorSelect.value][t]) {
+      if (hardware[vendorSelect.value][t][m].product_name === modelSelect.value) {
+        selectedModel = hardware[vendorSelect.value][t][m]
+        typeSelect.disabled = false
+        targetNext.disabled = false
+        if (t === 'vrx')
+          document.querySelectorAll('.product-name').forEach(e => {
+            e.innerHTML = `${hardware[vendorSelect.value].name} on ${selectedModel.product_name}`
+          })
+        else
+          document.querySelectorAll('.product-name').forEach(e => {
+            e.innerHTML = selectedModel.product_name
+          })
+        showHideFeatures()
+        return
       }
     }
   }
@@ -462,16 +530,19 @@ _('rx-as-tx').onchange = (_e) => {
 }
 
 function adjustedType() {
-  return _('rx-as-tx').checked ? typeSelect.value.replace('rx_', 'tx_') : typeSelect.value
+  if (mainFirmware)
+    return _('rx-as-tx').checked ? typeSelect.value.replace('rx_', 'tx_') : typeSelect.value
+  return _('device-type').value.slice(4)
 }
 
-deviceNext.onclick = (e) => {
+targetNext.onclick = (e) => {
   e.preventDefault()
   _('fcclbt').value = 'FCC'
   
   _('uart').disabled = true
   _('betaflight').disabled = true
   _('etx').disabled = true
+  _('passthru').disabled = true
   _('wifi').disabled = true
   _('stlink').disabled = true
   showHideFeatures()
@@ -489,7 +560,6 @@ methodSelect.onchange = () => {
 
 const getSettings = async (deviceType) => {
   const config = selectedModel
-  const firmwareUrl = `firmware/${versionSelect.value}/${_('fcclbt').value}/${config.firmware}/firmware.bin`
   const options = {
     'flash-discriminator': Math.floor(Math.random() * ((2 ** 31) - 2) + 1)
   }
@@ -506,40 +576,47 @@ const getSettings = async (deviceType) => {
       options['wifi-password'] = _('wifi-password').value
     }
   }
-  if (deviceType === 'RX' && !_('rx-as-tx').checked) {
-    options['rcvr-uart-baud'] = +_('rcvr-uart-baud').value
-    options['rcvr-invert-tx'] = _('rcvr-invert-tx').checked
-    options['lock-on-first-connection'] = _('lock-on-first-connection').checked
-  } else {
-    options['tlm-interval'] = +_('tlm-interval').value
-    options['fan-runtime'] = +_('fan-runtime').value
-    options['uart-inverted'] = _('uart-inverted').checked
-    options['unlock-higher-power'] = _('unlock-higher-power').checked
-  }
-  if (typeSelect.value.endsWith('_900') || typeSelect.value.endsWith('_dual')) {
-    options.domain = +_('domain').value
-  }
-  if (config.features !== undefined && config.features.indexOf('buzzer') !== -1) {
-    const beeptype = Number(_('melody-type').value)
-    options.beeptype = beeptype > 2 ? 2 : beeptype
-
-    const melodyModule = await import('./melody.js')
-    if (beeptype === 2) {
-      options.melody = melodyModule.MelodyParser.parseToArray('A4 20 B4 20|60|0')
-    } else if (beeptype === 3) {
-      options.melody = melodyModule.MelodyParser.parseToArray('E5 40 E5 40 C5 120 E5 40 G5 22 G4 21|20|0')
-    } else if (beeptype === 4) {
-      options.melody = melodyModule.MelodyParser.parseToArray(_('melody').value)
+  let firmwareUrl
+  if (mainFirmware) {
+    firmwareUrl = `firmware/${versionSelect.value}/${_('fcclbt').value}/${config.firmware}/firmware.bin`
+    if (deviceType === 'RX' && !_('rx-as-tx').checked) {
+      options['rcvr-uart-baud'] = +_('rcvr-uart-baud').value
+      options['rcvr-invert-tx'] = _('rcvr-invert-tx').checked
+      options['lock-on-first-connection'] = _('lock-on-first-connection').checked
     } else {
-      options.melody = []
+      options['tlm-interval'] = +_('tlm-interval').value
+      options['fan-runtime'] = +_('fan-runtime').value
+      options['uart-inverted'] = _('uart-inverted').checked
+      options['unlock-higher-power'] = _('unlock-higher-power').checked
     }
+    if (typeSelect.value.endsWith('_900') || typeSelect.value.endsWith('_dual')) {
+      options.domain = +_('domain').value
+    }
+    if (config.features !== undefined && config.features.indexOf('buzzer') !== -1) {
+      const beeptype = Number(_('melody-type').value)
+      options.beeptype = beeptype > 2 ? 2 : beeptype
+
+      const melodyModule = await import('./melody.js')
+      if (beeptype === 2) {
+        options.melody = melodyModule.MelodyParser.parseToArray('A4 20 B4 20|60|0')
+      } else if (beeptype === 3) {
+        options.melody = melodyModule.MelodyParser.parseToArray('E5 40 E5 40 C5 120 E5 40 G5 22 G4 21|20|0')
+      } else if (beeptype === 4) {
+        options.melody = melodyModule.MelodyParser.parseToArray(_('melody').value)
+      } else {
+        options.melody = []
+      }
+    }
+  } else {
+    options['product-name'] = config['product_name']
+    firmwareUrl = `backpack/${versionSelect.value}/${config.firmware}/firmware.bin`
   }
   return { config, firmwareUrl, options }
 }
 
 const connectUART = async (e) => {
   e.preventDefault()
-  const deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX'
+  const deviceType = mainFirmware ? typeSelect.value.startsWith('tx_') ? 'TX' : 'RX' : _('device-type').value.slice(4)
   const radioType = typeSelect.value.endsWith('_900') ? 'sx127x' : (typeSelect.value.endsWith('_2400') ? 'sx128x' : 'lr1121')
   term.clear()
   const { config, firmwareUrl, options } = await getSettings(deviceType)
@@ -600,15 +677,24 @@ const connectUART = async (e) => {
 }
 
 const generateFirmware = async () => {
-  const deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX'
-  const radioType = typeSelect.value.endsWith('_900') ? 'sx127x' : (typeSelect.value.endsWith('_2400') ? 'sx128x' : 'lr1121')
-  const { config, firmwareUrl, options } = await getSettings(deviceType)
-  const txType = _('rx-as-tx').checked ? _('connection').value : undefined
-  const firmwareFiles = await Configure.download(deviceType, txType, radioType, config, firmwareUrl, options)
-  return [
-    firmwareFiles,
-    { config, firmwareUrl, options }
-  ]
+  if (mainFirmware) {
+    const deviceType = typeSelect.value.startsWith('tx_') ? 'TX' : 'RX'
+    const radioType = typeSelect.value.endsWith('_900') ? 'sx127x' : (typeSelect.value.endsWith('_2400') ? 'sx128x' : 'lr1121')
+    const { config, firmwareUrl, options } = await getSettings(deviceType)
+    const txType = _('rx-as-tx').checked ? _('connection').value : undefined
+    const firmwareFiles = await Configure.download(deviceType, txType, radioType, config, firmwareUrl, options)
+    return [
+      firmwareFiles,
+      { config, firmwareUrl, options }
+    ]
+  } else {
+    const { config, firmwareUrl, options } = await getSettings(_('device-type').value)
+    const firmwareFiles = await Configure.download(_('device-type').value.slice(4), undefined, undefined, config, firmwareUrl, options)
+    return [
+      firmwareFiles,
+      { config, firmwareUrl, options }
+    ]
+  }
 }
 
 const connectSTLink = async (e) => {
@@ -681,8 +767,8 @@ _('options-next').onclick = async (e) => {
   if (method === 'download') {
     await downloadFirmware()
   } else {
-    stepper.next()
     setDisplay(`.${method}`)
+    stepper.next()
 
     if (method === 'wifi') {
       connectButton.onclick = connectWifi
@@ -931,7 +1017,7 @@ async function parseFile (file) {
           custom_layout: customLayout
         }
         typeSelect.value = `${v[0].toLowerCase()}_${v[2] === 'LR1121' ? 'dual' : v[2]}`
-        deviceNext.onclick(undefined)
+        targetNext.onclick(undefined)
       }
     })
     const element = document.querySelector('.swal2-html-container')

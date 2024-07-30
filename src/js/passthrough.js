@@ -91,6 +91,42 @@ class Passthrough {
     this.terminal.writeln(str)
   }
 
+  edgeTXBP = async () => {
+    this.log('======== PASSTHROUGH INIT ========')
+
+    const sendExpect = async (send, expect, delay) => {
+      await this.transport.write_string(send)
+      const line = await this.transport.read_line(100)
+
+      if (line.indexOf(expect) === -1) {
+        throw new AlertError('Failed Passthrough Initialisation', `Wanted '${expect}', but not found in response '${line}'`)
+      }
+      await this._sleep(delay)
+    }
+
+    this.transport.set_delimiters(['> '])
+    try {
+      await sendExpect('set rfmod 0 power off\n', 'set: ', 100)
+      await sendExpect('set pulses 0\n', 'set: ', 500)
+      await sendExpect('set rfmod 0 power on\n', 'set: ', 2500)
+      await sendExpect('set rfmod 0 bootpin 1\n', 'set: ', 100)
+      await sendExpect('set rfmod 0 bootpin 0\n', 'set: ', 100)
+
+      this.log('Enabling serial passthrough...')
+      this.transport.set_delimiters(['\n'])
+      const cmd = `serialpassthrough rfmod 0 ${this.transport.baudrate.toString()}`
+      this.log(`  CMD: '${cmd}`)
+      await this.transport.write_string(`${cmd}\n`)
+      await this.transport.read_line(200)
+
+      this.log('======== PASSTHROUGH DONE ========')
+    } catch (e) {
+      this.log(e.message)
+      this.log('======== PASSTHROUGH FAILED ========')
+      return Promise.reject(e)
+    }
+  }
+
   edgeTX = async () => {
     this.log('======== PASSTHROUGH INIT ========')
 

@@ -175,14 +175,22 @@ export class Configure {
     return u8array
   }
 
-  static #configureESP = (binary, config, options) => {
+  static #configureESP = (deviceType, binary, config, options) => {
     const end = this.#findFirmwareEnd(binary, config)
-    return this.#appendArray(
-      binary.slice(0, end),
-      this.#bstrToUi8(config.product_name.padEnd(128, '\x00')),
-      this.#bstrToUi8(config.lua_name.padEnd(16, '\x00')),
-      this.#bstrToUi8(JSON.stringify(options).padEnd(512, '\x00'))
-    )
+    if (deviceType === 'RX' || deviceType === 'TX') {
+      return this.#appendArray(
+        binary.slice(0, end),
+        this.#bstrToUi8(config.product_name.padEnd(128, '\x00')),
+        this.#bstrToUi8(config.lua_name.padEnd(16, '\x00')),
+        this.#bstrToUi8(JSON.stringify(options).padEnd(512, '\x00'))
+      )
+    }
+    else {
+      return this.#appendArray(
+          binary.slice(0, end),
+          this.#bstrToUi8(JSON.stringify(options).padEnd(512, '\x00'))
+      )
+    }
   }
 
   static download = async (deviceType, rxAsTxType, radioType, config, firmwareUrl, options) => {
@@ -198,7 +206,7 @@ export class Configure {
       let hardwareLayoutData
       if (config.custom_layout) {
         hardwareLayoutData = this.#bstrToUi8(JSON.stringify(config.custom_layout))
-      } else {
+      } else if (config.layout_file) {
         // get layout from version specific folder OR fall back to global folder
         const hardwareLayoutFile = await this.#fetch_file(`${folder}/hardware/${deviceType}/${config.layout_file}`, 0)
           .catch(() => this.#fetch_file(`firmware/hardware/${deviceType}/${config.layout_file}`, 0))
@@ -211,6 +219,8 @@ export class Configure {
         }
         if (rxAsTxType === 'external') layout['serial_rx'] = layout['serial_tx']
         hardwareLayoutData = this.#bstrToUi8(JSON.stringify(layout))
+      } else {
+        hardwareLayoutData = new Uint8Array(0)
       }
 
       if (config.platform.startsWith('esp32')) {
@@ -221,9 +231,9 @@ export class Configure {
         list.push(this.#fetch_file(firmwareUrl.replace('firmware.bin', 'bootloader.bin'), startAddress))
         list.push(this.#fetch_file(firmwareUrl.replace('firmware.bin', 'partitions.bin'), 0x8000))
         list.push(this.#fetch_file(firmwareUrl.replace('firmware.bin', 'boot_app0.bin'), 0xE000))
-        list.push(this.#fetch_file(firmwareUrl, 0x10000, (bin) => Configure.#configureESP(bin, config, options)))
+        list.push(this.#fetch_file(firmwareUrl, 0x10000, (bin) => Configure.#configureESP(deviceType, bin, config, options)))
       } else if (config.platform === 'esp8285') {
-        list.push(this.#fetch_file(firmwareUrl, 0x0, (bin) => Configure.#configureESP(bin, config, options)))
+        list.push(this.#fetch_file(firmwareUrl, 0x0, (bin) => Configure.#configureESP(deviceType, bin, config, options)))
       }
 
       const files = await Promise.all(list)

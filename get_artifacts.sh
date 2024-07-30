@@ -1,11 +1,13 @@
 #!/bin/bash
 
+# Remove old firmware files
+rm -rf firmware backpack
+
 # Download main ELRS firmware, for each tagged version
 mkdir -p firmware
 cd firmware
 curl -L -o index.json https://artifactory.expresslrs.org/ExpressLRS/index.json
-for i in `cat index.json | jq '.tags | keys[]' | sed 's/"//g' | sort -r` ; do
-    HASH=`grep \"$i\" index.json | sed 's/.* "//' | sed 's/".*//'`
+for HASH in `cat index.json | jq '.tags,.branches | values[]' | sed 's/"//g' | sort -r` ; do
     curl -L -o firmware.zip "https://artifactory.expresslrs.org/ExpressLRS/$HASH/firmware.zip"
     mkdir $HASH
     cd $HASH
@@ -28,8 +30,7 @@ cd ../..
 mkdir -p backpack
 cd backpack
 curl -L -o index.json https://artifactory.expresslrs.org/Backpack/index.json
-for i in `cat index.json | jq '.tags | keys[]' | sed 's/"//g' | sort -r` ; do
-    HASH=`grep \"$i\" index.json | sed 's/.* "//' | sed 's/".*//'`
+for HASH in `cat index.json | jq '.tags,.branches | values[]' | sed 's/"//g' | sort -r` ; do
     curl -L -o firmware.zip "https://artifactory.expresslrs.org/Backpack/$HASH/firmware.zip"
     mkdir $HASH
     cd $HASH
