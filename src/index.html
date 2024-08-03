@@ -181,7 +181,7 @@
             <label for="domain">Regulatory domain</label>
         </div>
 
-        <div class="esp8285 esp32 display--none">
+        <div class="esp8285 esp32 esp32-s3 esp32-c3 display--none">
             <div class="mui-textfield mui-textfield--float-label">
                 <input size='32' id='wifi-ssid' name='wifi-ssid' type='text' value=""/>
                 <label for="wifi-ssid">WiFi SSID</label>
@@ -201,7 +201,7 @@
                 <input size='5' id='tlm-interval' name='tlm-interval' type='text' value="240"/>
                 <label for="tlm-interval">TLM report interval (ms)</label>
             </div>
-            <div class="expert-esp32 display--none mui-checkbox">
+            <div class="expert-esp32 esp32-s3 esp32-c3 display--none mui-checkbox">
                 <input id='uart-inverted' name='uart-inverted' type='checkbox' checked/>
                 <label for="uart-inverted">UART inverted</label>
             </div>
@@ -241,7 +241,7 @@
                 <input id='r9mm-mini-sbus' name='r9mm-mini-sbus' type='checkbox'/>
                 <label for="r9mm-mini-sbus">Use SBUS Pins as UART</label>
             </div>
-            <div class="expert-esp8285 expert-esp32 display--none mui-checkbox">
+            <div class="expert-esp8285 expert-esp32 expert-esp32-s3 expert-esp32-c3display--none mui-checkbox">
                 <input id='rcvr-invert-tx' name='rcvr-invert-tx' type='checkbox'/>
                 <label for="rcvr-invert-tx">Invert TX pin</label>
             </div>
@@ -282,7 +282,7 @@
         <br/>
         <div id="flash-mode" class="display--none">
             <div class="uart betaflight etx stlink passthru display--none">
-                <div class="mui-checkbox esp8285 esp32 display--none">
+                <div class="mui-checkbox esp8285 esp32 esp32-s3 esp32-c3 display--none">
                     <input id='erase-flash' type='checkbox'/>
                     <label for="erase-flash">Erase flash first?</label>
                 </div>

@@ -48,6 +48,8 @@ const hideables = [
     '.tx_dual',
     '.rx_dual',
     '.esp32',
+    '.esp32-c3',
+    '.esp32-s3',
     '.esp8285',
     '.stm32',
     '.expert-esp32',
