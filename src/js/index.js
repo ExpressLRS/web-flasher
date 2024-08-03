@@ -105,13 +105,14 @@ _('whats-new').onclick = function () {
         title: "What's New",
         width: "auto",
         html: `<div class="mui--text-left">
-<h2>Version 1.0</h2>
+<h2>Version 1.2</h2>
 <ul>
 <li>Expert mode checkbox</li>
 <li>Simplified UI, moved uncommon settings behind the "Expert mode" switch</li>
 <li>Allow flashing an RX as a TX (Expert mode)</li>
 <li>Adds support for flashing ESP32-S3 and C3 based targets</li>
-<li>Allows flashing of devices on Android using OTG cable</li>
+<li>Allows flashing of (supported) devices on Android using OTG cable</li>
+<li>Support flashing of backpacks</li>
 </ul>
 </div>`
     })
