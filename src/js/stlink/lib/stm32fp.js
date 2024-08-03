@@ -8,8 +8,8 @@
  *
  */
 
-import { Exception, Warning, UsbError } from './stlinkex.js';
-import { Stm32 } from './stm32.js';
+import {Exception, Warning, UsbError} from './stlinkex.js';
+import {Stm32} from './stm32.js';
 import {
     hex_word as H32,
     async_sleep,
@@ -176,8 +176,8 @@ class Flash {
     async wait_busy(wait_time, bargraph_msg = null) {
         if (bargraph_msg) {
             this._dbg.bargraph_start(bargraph_msg, {
-                "value_min": Date.now()/1000.0,
-                "value_max": (Date.now()/1000.0 + wait_time)
+                "value_min": Date.now() / 1000.0,
+                "value_max": (Date.now() / 1000.0 + wait_time)
             });
         }
 
@@ -185,7 +185,7 @@ class Flash {
         const end_time = (Date.now() + (wait_time * 2 * 1000));
         while (Date.now() < end_time) {
             if (bargraph_msg) {
-                this._dbg.bargraph_update({"value": Date.now()/1000.0});
+                this._dbg.bargraph_update({"value": Date.now() / 1000.0});
             }
             let status = await this._stlink.get_debugreg32(this.FLASH_SR_REG);
             if (!(status & FLASH_SR_BUSY_BIT)) {
@@ -236,13 +236,13 @@ class Stm32FP extends Stm32 {
         await flash.erase_all();
         await flash.lock();
     }
-    
+
     async flash_erase_all() {
         this._dbg.debug("Stm32FP.flash_erase_all()");
         await this._flash_erase_all();
     }
 
-    async _flash_write(addr, data, { erase = false, verify = false, erase_sizes = null, bank = 0 }) {
+    async _flash_write(addr, data, {erase = false, verify = false, erase_sizes = null, bank = 0}) {
         // align data
         if (data.length % 4) {
             let padded_data = new Uint8Array(data.length + (4 - (data.length % 4)));
@@ -283,7 +283,8 @@ class Stm32FP extends Stm32 {
         await flash.lock();
         this._dbg.bargraph_done();
     }
-    async flash_write(addr, data, { erase = false, verify = false, erase_sizes = null }) {
+
+    async flash_write(addr, data, {erase = false, verify = false, erase_sizes = null}) {
         let addr_str = (addr !== null) ? `0x{H32(addr)}` : 'None';
         this._dbg.debug(`Stm32FP.flash_write(${addr_str}, [data:${data.length}Bytes], erase=${erase}, verify=${verify}, erase_sizes=${erase_sizes})`);
         if (addr === null) {
@@ -300,6 +301,7 @@ class Stm32FP extends Stm32 {
 // support STM32F MCUs with page access to FLASH and two banks
 // (STM32F1xxxF and STM32F1xxxG) (XL devices)
 const STM32FPXL_BANK_SIZE = 512 * 1024;
+
 class Stm32FPXL extends Stm32FP {
     async flash_erase_all() {
         this._dbg.debug("Stm32F1.flash_erase_all()");
@@ -307,7 +309,7 @@ class Stm32FPXL extends Stm32FP {
         await this._flash_erase_all(1);
     }
 
-    async flash_write(addr, data, { erase = false, verify = false, erase_sizes = null }) {
+    async flash_write(addr, data, {erase = false, verify = false, erase_sizes = null}) {
         let options = arguments[2];
         let addr_str = (addr !== null) ? `0x${H32(addr)}` : 'None';
         this._dbg.debug(`Stm32F1.flash_write(${addr_str}, [data:${data.length}Bytes], erase=${erase}, verify=${verify}, erase_sizes=${erase_sizes})`);
@@ -320,20 +322,20 @@ class Stm32FPXL extends Stm32FP {
             }
         }
         if ((addr - this.FLASH_START + data.length) <= STM32FPXL_BANK_SIZE) {
-            await this._flash_write(addr, data, { ...options, bank: 0 });
+            await this._flash_write(addr, data, {...options, bank: 0});
         } else {
             if ((addr - this.FLASH_START) > STM32FPXL_BANK_SIZE) {
-                await this._flash_write(addr, data, { ...options, bank: 1 });
+                await this._flash_write(addr, data, {...options, bank: 1});
             } else {
                 addr_bank1 = addr;
                 addr_bank2 = (this.FLASH_START + STM32FPXL_BANK_SIZE);
                 data_bank1 = data.slice(0, (STM32FPXL_BANK_SIZE - (addr - this.FLASH_START)));
                 data_bank2 = data.slice(STM32FPXL_BANK_SIZE - (addr - this.FLASH_START));
-                await this._flash_write(addr_bank1, data_bank1, { ...options, bank: 1 });
-                await this._flash_write(addr_bank2, data_bank2, { ...options, bank: 1 });
+                await this._flash_write(addr_bank1, data_bank1, {...options, bank: 1});
+                await this._flash_write(addr_bank2, data_bank2, {...options, bank: 1});
             }
         }
     }
 }
 
-export { Stm32FP, Stm32FPXL };
+export {Stm32FP, Stm32FPXL};

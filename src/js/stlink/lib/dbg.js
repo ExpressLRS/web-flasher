@@ -99,7 +99,7 @@ export default class Dbg {
     }
 
     bargraph_update(value = 0, percent = null) {
-        if ((! this._bargraph_msg)) {
+        if ((!this._bargraph_msg)) {
             return;
         }
         if (percent === null) {

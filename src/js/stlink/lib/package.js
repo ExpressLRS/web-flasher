@@ -13,9 +13,9 @@ import DEVICES from './stm32devices.js';
 import * as semihosting from './semihosting.js';
 
 
-import { Stm32 } from './stm32.js';
-import { Stm32FP, Stm32FPXL } from './stm32fp.js';
-import { Stm32FS } from './stm32fs.js';
+import {Stm32} from './stm32.js';
+import {Stm32FP, Stm32FPXL} from './stm32fp.js';
+import {Stm32FS} from './stm32fs.js';
 
 let drivers = {
     Stm32: Stm32,
@@ -24,4 +24,4 @@ let drivers = {
     Stm32FS: Stm32FS
 };
 
-export { exceptions, usb, drivers, Stlinkv2, Logger, DEVICES, semihosting };
+export {exceptions, usb, drivers, Stlinkv2, Logger, DEVICES, semihosting};

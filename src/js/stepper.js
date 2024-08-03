@@ -1,4 +1,4 @@
-import { _, setDisplay, setClass } from './helpers'
+import {_, setDisplay, setClass} from './helpers'
 
 export class Stepper {
     constructor(steps) {

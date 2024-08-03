@@ -8,7 +8,7 @@
  *
  */
 
-import { Exception, Warning, UsbError } from './stlinkex.js';
+import {Exception, Warning, UsbError} from './stlinkex.js';
 import {
     hex_word as H32,
     hex_octet as H8
@@ -226,7 +226,7 @@ class Stm32 {
         throw new Exception("Erasing FLASH is not implemented for this MCU");
     }
 
-    async flash_write(addr, data, { erase = false, verify = false, erase_sizes = null }) {
+    async flash_write(addr, data, {erase = false, verify = false, erase_sizes = null}) {
         let addr_str = (addr !== null) ? `0x{H32(addr)}` : 'None';
         this._dbg.debug(`Stm32.flash_write(${addr_str}, [data:${data.length}Bytes], erase=${erase}, verify=${verify}, erase_sizes=${erase_sizes})`);
         throw new Exception("Programing FLASH is not implemented for this MCU");
@@ -258,4 +258,4 @@ Stm32.DHCSR_STEP = DHCSR_STEP;
 Stm32.DEMCR_RUN_AFTER_RESET = DEMCR_RUN_AFTER_RESET;
 Stm32.DEMCR_HALT_AFTER_RESET = DEMCR_HALT_AFTER_RESET;
 
-export { Stm32 };
+export {Stm32};

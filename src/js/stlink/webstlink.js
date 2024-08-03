@@ -106,6 +106,7 @@ export default class WebStlink {
 
     _dispatch_callback(name, ...args) {
         let mutex = this._callback_mutex;
+
         async function run_callbacks(callbacks) {
             // Ensure that the previous callback chain is done before
             // starting this callback chain
@@ -407,7 +408,7 @@ export default class WebStlink {
         }
         let status = {
             halted: (dhcsr & libstlink.drivers.Stm32.DHCSR_STATUS_HALT_BIT) != 0,
-            debug:  (dhcsr & libstlink.drivers.Stm32.DHCSR_DEBUGEN_BIT) != 0,
+            debug: (dhcsr & libstlink.drivers.Stm32.DHCSR_DEBUGEN_BIT) != 0,
         };
 
         this._last_cpu_status = status;
@@ -536,7 +537,7 @@ export default class WebStlink {
             data = new Uint8Array(data.buffer);
         } else if (data instanceof Array) {
             let new_data = new Uint8Array(data.length);
-            for (let i=0; i < data.length; i++) {
+            for (let i = 0; i < data.length; i++) {
                 if (typeof data[i] != "number" || data[i] < 0x00 || data[i] > 0xff) {
                     throw new libstlink.exceptions.Exception(`Datum at index ${i} is not a valid octet: ${data[i]}`);
                 }
@@ -590,8 +591,8 @@ export default class WebStlink {
         let param_bytes = await this._driver.get_mem(pointer, count * 4);
         let view = new DataView(param_bytes.buffer);
         let params = [];
-        for (let i=0; i < count; i++) {
-            params.push(view.getUint32(i*4, true));
+        for (let i = 0; i < count; i++) {
+            params.push(view.getUint32(i * 4, true));
         }
         return params;
     }
@@ -599,7 +600,7 @@ export default class WebStlink {
     async _unsafe_read_semihost_operation() {
         let opcode = await this._unsafe_read_register("R0");
         let pointer = await this._unsafe_read_register("R1");
-        let operation = { "opcode": opcode };
+        let operation = {"opcode": opcode};
         const opcodes = libstlink.semihosting.opcodes;
         if (opcode == opcodes.SYS_OPEN) {
             let params = await this._unsafe_read_semihost_params(pointer, 3);

@@ -1,8 +1,8 @@
-export function _ (el) {
+export function _(el) {
     return document.getElementById(el)
 }
 
-export function setDisplay (elementOrSelector, shown = true) {
+export function setDisplay(elementOrSelector, shown = true) {
     if (typeof elementOrSelector === 'string') {
         const elements = document.querySelectorAll(elementOrSelector)
         elements.forEach(element => {
@@ -13,7 +13,7 @@ export function setDisplay (elementOrSelector, shown = true) {
     }
 }
 
-export function setHidden (elementOrSelector, hidden = true) {
+export function setHidden(elementOrSelector, hidden = true) {
     if (typeof elementOrSelector === 'string') {
         const elements = document.querySelectorAll(elementOrSelector)
         elements.forEach(element => {
@@ -24,7 +24,7 @@ export function setHidden (elementOrSelector, hidden = true) {
     }
 }
 
-export function setClass (elementOrSelector, className, enabled = true) {
+export function setClass(elementOrSelector, className, enabled = true) {
     const element = (typeof elementOrSelector === 'string') ? document.querySelector(elementOrSelector) : elementOrSelector
 
     if (enabled) {

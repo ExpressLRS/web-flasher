@@ -8,7 +8,7 @@
  *
  */
 
-import { Exception, UsbError } from './stlinkex.js';
+import {Exception, UsbError} from './stlinkex.js';
 import {
     hex_halfword as H16,
     hex_octet_array
@@ -149,7 +149,7 @@ var Connector = class StlinkUsbConnector {
         }
     }
 
-    async xfer(cmd, { data=null, rx_len=null, retry=0 } = {}) {
+    async xfer(cmd, {data = null, rx_len = null, retry = 0} = {}) {
         let src;
         if (cmd instanceof Array || cmd instanceof Uint8Array) {
             src = cmd;
@@ -195,9 +195,9 @@ var Connector = class StlinkUsbConnector {
 
 const filters = DEV_TYPES.map(
     dev_type => ({
-        vendorId:  dev_type.idVendor,
+        vendorId: dev_type.idVendor,
         productId: dev_type.idProduct
     })
 );
 
-export { Connector, filters };
+export {Connector, filters};

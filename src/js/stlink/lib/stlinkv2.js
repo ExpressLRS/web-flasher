@@ -8,7 +8,7 @@
  *
  */
 
-import { Exception, Warning, UsbError } from './stlinkex.js';
+import {Exception, Warning, UsbError} from './stlinkex.js';
 
 const STLINK_GET_VERSION = 0xf1;
 const STLINK_DEBUG_COMMAND = 0xf2;
@@ -75,15 +75,15 @@ const STLINK_DEBUG_APIV2_SWD_SET_FREQ_MAP = [
     [4000000, 0],
     [1800000, 1],  // default
     [1200000, 2],
-    [950000,  3],
-    [480000,  7],
+    [950000, 3],
+    [480000, 7],
     [240000, 15],
     [125000, 31],
     [100000, 40],
-    [50000,  79],
+    [50000, 79],
     [25000, 158],
     [15000, 265],
-    [5000,  798]
+    [5000, 798]
 ];
 
 export default class Stlink {
@@ -122,7 +122,7 @@ export default class Stlink {
         // WORKAROUNF for OS/X 10.11+
         // ... retry XFER if first is timeout.
         // only during this command it is necessary
-        let rx = await this._connector.xfer([STLINK_GET_VERSION, 0x80], {"rx_len": 6, "retry": 2 });
+        let rx = await this._connector.xfer([STLINK_GET_VERSION, 0x80], {"rx_len": 6, "retry": 2});
         let ver = rx.getUint16(0);
 
         let dev_ver = this._connector.version;
