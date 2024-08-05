@@ -13,6 +13,7 @@
     "@sweetalert2/theme-material-ui": "^5.0.17",
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/xterm": "^5.5.0",
+    "@zip.js/zip.js": "^2.7.48",
     "bluejay-rtttl-parse": "^2.0.2",
     "crypto-js": "^4.2.0",
     "esptool-js": "^0.4.5",
@@ -22,10 +23,10 @@
     "sweetalert2": "^11.12.3"
   },
   "devDependencies": {
-    "css-loader": "^7.1.2",
-    "css-minimizer-webpack-plugin": "^7.0.0",
     "@eslint/eslintrc": "^3.1.0",
     "@eslint/js": "^9.8.0",
+    "css-loader": "^7.1.2",
+    "css-minimizer-webpack-plugin": "^7.0.0",
     "globals": "^15.8.0",
     "html-webpack-plugin": "^5.6.0",
     "mini-css-extract-plugin": "^2.9.0",

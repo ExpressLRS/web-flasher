@@ -4,6 +4,7 @@ import {FitAddon} from '@xterm/addon-fit'
 import FileSaver from 'file-saver'
 import mui from 'muicss'
 import pako from 'pako'
+import * as zip from "@zip.js/zip.js"
 
 // Local imports
 import {Configure} from './configure'
@@ -836,9 +837,20 @@ const downloadFirmware = async () => {
         const data = new Blob([bin], {type: 'application/octet-stream'})
         FileSaver.saveAs(data, 'firmware.bin.gz')
     } else {
-        const bin = binary[binary.length - 1].data.buffer
-        const data = new Blob([bin], {type: 'application/octet-stream'})
-        FileSaver.saveAs(data, 'firmware.bin')
+        if (config.upload_methods.includes('zip')) {
+            // create zip file
+            const zipper = new zip.ZipWriter(new zip.BlobWriter("application/zip"), { bufferedWrite: true })
+            await zipper.add('bootloader.bin', new Blob([binary[0].data.buffer], {type: 'application/octet-stream'}).stream())
+            await zipper.add('partitions.bin', new Blob([binary[1].data.buffer], {type: 'application/octet-stream'}).stream())
+            await zipper.add('boot_app0.bin', new Blob([binary[2].data.buffer], {type: 'application/octet-stream'}).stream())
+            await zipper.add('firmware.bin', new Blob([binary[3].data.buffer], {type: 'application/octet-stream'}).stream())
+            FileSaver.saveAs(await zipper.close(), 'firmware.zip')
+        }
+        else {
+            const bin = binary[binary.length - 1].data.buffer
+            const data = new Blob([bin], {type: 'application/octet-stream'})
+            FileSaver.saveAs(data, 'firmware.bin')
+        }
     }
 }
 
