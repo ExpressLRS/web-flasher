@@ -1,40 +1,19 @@
 {
-  "name": "flasher",
-  "main": "index.js",
-  "version": "1.0.0",
-  "description": "",
+  "name": "flasher2",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
   "scripts": {
-    "postinstall": "patch -Ntu -p0 < patches/0001-sweetalert2.patch",
-    "dev": "webpack serve --open --config webpack.dev.js",
-    "dist": "webpack --config webpack.dist.js"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
-  "license": "GPL",
   "dependencies": {
-    "@sweetalert2/theme-material-ui": "^5.0.17",
-    "@xterm/addon-fit": "^0.10.0",
-    "@xterm/xterm": "^5.5.0",
-    "@zip.js/zip.js": "^2.7.48",
-    "bluejay-rtttl-parse": "^2.0.2",
-    "crypto-js": "^4.2.0",
-    "esptool-js": "^0.4.5",
-    "file-saver": "^2.0.5",
-    "muicss": "^0.10.3",
-    "pako": "^2.1.0",
-    "sweetalert2": "^11.12.3"
+    "vue": "^3.4.35",
+    "vuetify": "^3.6.14"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.1.0",
-    "@eslint/js": "^9.8.0",
-    "css-loader": "^7.1.2",
-    "css-minimizer-webpack-plugin": "^7.0.0",
-    "globals": "^15.8.0",
-    "html-webpack-plugin": "^5.6.0",
-    "mini-css-extract-plugin": "^2.9.0",
-    "style-loader": "^4.0.0",
-    "terser-webpack-plugin": "^5.3.10",
-    "webpack": "^5.93.0",
-    "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^5.0.4",
-    "webpack-merge": "^6.0.1"
+    "@vitejs/plugin-vue": "^5.1.2",
+    "vite": "^5.3.5"
   }
 }
