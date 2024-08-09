@@ -1,13 +1,24 @@
 <script setup>
-import { ref, Transition } from 'vue';
-import HoverCard from './components/HoverCard.vue';
-import { VAppBar, VAppBarTitle, VCol, VRow, VMain, VLayout, VImg } from 'vuetify/components';
+import { ref } from 'vue';
+import { VAppBar, VAppBarTitle, VMain, VLayout, VImg, VStepper, VStepperActions } from 'vuetify/components';
+import DeviceSelection from './DeviceSelection.vue';
+import TargetSelection from './TargetSelection.vue';
+import Transmitter from './options/Transmitter.vue';
+import Receiver from './options/Receiver.vue';
+
 import { store } from './state';
 
-// Set firmware and targeType in state store, then update page to target selection page
-function setFirmware(firmware, targetType) {
-  store.firmware = firmware;
-  store.targetType = targetType;
+let step = ref(1)
+
+function stepNext() {
+  step.value = 2;
+}
+
+function disableNext() {
+  if (step.value === 2) {
+    return !store.target ? "next" : false
+  }
+  return false
 }
 </script>
 
@@ -16,7 +27,7 @@ function setFirmware(firmware, targetType) {
     <VLayout>
       <VAppBar height="100">
         <template v-slot:image>
-          <v-img class="elrs-background"></v-img>
+          <VImg class="elrs-background"></VImg>
         </template>
 
         <div>
@@ -30,100 +41,28 @@ function setFirmware(firmware, targetType) {
 
         <VAppBarTitle class="text-h2 text-center elrs-header">ExpressLRS Web Flasher</VAppBarTitle>
 
-        <div class="text-subtitle-1 position-relative bottom-0">
+        <div class="text-subtitle-1 position-absolute right-0 bottom-0">
           Git: @GITHASH@
         </div>
       </VAppBar>
       <VMain>
-        <Transition name="slide-fade">
-          <div v-if="store.firmware==''">
-            <VRow>
-              <VCol cols="12" md="8" offsetMd="2">
-                  ExpressLRS is more than just a radio-control protocol, it's an ecosystem of connected devices, sure it has a transmitter and receiver,
-                  but it also has various backpacks that extend it's functionality outside the traditional areas of radio-control.
-                  <br>
-                  <br>
-                  These other devices, known as backpacks, allow you to wirelessly control your FPV video goggles, forward MAVLink telemetry and waypoint data to/from
-                  a MAVLink controlled craft, send GPS information from the craft telemetry to an Antenna tracker or allow a race timer to send race timing inform to your
-                  FPV goggles.
-              </VCol>
-            </VRow>
-
-            <VRow>
-              <VCol cols="12" md="4" offsetMd="2">
-                <HoverCard min-height="100%" @click="setFirmware('main', 'tx')">
-                  <VLayout align-center>
-                    <VImg src="transmitter.svg" height="100px" width="100px"></VImg>
-                  </VLayout>
-                  <VCardTitle align-center>Transmitter</VCardTitle>
-                  <VCardText>Flash your external transmitter module, JR Bay (Micro) or Nano module; or an internal built-in
-                    ExpressLRS module.</VCardText>
-                </HoverCard>
-              </VCol>
-              <VCol cols="12" md="4">
-                <HoverCard min-height="100%" @click="setFirmware('main', 'rx')">
-                  <VLayout align-center>
-                    <VImg src="receiver.svg" height="100px" width="100px"></VImg>
-                  </VLayout>
-                  <VCardTitle>Receiver</VCardTitle>
-                  <VCardText>Serial connected and PWM receivers alike may flashed here.</VCardText>
-                </HoverCard>
-              </VCol>
-            </VRow>
-            <VRow>
-              <VCol cols="12" md="2" offsetMd="2">
-                <HoverCard min-height="100%" @click="setFirmware('backpack', 'txbp')">
-                  <VLayout align-center>
-                    <VImg src="tx-backpack.svg" height="100px" width="100px"></VImg>
-                  </VLayout>
-                  <VCardTitle>Transmitter Backpack</VCardTitle>
-                  <VCardText>Built in to most transmitters, this allows you to switch your goggles to the same frequency as
-                    your
-                    VTx, or for wireless head-tracking or wireless connection to Mission Planner for MAVLink craft.
-                  </VCardText>
-                </HoverCard>
-              </VCol>
-              <VCol cols="12" md="2">
-                <HoverCard min-height="100%" @click="setFirmware('backpack', 'vrx')">
-                  <VLayout align-center>
-                    <VImg src="vrx-backpack.svg" height="100px" width="100px"></VImg>
-                  </VLayout>
-                  <VCardTitle>Video Receiver Backpack</VCardTitle>
-                  <VCardText>A built-in VRx backpack like the HDZero goggles backpack, or the SkyZone ELRS backpack; or a
-                    DIY
-                    solution connected to a VRx allows you to always have your goggles on the right channel.</VCardText>
-                </HoverCard>
-              </VCol>
-              <VCol cols="12" md="2">
-                <HoverCard min-height="100%" @click="setFirmware('backpack', 'aat')">
-                  <VLayout align-center>
-                    <VImg src="aat-backpack.svg" height="100px" width="100px"></VImg>
-                  </VLayout>
-                  <VCardTitle>Antenna Tracker Backpack</VCardTitle>
-                  <VCardText>Flying long-range and need your antenna pointed in just the right direction? This is the
-                    backpack for
-                    you!</VCardText>
-                </HoverCard>
-              </VCol>
-              <VCol cols="12" md="2">
-                <HoverCard min-height="100%" @click="setFirmware('backpack', 'timer')">
-                  <VLayout align-center>
-                    <VImg src="timer-backpack.svg" height="100px" width="100px"></VImg>
-                  </VLayout>
-                  <VCardTitle>Race Timer Backpack</VCardTitle>
-                  <VCardText>Connects to the RotorHazard race timing system and sends OSD message with lap times and current
-                    place
-                    during the race so you always know where you're placed.</VCardText>
-                </HoverCard>
-              </VCol>
-            </VRow>
-          </div>
-        </Transition>
-        <Transition name="slide-fade">
-            <div v-if="store.firmware!=''">
-
-            </div>
-          </Transition>
+        <VRow>
+          <VCol cols="12" md="8" offsetMd="2">
+            <VStepper v-model="step" :items="['Firmware Selection', 'Target Selection', 'Options', 'Flashing']" hideActions>
+              <template v-slot:item.1>
+                <DeviceSelection @on-click="stepNext()"/>
+              </template>
+              <template v-slot:item.2>
+                <TargetSelection />
+              </template>
+              <template v-slot:item.3>
+                <Transmitter v-if="store.targetType=='tx'" />
+                <Receiver v-if="store.targetType=='rx'" />
+              </template>
+              <VStepperActions :hidden="step==1" :disabled="disableNext()" @click:prev="step--" @click:next="step++" />
+            </VStepper>
+          </VCol>
+        </VRow>
       </VMain>
     </VLayout>
   </VApp>
@@ -146,17 +85,4 @@ function setFirmware(firmware, targetType) {
   background-size: auto, cover, cover;
 }
 
-.slide-fade-enter-active {
-  transition: all 0.3s ease-out;
-}
-
-.slide-fade-leave-active {
-  transition: all 0.8s cubic-bezier(1, 0.5, 0.8, 1);
-}
-
-.slide-fade-enter-from,
-.slide-fade-leave-to {
-  transform: translateX(-100%);
-  opacity: 0;
-}
 </style>

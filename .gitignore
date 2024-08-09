@@ -14,6 +14,9 @@ dist-ssr
 mdns-proxy/mdns.dSYM
 mdns-proxy/mdns
 
+# Firmware files
+public/assets/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
