@@ -1,7 +1,8 @@
 <script setup>
-import {ref} from "vue";
+import {ref, watch} from "vue";
 import {VCheckbox, VTextField, VSelect, VCardTitle, VCardSubtitle, VRow, VCol} from "vuetify/components";
 import {store} from "../state.js";
+import {uidBytesFromText} from "../phrase.js";
 
 const regions = [
   {value: 'fcc', title: 'FCC'},
@@ -60,13 +61,19 @@ function has(feature) {
 function getFlashMethods() {
   return flashMethods.filter(v => v.value==='download' || store.target?.config?.upload_methods?.includes(v.value))
 }
+
+let uid=ref('Bind Phrase')
+function generateUID() {
+  if (bindPhrase.value === '') uid.value='Bind Phrase'
+  else uid.value = 'UID: ' + uidBytesFromText(bindPhrase.value)
+}
 </script>
 
 <template>
   <VCardTitle>Transmitter Options</VCardTitle>
   <VCardSubtitle>Choose the hardware that you are flashing the firmware onto</VCardSubtitle>
   <br>
-  <VTextField v-model="bindPhrase" label="Bind Phrase" density="comfortable"/>
+  <VTextField v-model="bindPhrase" :label="uid" density="comfortable" :oninput="generateUID"/>
   <VSelect v-model="region" label="Region" density="comfortable"
            :items="regions" v-if="hasHighFrequency()"/>
   <VSelect v-model="domain" label="Regulatory Domain" density="comfortable"
