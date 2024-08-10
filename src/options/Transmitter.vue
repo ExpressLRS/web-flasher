@@ -1,38 +1,14 @@
 <script setup>
-import {ref, watch} from "vue";
-import {VCheckbox, VTextField, VSelect, VCardTitle, VCardSubtitle, VRow, VCol} from "vuetify/components";
+import {ref} from "vue";
+import {VCheckbox, VTextField, VSelect, VCardTitle, VCardSubtitle} from "vuetify/components";
 import {store} from "../state.js";
-import {uidBytesFromText} from "../phrase.js";
+import BindPhraseInput from "../components/BindPhraseInput.vue";
+import WiFiSettingsInput from "../components/WiFiSettingsInput.vue";
+import FlashMethodSelect from "../components/FlashMethodSelect.vue";
+import MelodyInput from "../components/MelodyInput.vue";
+import RFSelect from "../components/RFSelect.vue";
 
-const regions = [
-  {value: 'fcc', title: 'FCC'},
-  {value: 'lbt', title: 'LBT'}
-]
-const domains = [
-  {value: 0, title: 'AU915'},
-  {value: 1, title: 'FCC915'},
-  {value: 2, title: 'EU868'},
-  {value: 3, title: 'IN866'},
-  {value: 4, title: 'AU433'},
-  {value: 5, title: 'EU433'}
-]
-const melodyTypes = [
-  {value: 0, title: 'Quiet, no beeps'},
-  {value: 1, title: 'Just one beep'},
-  {value: 2, title: 'No tune, just beeps'},
-  {value: 3, title: 'Default tune'},
-  {value: 4, title: 'Custom tune'}
-]
-const flashMethods = [
-  {value: 'download', title: 'Local Download'},
-  {value: 'uart', title: 'Serial UART'},
-  {value: 'betaflight', title: 'Betaflight Passthrough'},
-  {value: 'etx', title: 'EdgeTX Passthrough'},
-  {value: 'passthru', title: 'Passthrough'},
-  {value: 'wifi', title: 'WiFi'},
-  {value: 'stlink', title: 'STLink'},
-]
-let bindPhrase = ref(null)
+let uid = ref(null)
 let region = ref('fcc')
 let domain = ref(1)
 let ssid = ref(null)
@@ -46,26 +22,8 @@ let melodyType = ref(3)
 let melodyTune = ref(null)
 let flashMethod = ref(null)
 
-function hasHighFrequency() {
-  return store.radio && (store.radio.endsWith('2400') || store.radio.endsWith('dual'))
-}
-
-function hasLowFrequency() {
-  return store.radio && (store.radio.endsWith('900') || store.radio.endsWith('dual'))
-}
-
 function has(feature) {
   return store.target?.config?.features?.includes(feature)
-}
-
-function getFlashMethods() {
-  return flashMethods.filter(v => v.value==='download' || store.target?.config?.upload_methods?.includes(v.value))
-}
-
-let uid=ref('Bind Phrase')
-function generateUID() {
-  if (bindPhrase.value === '') uid.value='Bind Phrase'
-  else uid.value = 'UID: ' + uidBytesFromText(bindPhrase.value)
 }
 </script>
 
@@ -73,29 +31,17 @@ function generateUID() {
   <VCardTitle>Transmitter Options</VCardTitle>
   <VCardSubtitle>Choose the hardware that you are flashing the firmware onto</VCardSubtitle>
   <br>
-  <VTextField v-model="bindPhrase" :label="uid" density="comfortable" :oninput="generateUID"/>
-  <VSelect v-model="region" label="Region" density="comfortable"
-           :items="regions" v-if="hasHighFrequency()"/>
-  <VSelect v-model="domain" label="Regulatory Domain" density="comfortable"
-           :items="domains" v-if="hasLowFrequency()"/>
-  <VTextField v-model="ssid" label="WiFi SSID" density="comfortable"
-              v-if="store.target?.config?.platform!=='stm32'"/>
-  <VTextField v-model="password" label="WiFi Password" density="comfortable"
-              v-if="store.target?.config?.platform!=='stm32'"/>
-  <VTextField v-model="wifiOnInternal" label='WiFi "auto on" interval (s)' density="comfortable"
-              v-if="store.target?.config?.platform!=='stm32'"/>
-  <VTextField v-model="telemetryInterval" label='TLM report interval (ms)' density="comfortable"
-              v-if="store.target?.config?.platform!=='stm32'"/>
+  <BindPhraseInput v-model="uid"/>
+  <RFSelect v-model:region="region" v-model:domain="domain" :radio="store.radio"/>
+  <WiFiSettingsInput v-model:ssid="ssid" v-model:password="password" v-model:wifi-on-interval="wifiOnInternal"
+                     v-if="store.target?.config?.platform!=='stm32'"/>
+  <VTextField v-model="telemetryInterval" label='TLM report interval (ms)' density="comfortable"/>
   <VCheckbox v-model="uartInverted" label="UART inverted" density="comfortable"
              v-if="store.target?.config?.platform==='stm32'"/>
   <VTextField v-model="fanRuntime" label='Fan runtime (s)' density="comfortable"
               v-if="has('fan')"/>
-  <VTextField v-model="higherPower" label='Unlock higher power' density="comfortable"
+  <VCheckbox v-model="higherPower" label='Unlock higher power' density="comfortable"
               v-if="has('unlock-higher-power')"/>
-  <VSelect v-model="melodyType" label="Beeper" density="comfortable"
-           :items="melodyTypes" v-if="has('buzzer')"/>
-  <VTextField v-model="melodyTune" label="Melody" density="comfortable"
-              v-if="melodyType===4"/>
-  <VSelect v-model="flashMethod" label="Flashing Method" density="comfortable"
-           :items="getFlashMethods()"/>
+  <MelodyInput v-model:melody-type="melodyType" v-model:melody-tune="melodyTune" v-if="has('buzzer')"/>
+  <FlashMethodSelect v-model="flashMethod" :methods="store.target?.config?.upload_methods"/>
 </template>
