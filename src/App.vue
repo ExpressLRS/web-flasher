@@ -1,10 +1,10 @@
 <script setup>
 import {ref} from 'vue';
 import {VAppBar, VAppBarTitle, VMain, VLayout, VImg, VStepper, VStepperActions} from 'vuetify/components';
-import DeviceSelection from './DeviceSelection.vue';
-import MainTargetSelection from './target/MainTargetSelection.vue';
-import Transmitter from './options/Transmitter.vue';
-import Receiver from './options/Receiver.vue';
+import FirmwareSelect from './pages/FirmwareSelect.vue';
+import MainHardwareSelect from './pages/MainHardwareSelect.vue';
+import TransmitterOptions from './pages/TransmitterOptions.vue';
+import ReceiverOptions from './pages/ReceiverOptions.vue';
 
 import {store} from './state';
 
@@ -47,16 +47,16 @@ function disableNext() {
       </VAppBar>
       <VMain>
         <VContainer>
-          <VStepper v-model="step" :items="['Firmware Selection', 'Target Selection', 'Options', 'Flashing']" hideActions>
+          <VStepper v-model="step" :items="['Firmware', 'Hardware', 'Options', 'Flashing']" hideActions>
             <template v-slot:item.1>
-              <DeviceSelection @on-click="stepNext()"/>
+              <FirmwareSelect @on-click="stepNext()"/>
             </template>
             <template v-slot:item.2>
-              <MainTargetSelection v-if="store.firmware==='firmware'"/>
+              <MainHardwareSelect v-if="store.firmware==='firmware'"/>
             </template>
             <template v-slot:item.3>
-              <Transmitter v-if="store.targetType==='tx'"/>
-              <Receiver v-if="store.targetType==='rx'"/>
+              <TransmitterOptions v-if="store.targetType==='tx'"/>
+              <ReceiverOptions v-if="store.targetType==='rx'"/>
             </template>
             <VStepperActions v-if="step!==1" :disabled="disableNext()" @click:prev="step--" @click:next="step++"/>
           </VStepper>

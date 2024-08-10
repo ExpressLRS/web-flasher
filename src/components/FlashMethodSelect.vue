@@ -2,7 +2,7 @@
 import {VSelect} from "vuetify/components";
 
 let model = defineModel()
-const props = defineProps(['methods'])
+const props = defineProps({methods: Array})
 
 const flashMethods = [
   {value: 'download', title: 'Local Download'},

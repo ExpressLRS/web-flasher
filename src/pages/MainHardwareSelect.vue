@@ -107,8 +107,8 @@ watch(() => store.target, (v, _oldValue) => {
 </script>
 
 <template>
-  <VCardTitle>Target Selection</VCardTitle>
-  <VCardSubtitle>Choose the hardware that you are flashing the firmware onto</VCardSubtitle>
+  <VCardTitle>Hardware Selection</VCardTitle>
+  <VCardSubtitle>Choose the vendor specific hardware that you are flashing, if the hardware is not in the list then the hardware is unsupported.</VCardSubtitle>
   <br>
   <VSelect :items="versions" v-model="store.version" density="comfortable" label="Firmware Version"/>
   <VSelect :items="vendors" v-model="store.vendor" density="comfortable" label="Hardware Vendor"

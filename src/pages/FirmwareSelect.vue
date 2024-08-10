@@ -1,11 +1,11 @@
 <script setup>
-import HoverCard from './components/HoverCard.vue';
+import HoverCard from '../components/HoverCard.vue';
 import {VCol, VRow, VLayout, VImg, VCheckbox} from 'vuetify/components';
-import {store} from './state';
+import {store} from '../state';
 
 const emit = defineEmits(['onClick']);
 
-// Set firmware and targetType in state store, then update page to target selection page
+// Set firmware and targetType in state store, then update page to pages selection page
 function setFirmware(firmware, targetType) {
   store.firmware = firmware;
   store.targetType = targetType;

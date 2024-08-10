@@ -3,7 +3,7 @@ import {VSelect} from "vuetify/components";
 
 let region = defineModel('region')
 let domain = defineModel('domain')
-const props = defineProps(['radio'])
+const props = defineProps({radio: String})
 
 const regions = [
   {value: 'fcc', title: 'FCC'},
