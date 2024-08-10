@@ -50,7 +50,7 @@ function setFirmware(firmware, targetType) {
         <VLayout align-center>
           <VImg src="tx-backpack.svg" height="100px" width="100px"></VImg>
         </VLayout>
-        <VCardTitle>Transmitter Backpack</VCardTitle>
+        <VCardTitle>Transmitter Module</VCardTitle>
         <VCardText>Built in to most transmitters, this allows you to switch your goggles to the same frequency
           as
           your
@@ -63,7 +63,7 @@ function setFirmware(firmware, targetType) {
         <VLayout align-center>
           <VImg src="vrx-backpack.svg" height="100px" width="100px"></VImg>
         </VLayout>
-        <VCardTitle>Video Receiver Backpack</VCardTitle>
+        <VCardTitle>Video Receiver</VCardTitle>
         <VCardText>A built-in VRx backpack like the HDZero goggles backpack, or the SkyZone ELRS backpack; or a
           DIY solution connected to a VRx allows you to always have your goggles on the right channel.
         </VCardText>
@@ -74,7 +74,7 @@ function setFirmware(firmware, targetType) {
         <VLayout align-center>
           <VImg src="aat-backpack.svg" height="100px" width="100px"></VImg>
         </VLayout>
-        <VCardTitle>Antenna Tracker Backpack</VCardTitle>
+        <VCardTitle>Antenna Tracker</VCardTitle>
         <VCardText>Flying long-range and need your antenna pointed in just the right direction? This is the
           backpack for
           you!
@@ -86,7 +86,7 @@ function setFirmware(firmware, targetType) {
         <VLayout align-center>
           <VImg src="timer-backpack.svg" height="100px" width="100px"></VImg>
         </VLayout>
-        <VCardTitle>Race Timer Backpack</VCardTitle>
+        <VCardTitle>Race Timer</VCardTitle>
         <VCardText>Connects to the RotorHazard race timing system and sends OSD message with lap times and
           current
           place
