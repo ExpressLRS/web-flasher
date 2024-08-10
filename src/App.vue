@@ -7,6 +7,9 @@ import TransmitterOptions from './pages/TransmitterOptions.vue';
 import ReceiverOptions from './pages/ReceiverOptions.vue';
 
 import {store} from './state';
+import TXBPHardwareSelect from "./pages/TXBPHardwareSelect.vue";
+import VRXHardwareSelect from "./pages/BackpackHardwareSelect.vue";
+import BackpackOptions from "./pages/BackpackOptions.vue";
 
 let step = ref(1)
 
@@ -53,10 +56,15 @@ function disableNext() {
             </template>
             <template v-slot:item.2>
               <MainHardwareSelect v-if="store.firmware==='firmware'"/>
+              <TXBPHardwareSelect v-if="store.targetType==='txbp'"/>
+              <VRXHardwareSelect vendor-label="VRx Type" v-if="store.targetType==='vrx'"/>
+              <VRXHardwareSelect vendor-label="Antenna Tracker Type" v-if="store.targetType==='aat'"/>
+              <VRXHardwareSelect vendor-label="Timer Type" v-if="store.targetType==='timer'"/>
             </template>
             <template v-slot:item.3>
               <TransmitterOptions v-if="store.targetType==='tx'"/>
-              <ReceiverOptions v-if="store.targetType==='rx'"/>
+              <ReceiverOptions v-else-if="store.targetType==='rx'"/>
+              <BackpackOptions v-else />
             </template>
             <VStepperActions v-if="step!==1" :disabled="disableNext()" @click:prev="step--" @click:next="step++"/>
           </VStepper>

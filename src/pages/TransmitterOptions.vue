@@ -15,7 +15,7 @@ function has(feature) {
 
 <template>
   <VCardTitle>Transmitter Options</VCardTitle>
-  <VCardSubtitle>Set the flashing options and method for your <b>{{store.target.config?.product_name}}</b></VCardSubtitle>
+  <VCardSubtitle>Set the flashing options and method for your <b>{{store.target?.config?.product_name}}</b></VCardSubtitle>
   <br>
   <BindPhraseInput v-model="store.options.uid"/>
   <RFSelect v-model:region="store.options.region" v-model:domain="store.options.domain" :radio="store.radio"/>
