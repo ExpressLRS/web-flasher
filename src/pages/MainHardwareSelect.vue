@@ -1,7 +1,7 @@
 <script setup>
 import {ref, watch, onMounted} from 'vue';
-import {store} from '../state';
-import {compareSemanticVersions} from '../version';
+import {store} from '../js/state';
+import {compareSemanticVersions} from '../js/version';
 
 const showRCs = false;
 

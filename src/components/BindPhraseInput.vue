@@ -1,7 +1,7 @@
 <script setup>
 import {ref} from "vue";
 import {VTextField} from "vuetify/components";
-import {uidBytesFromText} from "../phrase.js";
+import {uidBytesFromText} from "../js/phrase.js";
 
 let model = defineModel()
 

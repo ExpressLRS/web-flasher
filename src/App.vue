@@ -1,14 +1,15 @@
 <script setup>
 import {ref} from 'vue';
 import {VAppBar, VAppBarTitle, VMain, VLayout, VImg, VStepper, VStepperActions} from 'vuetify/components';
+import {store} from './js/state';
+
 import FirmwareSelect from './pages/FirmwareSelect.vue';
 import MainHardwareSelect from './pages/MainHardwareSelect.vue';
-import TransmitterOptions from './pages/TransmitterOptions.vue';
-import ReceiverOptions from './pages/ReceiverOptions.vue';
-
-import {store} from './state';
 import TXBPHardwareSelect from "./pages/TXBPHardwareSelect.vue";
 import VRXHardwareSelect from "./pages/BackpackHardwareSelect.vue";
+
+import TransmitterOptions from './pages/TransmitterOptions.vue';
+import ReceiverOptions from './pages/ReceiverOptions.vue';
 import BackpackOptions from "./pages/BackpackOptions.vue";
 
 let step = ref(1)

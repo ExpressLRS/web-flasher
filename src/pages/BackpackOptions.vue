@@ -1,6 +1,6 @@
 <script setup>
 import {VCardTitle, VCardSubtitle} from "vuetify/components";
-import {store} from "../state.js";
+import {store} from "../js/state.js";
 
 import BindPhraseInput from "../components/BindPhraseInput.vue";
 import WiFiSettingsInput from "../components/WiFiSettingsInput.vue";

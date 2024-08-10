@@ -1,7 +1,7 @@
 <script setup>
 import HoverCard from '../components/HoverCard.vue';
 import {VCol, VRow, VLayout, VImg, VCheckbox} from 'vuetify/components';
-import {store} from '../state';
+import {store} from '../js/state';
 
 const emit = defineEmits(['onClick']);
 
