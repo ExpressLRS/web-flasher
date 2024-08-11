@@ -68,6 +68,6 @@ export async function generateFirmware() {
     const firmwareFiles = await Configure.download(folder, deviceType, txType, radioType, config, firmwareUrl, options)
     return [
         firmwareFiles,
-        {config, firmwareUrl, options}
+        {config, firmwareUrl, options, deviceType, radioType, txType}
     ]
 }

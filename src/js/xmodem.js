@@ -1,6 +1,5 @@
 import {TransportEx} from './serialex.js'
 import {Bootloader, Passthrough} from './passthrough.js'
-import {SwalMUI} from './swalmui.js'
 
 const log = {
     info: function () {

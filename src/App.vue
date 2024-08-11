@@ -11,6 +11,7 @@ import ReceiverOptions from './pages/ReceiverOptions.vue';
 import BackpackOptions from "./pages/BackpackOptions.vue";
 
 import Download from "./pages/Download.vue";
+import SerialFlash from "./pages/SerialFlash.vue";
 
 function stepNext() {
   store.currentStep = 2;
@@ -27,6 +28,12 @@ function disableNext() {
     return "next"
   }
   return false
+}
+function stepComplete(step) {
+  return store.currentStep > step
+}
+function stepStatus(step) {
+  return store.currentStep > step ? 'green' : 'blue'
 }
 </script>
 
@@ -74,6 +81,7 @@ function disableNext() {
             </template>
             <template v-slot:item.4>
               <Download v-if="store.options.flashMethod==='download'"/>
+              <SerialFlash v-else/>
             </template>
             <VStepperActions v-if="store.currentStep!==1" :disabled="disableNext()" @click:prev="store.currentStep--" @click:next="store.currentStep++"/>
           </VStepper>

@@ -1,5 +1,5 @@
 import {TransportEx} from './serialex.js'
-import {ESPLoader, FlashOptions} from 'esptool-js'
+import {ESPLoader} from 'esptool-js'
 import {Passthrough} from './passthrough.js'
 import CryptoJS from 'crypto-js'
 
@@ -93,7 +93,7 @@ export class ESPFlasher {
         return chip
     }
 
-    flash = async (files, erase) => {
+    flash = async (files, erase, progress) => {
         const loader = this.esploader
         if (this.method === 'etx' || this.method === 'betaflight') {
             loader.FLASH_WRITE_SIZE = 0x0800
@@ -111,16 +111,11 @@ export class ESPFlasher {
             flashFreq: 'keep',
             eraseAll: erase,
             compress: true,
-            reportProgress: (fileIndex, written, total) => {
-                const percent = Math.round(written / total * 100)
-                document.getElementById('progressBar').value = percent
-                document.getElementById('status').innerHTML = `Flashing: ${percent}% uploaded... please wait`
-            },
+            reportProgress: progress,
             calculateMD5Hash: (image) => CryptoJS.MD5(CryptoJS.enc.Latin1.parse(image))
         })
             .then(_ => {
-                document.getElementById('progressBar').value = 100
-                document.getElementById('status').innerHTML = 'Flashing complete'
+                progress(fileArray.length-1, 100, 100)
                 if (this.config.platform.startsWith('esp32')) {
                     return loader.hardReset().catch(() => {
                     })

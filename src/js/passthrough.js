@@ -1,5 +1,4 @@
-import {SwalMUI} from './swalmui.js'
-import {MismatchError, AlertError} from './error.js'
+import {MismatchError, AlertError, PassthroughError} from './error.js'
 
 export class Bootloader {
     static INIT_SEQ = {
@@ -91,80 +90,61 @@ export class Passthrough {
         this.terminal.writeln(str)
     }
 
-    edgeTXBP = async () => {
-        this.log('======== PASSTHROUGH INIT ========')
+    sendExpect = async (send, expect, delay) => {
+        await this.transport.write_string(send)
+        const line = await this.transport.read_line(100)
 
-        const sendExpect = async (send, expect, delay) => {
-            await this.transport.write_string(send)
-            const line = await this.transport.read_line(100)
-
-            if (line.indexOf(expect) === -1) {
-                throw new AlertError('Failed Passthrough Initialisation', `Wanted '${expect}', but not found in response '${line}'`)
-            }
-            await this._sleep(delay)
+        if (line.indexOf(expect) === -1) {
+            this.log('Failed passthrough initialisation')
+            this.log(`Wanted '${expect}', but not found in response '${line}'`)
+            throw new PassthroughError()
         }
+        await this._sleep(delay)
+    }
+
+
+    edgeTXBP = async () => {
+        this.log('Initializing EdgeTX backpack passthrough')
 
         this.transport.set_delimiters(['> '])
-        try {
-            await sendExpect('set rfmod 0 power off\n', 'set: ', 100)
-            await sendExpect('set pulses 0\n', 'set: ', 500)
-            await sendExpect('set rfmod 0 power on\n', 'set: ', 2500)
-            await sendExpect('set rfmod 0 bootpin 1\n', 'set: ', 100)
-            await sendExpect('set rfmod 0 bootpin 0\n', 'set: ', 100)
+        await this.sendExpect('set rfmod 0 power off\n', 'set: ', 100)
+        await this.sendExpect('set pulses 0\n', 'set: ', 500)
+        await this.sendExpect('set rfmod 0 power on\n', 'set: ', 2500)
+        await this.sendExpect('set rfmod 0 bootpin 1\n', 'set: ', 100)
+        await this.sendExpect('set rfmod 0 bootpin 0\n', 'set: ', 100)
 
-            this.log('Enabling serial passthrough...')
-            this.transport.set_delimiters(['\n'])
-            const cmd = `serialpassthrough rfmod 0 ${this.transport.baudrate.toString()}`
-            this.log(`  CMD: '${cmd}`)
-            await this.transport.write_string(`${cmd}\n`)
-            await this.transport.read_line(200)
+        this.log('Enabling serial passthrough...')
+        this.transport.set_delimiters(['\n'])
+        const cmd = `serialpassthrough rfmod 0 ${this.transport.baudrate.toString()}`
+        this.log(`  CMD: '${cmd}`)
+        await this.transport.write_string(`${cmd}\n`)
+        await this.transport.read_line(200)
 
-            this.log('======== PASSTHROUGH DONE ========')
-        } catch (e) {
-            this.log(e.message)
-            this.log('======== PASSTHROUGH FAILED ========')
-            return Promise.reject(e)
-        }
+        this.log('Passthrough initialization complete')
     }
 
     edgeTX = async () => {
-        this.log('======== PASSTHROUGH INIT ========')
-
-        const sendExpect = async (send, expect, delay) => {
-            await this.transport.write_string(send)
-            const line = await this.transport.read_line(100)
-
-            if (line.indexOf(expect) === -1) {
-                throw new AlertError('Failed Passthrough Initialisation', `Wanted '${expect}', but not found in response '${line}'`)
-            }
-            await this._sleep(delay)
-        }
+        this.log('Initializing EdgeTX passthrough')
 
         this.transport.set_delimiters(['> '])
-        try {
-            await sendExpect('set pulses 0\n', 'set: ', 500)
-            await sendExpect('set rfmod 0 power off\n', 'set: ', 500)
-            await sendExpect('set rfmod 0 bootpin 1\n', 'set: ', 100)
-            await sendExpect('set rfmod 0 power on\n', 'set: ', 100)
-            await sendExpect('set rfmod 0 bootpin 0\n', 'set: ', 0)
+        await this.sendExpect('set pulses 0\n', 'set: ', 500)
+        await this.sendExpect('set rfmod 0 power off\n', 'set: ', 500)
+        await this.sendExpect('set rfmod 0 bootpin 1\n', 'set: ', 100)
+        await this.sendExpect('set rfmod 0 power on\n', 'set: ', 100)
+        await this.sendExpect('set rfmod 0 bootpin 0\n', 'set: ', 0)
 
-            this.log('Enabling serial passthrough...')
-            this.transport.set_delimiters(['\n'])
-            const cmd = `serialpassthrough rfmod 0 ${this.transport.baudrate.toString()}`
-            this.log(`  CMD: '${cmd}`)
-            await this.transport.write_string(`${cmd}\n`)
-            await this.transport.read_line(200)
+        this.log('Enabling serial passthrough...')
+        this.transport.set_delimiters(['\n'])
+        const cmd = `serialpassthrough rfmod 0 ${this.transport.baudrate.toString()}`
+        this.log(`  CMD: '${cmd}`)
+        await this.transport.write_string(`${cmd}\n`)
+        await this.transport.read_line(200)
 
-            this.log('======== PASSTHROUGH DONE ========')
-        } catch (e) {
-            this.log(e.message)
-            this.log('======== PASSTHROUGH FAILED ========')
-            return Promise.reject(e)
-        }
+        this.log('Passthrough initialization complete')
     }
 
     betaflight = async () => {
-        this.log('======== PASSTHROUGH INIT ========')
+        this.log('Initializing FC passthrough')
 
         await this.transport.write_string('#\r\n')
         this.transport.set_delimiters(['# ', 'CCC'])
@@ -199,16 +179,18 @@ export class Passthrough {
         }
         if (serialCheck.length > 0) {
             if (await this._validate_serialrx('rx_spi_protocol', ['EXPRESSLRS'])) {
-                serialCheck.push('ExpressLRS SPI RX detected\n\nUpdate via betaflight to flash your RX\nhttps://www.expresslrs.org/2.0/hardware/spi-receivers/')
+                serialCheck.push('ExpressLRS SPI RX detected:')
+                serialCheck.push('Update via betaflight to flash your RX')
+                serialCheck.push('See https://www.expresslrs.org/2.0/hardware/spi-receivers/')
             }
             let msg = ''
-            this.log('[ERROR] Invalid serial RX configuration detected:\n')
+            this.log('[ERROR] Invalid serial RX configuration detected:')
             for (const err of serialCheck) {
-                this.log(`    !!! ${err} !!!`)
+                this.log(`    ${err}`)
                 msg += `${err}\n`
             }
-            this.log('\n    Please change the configuration and try again!')
-            throw new AlertError('Invalid serial RX configuration detected', msg)
+            this.log('Please change the configuration and try again!')
+            throw new PassthroughError()
         }
 
         this.log('\nAttempting to detect FC UART configuration...')
@@ -231,8 +213,9 @@ export class Passthrough {
             }
         }
         if (!index) {
-            this.log('!!! RX Serial not found !!!!\n  Check configuration and try again...')
-            throw new AlertError('Serial RX not found', 'Check flight controller RX configuration')
+            this.log('!!! RX Serial not found !!!!')
+            this.log('Check configuration and try again...')
+            throw new PassthroughError()
         }
 
         await this.transport.write_string(`serialpassthrough ${index} ${this.transport.baudrate}\r\n`)
@@ -244,11 +227,11 @@ export class Passthrough {
             }
         } catch (e) {
         }
-        this.log('======== PASSTHROUGH DONE ========')
+        this.log('Passthrough initialization complete')
     }
 
     reset_to_bootloader = async () => {
-        this.log('======== RESET TO BOOTLOADER ========')
+        this.log('Reset to bootloader')
 
         if (this.half_duplex) {
             this.log('Using half duplex (GHST)')
@@ -278,21 +261,12 @@ export class Passthrough {
         } else if (this.uploadforce) {
             this.log(`Force flashing ${this.flash_target}, detected ${rxTarget}`)
         } else if (rxTarget.toUpperCase() !== this.flash_target.toUpperCase()) {
-            const e = await SwalMUI.fire({
-                icon: 'question',
-                title: 'Targets Mismatch',
-                text: `Wrong target selected your RX is '${rxTarget}', trying to flash '${this.flash_target}'`,
-                confirmButtonText: 'Flash anyway',
-                showCancelButton: true
-            })
-            if (e.isConfirmed) {
-                this.log(`Wrong target selected your RX is '${rxTarget}', trying to flash '${this.flash_target}'`)
-                throw new MismatchError()
-            }
+            this.log(`Wrong target selected your RX is '${rxTarget}', trying to flash '${this.flash_target}'`)
+            throw new MismatchError()
         } else if (this.flash_target !== '') {
             this.log(`Verified RX target '${this.flash_target}'`)
         }
-        this.log('======== BOOTLOADER ENGAGED ========')
-        return await this._sleep(500)
+        this.log('Bootloader enabled')
+        await this._sleep(500)
     }
 }
