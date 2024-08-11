@@ -1,5 +1,4 @@
 <script setup>
-import {ref} from 'vue';
 import {VAppBar, VAppBarTitle, VMain, VLayout, VImg, VStepper, VStepperActions} from 'vuetify/components';
 import {store} from './js/state';
 
@@ -11,16 +10,18 @@ import VRXHardwareSelect from "./pages/BackpackHardwareSelect.vue";
 import TransmitterOptions from './pages/TransmitterOptions.vue';
 import ReceiverOptions from './pages/ReceiverOptions.vue';
 import BackpackOptions from "./pages/BackpackOptions.vue";
-
-let step = ref(1)
+import FlashSerial from "./pages/FlashSerial.vue";
 
 function stepNext() {
-  step.value = 2;
+  store.currentStep = 2;
 }
 
 function disableNext() {
-  if (step.value === 2) {
+  if (store.currentStep === 2) {
     return !store.target ? "next" : false
+  }
+  if (store.currentStep === 4) {
+    return "next"
   }
   return false
 }
@@ -51,7 +52,7 @@ function disableNext() {
       </VAppBar>
       <VMain>
         <VContainer>
-          <VStepper v-model="step" :items="['Firmware', 'Hardware', 'Options', 'Flashing']" hideActions>
+          <VStepper v-model="store.currentStep" :items="['Firmware', 'Hardware', 'Options', 'Flashing']" hideActions>
             <template v-slot:item.1>
               <FirmwareSelect @on-click="stepNext()"/>
             </template>
@@ -67,7 +68,10 @@ function disableNext() {
               <ReceiverOptions v-else-if="store.targetType==='rx'"/>
               <BackpackOptions v-else />
             </template>
-            <VStepperActions v-if="step!==1" :disabled="disableNext()" @click:prev="step--" @click:next="step++"/>
+            <template v-slot:item.4>
+              <FlashSerial/>
+            </template>
+            <VStepperActions v-if="store.currentStep!==1" :disabled="disableNext()" @click:prev="store.currentStep--" @click:next="store.currentStep++"/>
           </VStepper>
         </VContainer>
       </VMain>

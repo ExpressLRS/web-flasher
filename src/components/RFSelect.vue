@@ -6,8 +6,8 @@ let domain = defineModel('domain')
 const props = defineProps({radio: String})
 
 const regions = [
-  {value: 'fcc', title: 'FCC'},
-  {value: 'lbt', title: 'LBT'}
+  {value: 'FCC', title: 'FCC'},
+  {value: 'LBT', title: 'LBT'}
 ]
 const domains = [
   {value: 0, title: 'AU915'},

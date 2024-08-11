@@ -10,11 +10,19 @@
   },
   "dependencies": {
     "@mdi/font": "7.4.47",
+    "@zip.js/zip.js": "^2.7.48",
+    "bluejay-rtttl-parse": "^2.0.2",
+    "crypto-js": "^4.2.0",
+    "esptool-js": "^0.4.5",
+    "file-saver": "^2.0.5",
+    "pako": "^2.1.0",
     "roboto-fontface": "*",
     "vue": "^3.4.31",
     "vuetify": "^3.6.14"
   },
   "devDependencies": {
+    "@types/file-saver": "^2.0.7",
+    "@types/pako": "^2.0.3",
     "@vitejs/plugin-vue": "^5.1.2",
     "sass": "1.77.6",
     "unplugin-fonts": "^1.1.1",

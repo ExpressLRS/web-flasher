@@ -1,6 +1,7 @@
 import {reactive, watch} from 'vue'
 
 export const store = reactive({
+    currentStep: 1,
     firmware: null,
     targetType: null,
     version: null,
@@ -9,7 +10,7 @@ export const store = reactive({
     target: null,
     options: {
         uid: null,
-        region: 'fcc',
+        region: 'FCC',
         domain: 1,
         ssid: null,
         password: null,
@@ -38,7 +39,7 @@ watch(() => store.targetType, (_newValue, _oldValue) => {
     store.target = null
     store.options = {
         uid: null,
-        region: 'fcc',
+        region: 'FCC',
         domain: 1,
         ssid: null,
         password: null,
