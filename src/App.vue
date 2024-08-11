@@ -4,13 +4,13 @@ import {store} from './js/state';
 
 import FirmwareSelect from './pages/FirmwareSelect.vue';
 import MainHardwareSelect from './pages/MainHardwareSelect.vue';
-import TXBPHardwareSelect from "./pages/TXBPHardwareSelect.vue";
 import VRXHardwareSelect from "./pages/BackpackHardwareSelect.vue";
 
 import TransmitterOptions from './pages/TransmitterOptions.vue';
 import ReceiverOptions from './pages/ReceiverOptions.vue';
 import BackpackOptions from "./pages/BackpackOptions.vue";
-import FlashSerial from "./pages/FlashSerial.vue";
+
+import Download from "./pages/Download.vue";
 
 function stepNext() {
   store.currentStep = 2;
@@ -20,7 +20,10 @@ function disableNext() {
   if (store.currentStep === 2) {
     return !store.target ? "next" : false
   }
-  if (store.currentStep === 4) {
+  else if (store.currentStep === 3) {
+    return !store.options.flashMethod ? "next" : false
+  }
+  else if (store.currentStep === 4) {
     return "next"
   }
   return false
@@ -55,10 +58,11 @@ function disableNext() {
           <VStepper v-model="store.currentStep" :items="['Firmware', 'Hardware', 'Options', 'Flashing']" hideActions>
             <template v-slot:item.1>
               <FirmwareSelect @on-click="stepNext()"/>
+              &nbsp;
             </template>
             <template v-slot:item.2>
               <MainHardwareSelect v-if="store.firmware==='firmware'"/>
-              <TXBPHardwareSelect v-if="store.targetType==='txbp'"/>
+              <VRXHardwareSelect vendor-label="Transmitter Module" v-if="store.targetType==='txbp'"/>
               <VRXHardwareSelect vendor-label="VRx Type" v-if="store.targetType==='vrx'"/>
               <VRXHardwareSelect vendor-label="Antenna Tracker Type" v-if="store.targetType==='aat'"/>
               <VRXHardwareSelect vendor-label="Timer Type" v-if="store.targetType==='timer'"/>
@@ -69,7 +73,7 @@ function disableNext() {
               <BackpackOptions v-else />
             </template>
             <template v-slot:item.4>
-              <FlashSerial/>
+              <Download v-if="store.options.flashMethod==='download'"/>
             </template>
             <VStepperActions v-if="store.currentStep!==1" :disabled="disableNext()" @click:prev="store.currentStep--" @click:next="store.currentStep++"/>
           </VStepper>

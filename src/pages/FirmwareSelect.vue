@@ -23,7 +23,7 @@ function setFirmware(firmware, targetType) {
         <VLayout align-center>
           <VImg src="transmitter.svg" height="100px" width="100px"></VImg>
         </VLayout>
-        <VCardTitle align-center>Transmitter</VCardTitle>
+        <VCardTitle>Transmitter</VCardTitle>
         <VCardText>Flash your external transmitter module, JR Bay (Micro) or Nano module; or an internal
           built-in
           ExpressLRS module.

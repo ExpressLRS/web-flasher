@@ -6,8 +6,10 @@ export const store = reactive({
     targetType: null,
     version: null,
     vendor: null,
+    vendor_name: '',
     radio: null,
     target: null,
+    name: '',
     options: {
         uid: null,
         region: 'FCC',
@@ -35,8 +37,10 @@ export const store = reactive({
 
 watch(() => store.targetType, (_newValue, _oldValue) => {
     store.vendor = null
+    store.vendor_name = ''
     store.radio = null
     store.target = null
+    store.name = ''
     store.options = {
         uid: null,
         region: 'FCC',
