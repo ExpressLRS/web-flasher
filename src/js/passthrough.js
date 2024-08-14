@@ -1,4 +1,4 @@
-import {MismatchError, AlertError, PassthroughError} from './error.js'
+import {MismatchError, PassthroughError} from './error.js'
 
 export class Bootloader {
     static INIT_SEQ = {
@@ -183,11 +183,9 @@ export class Passthrough {
                 serialCheck.push('Update via betaflight to flash your RX')
                 serialCheck.push('See https://www.expresslrs.org/2.0/hardware/spi-receivers/')
             }
-            let msg = ''
             this.log('[ERROR] Invalid serial RX configuration detected:')
             for (const err of serialCheck) {
                 this.log(`    ${err}`)
-                msg += `${err}\n`
             }
             this.log('Please change the configuration and try again!')
             throw new PassthroughError()

@@ -44,11 +44,11 @@ export class Configure {
         pos = this.#write32(binary, pos, options['tlm-report'])
         pos = this.#write32(binary, pos, options['fan-runtime'])
         let val = binary[pos]
-        if (options['uart-inverted'] !== undefined) {
+        if (options['uart-inverted']) {
             val &= ~1
             val |= options['uart-inverted'] ? 1 : 0
         }
-        if (options['unlock-higher-power'] !== undefined) {
+        if (options['unlock-higher-power']) {
             val &= ~2
             val |= options['unlock-higher-power'] ? 2 : 0
         }
@@ -59,15 +59,15 @@ export class Configure {
     static #patch_rx_params(binary, pos, options) {
         pos = this.#write32(binary, pos, options['rcvr-uart-baud'])
         let val = binary[pos]
-        if (options['rcvr-invert-tx'] !== undefined) {
+        if (options['rcvr-invert-tx']) {
             val &= ~1
             val |= options['rcvr-invert-tx'] ? 1 : 0
         }
-        if (options['lock-on-first-connection'] !== undefined) {
+        if (options['lock-on-first-connection']) {
             val &= ~2
             val |= options['lock-on-first-connection'] ? 2 : 0
         }
-        if (options['r9mm-mini-sbus'] !== undefined) {
+        if (options['r9mm-mini-sbus']) {
             val &= ~4
             val |= options['r9mm-mini-sbus'] ? 4 : 0
         }
@@ -193,7 +193,7 @@ export class Configure {
     }
 
     static download = async (folder, deviceType, rxAsTxType, radioType, config, firmwareUrl, options) => {
-        if (rxAsTxType !== undefined) firmwareUrl = firmwareUrl.replace('_RX', '_TX')
+        if (rxAsTxType) firmwareUrl = firmwareUrl.replace('_RX', '_TX')
         if (config.platform === 'stm32') {
             const entry = await this.#fetch_file(firmwareUrl, 0, (bin) => this.#configureSTM32(bin, deviceType, radioType, options))
             return [entry]
@@ -208,7 +208,7 @@ export class Configure {
                 const hardwareLayoutFile = await this.#fetch_file(`${folder}/hardware/${deviceType}/${config.layout_file}`, 0)
                     .catch(() => this.#fetch_file(`firmware/hardware/${deviceType}/${config.layout_file}`, 0))
                 let layout = JSON.parse(this.#ui8ToBstr(hardwareLayoutFile.data))
-                if (config.overlay !== undefined) {
+                if (config.overlay) {
                     layout = {
                         ...layout,
                         ...config.overlay
@@ -235,7 +235,7 @@ export class Configure {
 
             const files = await Promise.all(list)
             let logoFile = {data: new Uint8Array(0), address: 0}
-            if (config.logo_file !== undefined) {
+            if (config.logo_file) {
                 // get logo from version specific folder OR fall back to global folder
                 logoFile = await this.#fetch_file(`${folder}/hardware/logo/${config.logo_file}`, 0)
                     .catch(() => this.#fetch_file(`firmware/hardware/logo/${config.logo_file}`, 0))

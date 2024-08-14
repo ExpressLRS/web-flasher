@@ -1,5 +1,6 @@
 import {TransportEx} from './serialex.js'
 import {Bootloader, Passthrough} from './passthrough.js'
+import {MismatchError, PassthroughError} from "./error.js";
 
 const log = {
     info: function () {
@@ -48,7 +49,7 @@ class Xmodem {
         return crc
     }
 
-    send = async (dataBuffer) => {
+    send = async (dataBuffer, progress) => {
         const _self = this
         const packagedBuffer = []
         let blockNumber = this.XMODEM_START_BLOCK
@@ -121,9 +122,8 @@ class Xmodem {
                     blockNumber++
                     if (blockNumber % 10 === 0) {
                         const percent = Math.floor(blockNumber * 100 / packagedBuffer.length)
+                        progress(1, percent, 100)
                         _self.logger.log(`${percent}% uploaded...`)
-                        document.getElementById('progressBar').value = percent
-                        document.getElementById('status').innerHTML = `Flashing: ${percent}% uploaded... please wait`
                     }
                 } else if (packagedBuffer.length === blockNumber) {
                     // We are EOT
@@ -136,8 +136,7 @@ class Xmodem {
                         // We are finished!
                         log.info('[SEND] - Finished!')
                         _self.emit('stop', 0)
-                        document.getElementById('progressBar').value = 100
-                        document.getElementById('status').innerHTML = 'Flashing complete'
+                        progress(1, 100, 100)
                         sending = false
                     }
                 }
@@ -242,11 +241,11 @@ export class XmodemFlasher {
         this.transport = new TransportEx(this.device, true)
         await this.transport.connect(420000)
         this.passthrough = new Passthrough(this.transport, this.terminal, this.config.firmware, 420000)
+        await this.startBootloader()
         return 'XModem Flasher'
     }
 
-    flash = async (binary, force = false) => {
-        this.log('Beginning flash...')
+    startBootloader = async (force = false) => {
         this.transport.set_delimiters(['CCC'])
         const data = await this.transport.read_line(2000)
         let gotBootloader = data.endsWith('CCC')
@@ -259,7 +258,7 @@ export class XmodemFlasher {
             if (!gotBootloader) {
                 this.transport.set_delimiters(['\n', 'CCC'])
                 let currAttempt = 0
-                this.log('\nAttempting to reboot into bootloader...\n')
+                this.log('Attempting to reboot into bootloader...')
                 while (!gotBootloader) {
                     currAttempt++
                     if (currAttempt > 10) {
@@ -278,14 +277,14 @@ export class XmodemFlasher {
 
                         if (line.indexOf('BL_TYPE') !== -1) {
                             const blType = line.substring(8).trim()
-                            this.log(`    Bootloader type found : '${blType}`)
+                            this.log(`Bootloader type found : '${blType}`)
                             delaySeq2 = 100
                             continue
                         }
 
                         const versionMatch = line.match(/=== (?<version>[vV].*) ===/)
                         if (versionMatch && versionMatch.groups && versionMatch.groups.version) {
-                            this.log(`    Bootloader version found : '${versionMatch.groups.version}'`)
+                            this.log(`Bootloader version found : '${versionMatch.groups.version}'`)
                         } else if (line.indexOf('hold down button') !== -1) {
                             await this._sleep(delaySeq2)
                             await this.transport.write_string('bbbbbb')
@@ -298,52 +297,30 @@ export class XmodemFlasher {
                             const flashTarget = this.config.firmware.toUpperCase()
 
                             if (line.trim() !== flashTarget && !force) {
-                                const e = await SwalMUI.fire({
-                                    icon: 'question',
-                                    title: 'Targets Mismatch',
-                                    text: `Wrong target selected your RX is '${line.trim()}', trying to flash '${flashTarget}'`,
-                                    confirmButtonText: 'Flash anyway',
-                                    showCancelButton: true
-                                })
-                                if (e.isConfirmed) {
-                                    force = true
-                                    continue
-                                }
                                 this.log(`Wrong target selected your RX is '${line.trim()}', trying to flash '${flashTarget}'`)
-                                return
+                                throw new MismatchError()
                             } else if (flashTarget !== '') {
                                 this.log(`Verified RX target '${flashTarget}'`)
                             }
                         }
                     } while (Date.now() - start < 2000)
                 }
-                this.log(`    Got into bootloader after: ${currAttempt} attempts`)
-                this.log('Wait sync...')
+                this.log(`Got into bootloader after: ${currAttempt} attempts`)
+                this.log('Waiting for sync...')
                 this.transport.set_delimiters(['CCC'])
                 const data = await this.transport.read_line(15000)
                 if (data.indexOf('CCC') === -1) {
-                    await SwalMUI.fire({
-                        icon: 'error',
-                        title: 'Flashing Failed',
-                        text: 'Unable to communicate with bootloader'
-                    })
                     this.log('[FAILED] Unable to communicate with bootloader...')
-                    return
+                    throw new PassthroughError()
                 }
-                this.log(' sync OK\n')
-            } else {
-                this.log('\nWe were already in bootloader\n')
+                this.log('Sync OK')
             }
-        } else {
-            this.log('\nWe were already in bootloader\n')
         }
-        return this.xmodem.send(binary[0].data)
     }
 
-    checkStatus = (response) => {
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status} - ${response.statusText}`)
-        }
-        return response
+    flash = async (binary, force = false, progress) => {
+        await this.startBootloader(true);
+        this.log('Beginning flash...')
+        return this.xmodem.send(binary[0].data, progress)
     }
 }

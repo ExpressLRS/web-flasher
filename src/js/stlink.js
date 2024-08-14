@@ -51,14 +51,12 @@ export class STLink {
             percent = 100
         }
         this.info(`${this._msg}: ${percent}%`)
-        document.getElementById('progressBar').value = percent
-        document.getElementById('status').innerHTML = `${this._msg}: ${percent}% uploaded... please wait`
+        this.progressCallback(1, percent, 100)
     }
 
     bargraph_done() {
         this.info(`${this._msg}: complete`)
-        document.getElementById('progressBar').value = 100
-        document.getElementById('status').innerHTML = `${this._msg}: Complete`
+        this.progressCallback(1, 100, 100)
     }
 
     update_debugger_info(stlink, device) {
@@ -188,11 +186,13 @@ export class STLink {
         return transform(binary)
     }
 
+
+    // PK pass in bootloader binary if we want to flash that!
     flash = async (binary, flashBootloader, progressCallback) => {
         this.progressCallback = progressCallback
         if (this.stlink !== null && this.stlink.connected) {
             if (flashBootloader) {
-                this.log('\nFlash bootloader')
+                this.log('Flash bootloader')
                 this.log('================')
                 const data = await this.fetch_file('firmware/' + document.getElementById('version').value + '/bootloader/' + this.config.stlink.bootloader)
                 try {
@@ -205,7 +205,7 @@ export class STLink {
             }
 
             const addr = parseInt(this.config.stlink.offset, 16)
-            this.log('\nFlash ExpressLRS')
+            this.log('Flash ExpressLRS')
             this.log('================')
             try {
                 await this.stlink.halt()

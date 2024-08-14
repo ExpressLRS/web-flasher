@@ -18,7 +18,7 @@ const files = reactive({
   config: null,
   firmwareUrl: '',
   options: {},
-  deviceType: undefined,
+  deviceType: null,
   radioType: undefined,
   txType: undefined
 })
@@ -44,16 +44,20 @@ let newline = false
 
 let noDevice = ref(false)
 let flasher;
-let device = ref(null);
+let device = null;
 
 let progress = ref(0)
 let progressText = ref('')
 
 async function closeDevice() {
-  if (device.value != null) {
-    await device.value.close()
+  if (device != null) {
+    try {
+      await device.close()
+    }
+    catch (error) {
+    }
   }
-  device.value = null
+  device = null
   enableFlash.value = false
   flashComplete.value = false
   failed.value = false
@@ -66,12 +70,11 @@ async function connect() {
   step.value++
 
   try {
-    let port = await navigator.serial.requestPort()
-    port.ondisconnect = (_p, _e) => {
+    device = await navigator.serial.requestPort()
+    device.ondisconnect = async (_p, _e) => {
       console.log("disconnected")
-      reset()
+      await closeDevice()
     }
-    device.value = port
   } catch {
     await closeDevice()
     noDevice.value = true
@@ -94,9 +97,9 @@ async function connect() {
   }
 
   if (store.target.config.platform === 'stm32') {
-    flasher = new XmodemFlasher(device.value, files.deviceType, method, files.config, files.options, files.firmwareUrl, term)
+    flasher = new XmodemFlasher(device, files.deviceType, method, files.config, files.options, files.firmwareUrl, term)
   } else {
-    flasher = new ESPFlasher(device.value, files.deviceType, method, files.config, files.options, files.firmwareUrl, term)
+    flasher = new ESPFlasher(device, files.deviceType, method, files.config, files.options, files.firmwareUrl, term)
   }
   try {
     const chip = await flasher.connect()
@@ -124,10 +127,10 @@ async function flash() {
       progressText.value = (fileIndex + 1) + ' of ' + (files.firmwareFiles.length)
       progress.value = Math.round(written / total * 100)
     })
-    if (device.value != null) {
-      await device.value.close()
+    if (device != null) {
+      await device.close()
     }
-    device.value = null
+    device = null
     flashComplete.value = true
   } catch (e) {
     failed.value = true
@@ -145,7 +148,7 @@ async function flash() {
   <VStepperVertical v-model="step" :hide-actions="true">
     <VStepperVerticalItem title="Connect" value="1" :hide-actions="true" :complete="step > 1"
                           :color="step > 1 ? 'green' : 'blue'">
-      <VBtn :disabled="device !== null" @click="connect" color="primary">Connect</VBtn>
+      <VBtn @click="connect" color="primary">Connect</VBtn>
     </VStepperVerticalItem>
     <VStepperVerticalItem title="Connecting" value="2" :hide-actions="true" :complete="step > 2"
                           :color="step > 2 ? 'green' : 'blue'">
@@ -161,13 +164,13 @@ async function flash() {
                           :color="flashComplete ? 'green' : (failed ? 'red' : 'blue')">
       <VLabel>Flashing file {{ progressText }}</VLabel>
       <VSpacer></VSpacer>
-      <VProgressCircular :model-value="progress" :rotate="360" :size="100" :width="15" color="teal">
+      <VProgressCircular :model-value="progress" :rotate="360" :size="100" :width="15" :color="flashComplete ? 'green' : (failed ? 'red' : 'blue')">
         <template v-slot:default> {{ progress }} %</template>
       </VProgressCircular>
       <VSpacer></VSpacer>
       <br>
       <VBtn v-if="flashComplete" @click="reset" color="primary">Flash Another</VBtn>
-      <div>
+      <div v-if="failed">
       <VLabel>Flash failed</VLabel>
       </div>
       <VBtn v-if="failed" @click="reset" color="red">Reset</VBtn>

@@ -56,8 +56,8 @@ const getSettings = async (deviceType) => {
 
 export async function generateFirmware() {
     let deviceType = store.targetType
-    let radioType = undefined
-    let txType = undefined
+    let radioType = null
+    let txType = null
     if (store.firmware === 'firmware') {
         deviceType = store.targetType === 'tx' ? 'TX' : 'RX'
         radioType = store.radio.endsWith('_900') ? 'sx127x' : (store.radio.endsWith('_2400') ? 'sx128x' : 'lr1121')
