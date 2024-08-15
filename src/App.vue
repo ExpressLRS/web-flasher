@@ -1,5 +1,5 @@
 <script setup>
-import {VAppBar, VAppBarTitle, VMain, VLayout, VImg, VStepper, VStepperActions} from 'vuetify/components';
+import {VAppBar, VAppBarTitle, VContainer, VMain, VLayout, VImg, VStepper, VStepperActions} from 'vuetify/components';
 import {store} from './js/state';
 
 import FirmwareSelect from './pages/FirmwareSelect.vue';
@@ -65,7 +65,6 @@ function stepStatus(step) {
           <VStepper v-model="store.currentStep" :items="['Firmware', 'Hardware', 'Options', 'Flashing']" hideActions>
             <template v-slot:item.1>
               <FirmwareSelect @on-click="stepNext()"/>
-              &nbsp;
             </template>
             <template v-slot:item.2>
               <MainHardwareSelect v-if="store.firmware==='firmware'"/>
@@ -106,5 +105,9 @@ function stepStatus(step) {
   background-image: linear-gradient(45deg, #9dc66b 5%, #4fa49a 30%, #4361c2);
   background-position: top left, center center, center center;
   background-size: auto, cover, cover;
+}
+.v-stepper-window {
+  padding: 24px;
+  margin: 0 !important;
 }
 </style>

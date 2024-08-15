@@ -18,7 +18,7 @@
     "pako": "^2.1.0",
     "roboto-fontface": "*",
     "vue": "^3.4.31",
-    "vuetify": "^3.6.14"
+    "vuetify": "^3.7.0"
   },
   "devDependencies": {
     "@types/file-saver": "^2.0.7",
