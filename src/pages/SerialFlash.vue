@@ -9,6 +9,7 @@ import {MismatchError} from "../js/error.js";
 
 watch(() => store.currentStep, (_new, _old) => {
   if (_new === 4) buildFirmware()
+  else if (_old === 4) closeDevice()
 })
 
 onMounted(() => buildFirmware())
@@ -102,7 +103,7 @@ async function connect() {
     flasher = new ESPFlasher(device, files.deviceType, method, files.config, files.options, files.firmwareUrl, term)
   }
   try {
-    const chip = await flasher.connect()
+    await flasher.connect()
     enableFlash.value = true
   } catch (e) {
     if (e instanceof MismatchError) {

@@ -29,12 +29,6 @@ function disableNext() {
   }
   return false
 }
-function stepComplete(step) {
-  return store.currentStep > step
-}
-function stepStatus(step) {
-  return store.currentStep > step ? 'green' : 'blue'
-}
 </script>
 
 <template>
