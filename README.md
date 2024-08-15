@@ -24,7 +24,7 @@ npm run dist
 ```
 # Firmware
 To actually test the code you will need a firmware folder at the root of the project.
-The firmware folder, with all it's accoutrements can be downloaded from the ExpressLRS artifact repository by
+The firmware folder, with all it's accoutrement's can be downloaded from the ExpressLRS artifact repository by
 executing the `get_artifacts.sh` command. This will download all the release artifacts and put all the versions
 into the `index.js` file for testing locally.
 When committing you changes, you will note that there is a comment above where the versions were placed in the

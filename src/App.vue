@@ -82,7 +82,7 @@ function stepStatus(step) {
               <Download v-if="store.options.flashMethod==='download'"/>
               <SerialFlash v-else/>
             </template>
-            <VStepperActions v-if="store.currentStep!==1" :disabled="disableNext()" @click:prev="store.currentStep--" @click:next="store.currentStep++"/>
+            <VStepperActions v-if="store.currentStep!==1" :disabled="disableNext()" @click:prev="store.currentStep--" @click:next="store.currentStep++" />
           </VStepper>
         </VContainer>
       </VMain>

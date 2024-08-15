@@ -145,7 +145,7 @@ async function flash() {
   </VCardSubtitle>
   <br>
 
-  <VStepperVertical v-model="step" :hide-actions="true">
+  <VStepperVertical v-model="step" :hide-actions="true" flat>
     <VStepperVerticalItem title="Connect" value="1" :hide-actions="true" :complete="step > 1"
                           :color="step > 1 ? 'green' : 'blue'">
       <VBtn @click="connect" color="primary">Connect</VBtn>
