@@ -2,6 +2,7 @@
 import HoverCard from '../components/HoverCard.vue';
 import {VCol, VRow} from 'vuetify/components';
 import {store} from '../js/state';
+import {watch} from "vue";
 
 const emit = defineEmits(['onClick']);
 
@@ -11,6 +12,32 @@ function setFirmware(firmware, targetType) {
   store.targetType = targetType;
   emit('onClick');
 }
+
+watch(() => store.targetType, () => {
+  store.options = {
+    uid: null,
+    region: 'FCC',
+    domain: 1,
+    ssid: null,
+    password: null,
+    wifiOnInternal: 60,
+    tx: {
+      telemetryInterval: 240,
+      uartInverted: true,
+      fanMinRuntime: 30,
+      higherPower: false,
+      melodyType: 3,
+      melodyTune: null,
+    },
+    rx: {
+      uartBaud: 420000,
+      lockOnFirstConnect: true,
+      r9mmMiniSBUS: false,
+      fanMinRuntime: 30,
+    },
+    flashMethod: null,
+  }
+})
 </script>
 
 <template>

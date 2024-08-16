@@ -1,20 +1,16 @@
-import {reactive, watchEffect} from 'vue'
+import {reactive, watch} from 'vue'
 
 export const store = reactive({
-
-})
-
-watchEffect(() => {
-    store.currentStep = 1
-    store.firmware =null
-    store.targetType= null
-    store.version = null
-    store.vendor = null
-    store.vendor_name = ''
-    store.radio = null
-    store.target = null
-    store.name = ''
-    store.options = {
+    currentStep: 1,
+    firmware: null,
+    targetType: null,
+    version: null,
+    vendor: null,
+    vendor_name: '',
+    radio: null,
+    target: null,
+    name: '',
+    options: {
         uid: null,
         region: 'FCC',
         domain: 1,

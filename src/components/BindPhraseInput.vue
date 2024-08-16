@@ -6,9 +6,10 @@ import {uidBytesFromText} from "../js/phrase.js";
 let model = defineModel()
 
 let bindPhrase = ref(null)
-let uid=ref('Bind Phrase')
+let uid = ref('Bind Phrase')
+
 function generateUID() {
-  if (bindPhrase.value === '') uid.value='Bind Phrase'
+  if (bindPhrase.value === '') uid.value = 'Bind Phrase'
   else {
     model.value = uidBytesFromText(bindPhrase.value)
     uid.value = 'UID: ' + model.value
