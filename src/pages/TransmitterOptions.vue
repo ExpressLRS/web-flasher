@@ -1,5 +1,4 @@
 <script setup>
-import {VCheckbox, VTextField, VCardTitle, VCardSubtitle} from "vuetify/components";
 import {store} from "../js/state.js";
 
 import BindPhraseInput from "../components/BindPhraseInput.vue";
@@ -25,13 +24,11 @@ function has(feature) {
                        v-if="store.target?.config?.platform!=='stm32'"/>
 
     <VTextField v-model="store.options.tx.telemetryInterval" label='TLM report interval (milliseconds)'
-                density="comfortable"/>
-    <VCheckbox v-model="store.options.tx.uartInverted" label="UART inverted" density="comfortable"
+    />
+    <VCheckbox v-model="store.options.tx.uartInverted" label="UART inverted"
                v-if="store.target?.config?.platform==='stm32'"/>
-    <VTextField v-model="store.options.tx.fanMinRuntime" label='Minimum fan runtime (seconds)' density="comfortable"
-                v-if="has('fan')"/>
-    <VCheckbox v-model="store.options.tx.higherPower" label='Unlock higher power' density="comfortable"
-               v-if="has('unlock-higher-power')"/>
+    <VTextField v-model="store.options.tx.fanMinRuntime" label='Minimum fan runtime (seconds)' v-if="has('fan')"/>
+    <VCheckbox v-model="store.options.tx.higherPower" label='Unlock higher power' v-if="has('unlock-higher-power')"/>
     <MelodyInput v-model:melody-type="store.options.tx.melodyType" v-model:melody-tune="store.options.tx.melodyTune"
                  v-if="has('buzzer')"/>
 

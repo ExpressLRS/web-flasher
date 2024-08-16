@@ -88,10 +88,8 @@ watch(() => store.target, (v, _oldValue) => {
       <VCardSubtitle>Choose the race timer and hardware to be flashed</VCardSubtitle>
     </template>
     <br>
-    <VSelect :items="versions" v-model="store.version" density="comfortable" label="Firmware Version"/>
-    <VSelect :items="vendors" v-model="store.vendor" density="comfortable" :label="vendorLabel"
-             :disabled="!store.version"/>
-    <VAutocomplete :items="targets" v-model="store.target" density="comfortable" label="Hardware Target"
-                   :disabled="!store.vendor"/>
+    <VSelect :items="versions" v-model="store.version" label="Firmware Version"/>
+    <VSelect :items="vendors" v-model="store.vendor" :label="vendorLabel" :disabled="!store.version"/>
+    <VAutocomplete :items="targets" v-model="store.target" label="Hardware Target" :disabled="!store.vendor"/>
   </VContainer>
 </template>

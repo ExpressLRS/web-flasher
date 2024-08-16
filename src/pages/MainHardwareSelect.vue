@@ -102,11 +102,11 @@ watch(() => store.target, (v, _oldValue) => {
       hardware is unsupported.
     </VCardText>
     <br>
-    <VSelect :items="versions" v-model="store.version" density="comfortable" label="Firmware Version"/>
-    <VSelect :items="vendors" v-model="store.vendor" density="comfortable" label="Hardware Vendor"
+    <VSelect :items="versions" v-model="store.version" density="compact" label="Firmware Version"/>
+    <VSelect :items="vendors" v-model="store.vendor" density="compact" label="Hardware Vendor"
              :disabled="!store.version"/>
-    <VSelect :items="radios" v-model="store.radio" density="comfortable" label="Radio Frequency"
+    <VSelect :items="radios" v-model="store.radio" density="compact" label="Radio Frequency"
              :disabled="!store.vendor"/>
-    <VAutocomplete :items="targets" v-model="store.target" density="comfortable" label="Hardware Target"/>
+    <VAutocomplete :items="targets" v-model="store.target" density="compact" label="Hardware Target"/>
   </VContainer>
 </template>

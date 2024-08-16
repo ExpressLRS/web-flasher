@@ -13,6 +13,6 @@ const melodyTypes = [
 </script>
 
 <template>
-  <VSelect v-model="melodyType" label="Beeper" density="comfortable" :items="melodyTypes"/>
-  <VTextField v-model="melodyTune" label="Melody" density="comfortable" v-if="melodyType===4"/>
+  <VSelect v-model="melodyType" label="Beeper" :items="melodyTypes"/>
+  <VTextField v-model="melodyTune" label="Melody" v-if="melodyType===4"/>
 </template>

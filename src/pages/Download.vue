@@ -5,7 +5,6 @@ import FileSaver from "file-saver";
 import pako from 'pako';
 import {store} from "../js/state.js";
 import {generateFirmware} from "../js/firmware.js";
-import {VCardSubtitle, VCardTitle} from "vuetify/components";
 
 watchEffect(buildFirmware)
 

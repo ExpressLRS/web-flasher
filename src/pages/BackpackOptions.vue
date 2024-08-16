@@ -1,5 +1,4 @@
 <script setup>
-import {VCardTitle, VCardSubtitle} from "vuetify/components";
 import {store} from "../js/state.js";
 
 import BindPhraseInput from "../components/BindPhraseInput.vue";

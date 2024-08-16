@@ -20,5 +20,5 @@ function getFlashMethods() {
 </script>
 
 <template>
-  <VSelect v-model="model" label="Flashing Method" density="comfortable" :items="getFlashMethods()"/>
+  <VSelect v-model="model" label="Flashing Method" :items="getFlashMethods()"/>
 </template>

@@ -1,6 +1,5 @@
 <script setup>
 import HoverCard from '../components/HoverCard.vue';
-import {VCol, VRow} from 'vuetify/components';
 import {store} from '../js/state';
 import {watch} from "vue";
 

@@ -1,8 +1,7 @@
 <script setup>
-import {ref, watch, watchPostEffect} from "vue";
+import {ref, watchPostEffect} from "vue";
 import {store} from "../js/state.js";
 import {generateFirmware} from "../js/firmware.js";
-import {VCardSubtitle, VCardTitle} from "vuetify/components";
 import {XmodemFlasher} from "../js/xmodem.js";
 import {ESPFlasher} from "../js/espflasher.js";
 import {MismatchError} from "../js/error.js";
@@ -143,7 +142,6 @@ async function flash() {
     <VCardText>The firmware file(s) have been configured for your <b>{{ store.target?.config?.product_name }}</b> with
       the specified options.
     </VCardText>
-    <br>
 
     <VStepperVertical v-model="step" :hide-actions="true" flat>
       <VStepperVerticalItem title="Connect" value="1" :hide-actions="true" :complete="step > 1"
@@ -151,7 +149,7 @@ async function flash() {
         <VBtn @click="connect" color="primary">Connect</VBtn>
       </VStepperVerticalItem>
       <VStepperVerticalItem title="Connecting" value="2" :hide-actions="true" :complete="step > 2"
-                            :color="step > 2 ? 'green' : 'blue'">
+                            :color="step > 2 ? 'green' : (failed ? 'red' : 'blue')">
         <template v-for="line in log">
           <VLabel>{{ line }}</VLabel>
           <br/>
@@ -162,19 +160,22 @@ async function flash() {
       </VStepperVerticalItem>
       <VStepperVerticalItem title="Flashing" value="3" :hide-actions="true" :complete="flashComplete"
                             :color="flashComplete ? 'green' : (failed ? 'red' : 'blue')">
-        <VLabel>Flashing file {{ progressText }}</VLabel>
-        <VSpacer></VSpacer>
-        <VProgressCircular :model-value="progress" :rotate="360" :size="100" :width="15"
-                           :color="flashComplete ? 'green' : (failed ? 'red' : 'blue')">
-          <template v-slot:default> {{ progress }} %</template>
-        </VProgressCircular>
-        <VSpacer></VSpacer>
-        <br>
-        <VBtn v-if="flashComplete" @click="reset" color="primary">Flash Another</VBtn>
-        <div v-if="failed">
-          <VLabel>Flash failed</VLabel>
-        </div>
-        <VBtn v-if="failed" @click="reset" color="red">Reset</VBtn>
+        <VRow>
+          <VCol class="d-flex align-center flex-column flex-grow-0 flex-shrink-0">
+            <VLabel>Flashing file {{ progressText }}</VLabel>
+            <VProgressCircular :model-value="progress" :rotate="360" :size="100" :width="15"
+                               :color="flashComplete ? 'green' : (failed ? 'red' : 'blue')">
+              <template v-slot:default> {{ progress }} %</template>
+            </VProgressCircular>
+            <br>
+            <VBtn v-if="flashComplete" @click="reset" color="primary">Flash Another</VBtn>
+            <div v-if="failed">
+              <VLabel>Flash failed</VLabel>
+            </div>
+            <VBtn v-if="failed" @click="reset" color="red">Reset</VBtn>
+          </VCol>
+          <VCol cols="1" class="flex-grow-1 flex-shrink-0"/>
+        </VRow>
       </VStepperVerticalItem>
     </VStepperVertical>
 

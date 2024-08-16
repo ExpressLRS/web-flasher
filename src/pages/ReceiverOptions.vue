@@ -1,5 +1,4 @@
 <script setup>
-import {VCheckbox, VTextField, VCardTitle, VCardSubtitle} from "vuetify/components";
 import {store} from "../js/state.js";
 
 import BindPhraseInput from "../components/BindPhraseInput.vue";
@@ -23,12 +22,10 @@ function has(feature) {
                        v-model:wifi-on-interval="store.options.wifiOnInternal"
                        v-if="store.target?.config?.platform!=='stm32'"/>
 
-    <VTextField v-model="store.options.rx.uartBaud" label='UART baud rate' density="comfortable"/>
-    <VCheckbox v-model="store.options.rx.lockOnFirstConnect" label='Lock on first connection' density="comfortable"/>
-    <VCheckbox v-model="store.options.rx.r9mmMiniSBUS" label='Use SBUS Pins as UART' density="comfortable"
-               v-if="has('sbus-uart')"/>
-    <VTextField v-model="store.options.rx.fanMinRuntime" label='Minimum fan runtime (seconds)' density="comfortable"
-                v-if="has('fan')"/>
+    <VTextField v-model="store.options.rx.uartBaud" label='UART baud rate'/>
+    <VCheckbox v-model="store.options.rx.lockOnFirstConnect" label='Lock on first connection'/>
+    <VCheckbox v-model="store.options.rx.r9mmMiniSBUS" label='Use SBUS Pins as UART' v-if="has('sbus-uart')"/>
+    <VTextField v-model="store.options.rx.fanMinRuntime" label='Minimum fan runtime (seconds)' v-if="has('fan')"/>
 
     <FlashMethodSelect v-model="store.options.flashMethod" :methods="store.target?.config?.upload_methods"/>
   </VContainer>

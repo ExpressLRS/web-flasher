@@ -13,6 +13,14 @@ const vuetify = createVuetify({
     directives,
     theme: {
         defaultTheme: 'light'
+    },
+    defaults: {
+        global: {
+            density: "compact",
+        },
+        VBtn: {
+            density: "default"
+        }
     }
 })
 

@@ -1,5 +1,4 @@
 <script setup>
-import {VAppBar, VAppBarTitle, VContainer, VMain, VLayout, VImg, VStepper, VStepperActions} from 'vuetify/components';
 import {store} from './js/state';
 
 import FirmwareSelect from './pages/FirmwareSelect.vue';
