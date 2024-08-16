@@ -5,9 +5,9 @@ import {store} from "../js/state.js";
 import BindPhraseInput from "../components/BindPhraseInput.vue";
 import WiFiSettingsInput from "../components/WiFiSettingsInput.vue";
 import FlashMethodSelect from "../components/FlashMethodSelect.vue";
-import {watch} from "vue";
+import {watch, watchEffect} from "vue";
 
-function setTargetName() {
+watchEffect(() => {
   if (store.targetType === 'txbp') {
     store.name = store.target?.config?.product_name + " Backpack"
   }
@@ -23,11 +23,7 @@ function setTargetName() {
   else {
     store.name = store.target?.config?.product_name
   }
-}
-watch(() => store.targetType, setTargetName)
-watch(() => store.target?.config?.product_name, setTargetName)
-watch(() => store.vendor_name, setTargetName)
-
+})
 </script>
 
 <template>

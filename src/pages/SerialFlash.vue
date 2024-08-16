@@ -1,5 +1,5 @@
 <script setup>
-import {onMounted, reactive, ref, watch} from "vue";
+import {ref, watch, watchPostEffect} from "vue";
 import {store} from "../js/state.js";
 import {generateFirmware} from "../js/firmware.js";
 import {VCardSubtitle, VCardTitle} from "vuetify/components";
@@ -7,14 +7,14 @@ import {XmodemFlasher} from "../js/xmodem.js";
 import {ESPFlasher} from "../js/espflasher.js";
 import {MismatchError} from "../js/error.js";
 
-watch(() => store.currentStep, (_new, _old) => {
-  if (_new === 4) buildFirmware()
-  else if (_old === 4) closeDevice()
+watchPostEffect((onCleanup) => {
+  onCleanup(closeDevice)
+  if (store.currentStep === 4) {
+    buildFirmware()
+  }
 })
 
-onMounted(() => buildFirmware())
-
-const files = reactive({
+const files = {
   firmwareFiles: [],
   config: null,
   firmwareUrl: '',
@@ -22,7 +22,7 @@ const files = reactive({
   deviceType: null,
   radioType: undefined,
   txType: undefined
-})
+}
 
 async function buildFirmware() {
   const [binary, {config, firmwareUrl, options, deviceType, radioType, txType}] = await generateFirmware()
@@ -67,7 +67,6 @@ async function closeDevice() {
 }
 
 async function connect() {
-  await closeDevice()
   step.value++
 
   try {

@@ -1,5 +1,5 @@
 <script setup>
-import {onMounted, reactive, watch} from "vue";
+import {watchEffect} from "vue";
 import * as zip from "@zip.js/zip.js";
 import FileSaver from "file-saver";
 import pako from 'pako';
@@ -7,26 +7,24 @@ import {store} from "../js/state.js";
 import {generateFirmware} from "../js/firmware.js";
 import {VCardSubtitle, VCardTitle} from "vuetify/components";
 
-watch(() => store.currentStep, (_new, _old) => {
-  if (_new === 4) buildFirmware()
-})
+watchEffect(buildFirmware)
 
-onMounted(() => buildFirmware())
-
-const files = reactive({
+const files = {
   firmwareFiles: [],
   config: null,
   firmwareUrl: '',
   options: {}
-})
+}
 
 async function buildFirmware() {
-  const [binary, {config, firmwareUrl, options}] = await generateFirmware()
+  if (store.currentStep === 4) {
+    const [binary, {config, firmwareUrl, options}] = await generateFirmware()
 
-  files.firmwareFiles = binary
-  files.firmwareUrl = firmwareUrl
-  files.config = config
-  files.options = options
+    files.firmwareFiles = binary
+    files.firmwareUrl = firmwareUrl
+    files.config = config
+    files.options = options
+  }
 }
 
 async function downloadFirmware() {

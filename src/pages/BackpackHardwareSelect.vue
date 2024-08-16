@@ -1,5 +1,5 @@
 <script setup>
-import {ref, watch, onMounted} from 'vue';
+import {ref, watch, watchEffect} from 'vue';
 import {store} from '../js/state';
 import {compareSemanticVersions} from '../js/version';
 
@@ -12,9 +12,9 @@ let versions = ref([]);
 let vendors = ref([]);
 let targets = ref([]);
 
-function updateVersions() {
+watchEffect(() => {
   hardware = null
-  fetch(`/assets/backpack/index.json`).then(r => r.json()).then(r => {
+  fetch(`/assets/${store.firmware}/index.json`).then(r => r.json()).then(r => {
     firmware = r
     store.version = null
     versions.value = []
@@ -26,14 +26,11 @@ function updateVersions() {
     })
     updateVRXType()
   })
-}
-
-watch(() => store.firmware, (_newValue, _oldValue) => updateVersions())
-onMounted(() => updateVersions())
+})
 
 function updateVRXType() {
   if (store.firmware && store.version && store.targetType) {
-    fetch(`/assets/backpack/${store.version}/hardware/targets.json`).then(r => r.json()).then(r => {
+    fetch(`/assets/${store.firmware}/${store.version}/hardware/targets.json`).then(r => r.json()).then(r => {
       hardware = r
       store.vendor = null
       vendors.value = []
@@ -45,10 +42,7 @@ function updateVRXType() {
   }
 }
 
-watch(() => store.version, (_newValue, _oldValue) => updateVRXType())
-watch(() => store.targetType, (_newValue, _oldValue) => updateVRXType())
-
-function updateTargets() {
+watchEffect(() => {
   targets.value = []
   if (store.version && hardware) {
     let keepTarget = false
@@ -64,10 +58,8 @@ function updateTargets() {
       store.target = targets.value[0].value
     } else if (!keepTarget) store.target = null
   }
-}
+})
 
-watch(() => store.version, (_newValue, _oldValue) => updateTargets())
-watch(() => store.vendor, (_newValue, _oldValue) => updateTargets())
 watch(() => store.target, (v, _oldValue) => {
   if (v) {
     store.vendor = v.vendor

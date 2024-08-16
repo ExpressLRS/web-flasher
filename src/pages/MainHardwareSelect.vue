@@ -1,20 +1,20 @@
 <script setup>
-import {ref, watch, onMounted} from 'vue';
+import {ref, watch, watchPostEffect} from 'vue';
 import {store} from '../js/state';
 import {compareSemanticVersions} from '../js/version';
 
 const showRCs = false;
 
 let firmware;
-let hardware;
+let hardware = ref(null);
 let versions = ref([]);
 let vendors = ref([]);
 let radios = ref([]);
 let targets = ref([]);
 
-function updateVersions() {
-  hardware = null
-  fetch(`/assets/firmware/index.json`).then(r => r.json()).then(r => {
+watchPostEffect(() => {
+  hardware.value = null
+  fetch(`/assets/${store.firmware}/index.json`).then(r => r.json()).then(r => {
     firmware = r
     store.version = null
     versions.value = []
@@ -24,31 +24,24 @@ function updateVersions() {
         if (!store.version) store.version = firmware.tags[key]
       }
     })
-    updateVendors()
   })
-}
+})
 
-watch(() => store.firmware, (_newValue, _oldValue) => updateVersions())
-onMounted(() => updateVersions())
-
-function updateVendors() {
+watchPostEffect(() => {
   if (store.firmware && store.version && store.targetType) {
-    fetch(`/assets/firmware/${store.version}/hardware/targets.json`).then(r => r.json()).then(r => {
-      hardware = r
+    fetch(`/assets/${store.firmware}/${store.version}/hardware/targets.json`).then(r => r.json()).then(r => {
+      hardware.value = r
       store.vendor = null
       vendors.value = []
-      for (const [k, v] of Object.entries(hardware)) {
+      for (const [k, v] of Object.entries(hardware.value)) {
         let hasTargets = false;
         Object.keys(v).forEach(type => hasTargets |= type.startsWith(store.targetType))
         if (hasTargets && v.name) vendors.value.push({title: v.name, value: k})
       }
-      updateTargets()
+      // updateTargets()
     }).catch((_ignore) => {})
   }
-}
-
-watch(() => store.version, (_newValue, _oldValue) => updateVendors())
-watch(() => store.targetType, (_newValue, _oldValue) => updateVendors())
+})
 
 const radioTitles = {
   'tx_2400': '2.4GHz Transmitter',
@@ -59,11 +52,11 @@ const radioTitles = {
   'rx_dual': 'Dual 2.4GHz/900MHz Receiver',
 }
 
-function updateRadios() {
+watchPostEffect(() => {
   radios.value = []
-  if (store.vendor && hardware) {
+  if (store.vendor && hardware.value) {
     let keepTarget = false
-    Object.keys(hardware[store.vendor]).forEach(k => {
+    Object.keys(hardware.value[store.vendor]).forEach(k => {
       if (k.startsWith(store.targetType)) radios.value.push({title: radioTitles[k], value: k})
       if (store.target && store.target.vendor === store.vendor && store.target.radio === k) keepTarget = true
     })
@@ -71,15 +64,13 @@ function updateRadios() {
       store.radio = radios.value[0].value
     } else if (!keepTarget) store.radio = null
   }
-}
+})
 
-watch(() => store.vendor, (_newValue, _oldValue) => updateRadios())
-
-function updateTargets() {
+watchPostEffect(() => {
   targets.value = []
-  if (store.version && hardware) {
+  if (store.version && hardware.value) {
     let keepTarget = false
-    for (const [vk, v] of Object.entries(hardware)) {
+    for (const [vk, v] of Object.entries(hardware.value)) {
       if (vk === store.vendor || store.vendor === null) {
         for (const [rk, r] of Object.entries(v)) {
           if (rk.startsWith(store.targetType) && (rk === store.radio || store.radio === null)) {
@@ -93,11 +84,8 @@ function updateTargets() {
     }
     if (!keepTarget) store.target = null
   }
-}
+})
 
-watch(() => store.version, (_newValue, _oldValue) => updateTargets())
-watch(() => store.vendor, (_newValue, _oldValue) => updateTargets())
-watch(() => store.radio, (_newValue, _oldValue) => updateTargets())
 watch(() => store.target, (v, _oldValue) => {
   if (v) {
     store.vendor = v.vendor
