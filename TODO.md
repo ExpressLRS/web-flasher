@@ -1,0 +1,6 @@
+- [ ] Check ST-Link flashing
+- [ ] Advanced Options
+    - [ ] RX as TX
+    - [ ] flashing branches
+    - [ ] Hide options other than bind-phrase & wifi settings
+- [ ] WiFi flashing
