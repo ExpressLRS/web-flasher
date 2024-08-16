@@ -38,7 +38,8 @@ function updateVRXType() {
         let hasTargets = v.hasOwnProperty(store.targetType);
         if (hasTargets && v.name) vendors.value.push({title: v.name, value: k})
       }
-    }).catch((_ignore) => {})
+    }).catch((_ignore) => {
+    })
   }
 }
 
@@ -69,24 +70,28 @@ watch(() => store.target, (v, _oldValue) => {
 </script>
 
 <template>
-  <template v-if="store.targetType==='txbp'">
-    <VCardTitle>Transmitter Hardware Selection</VCardTitle>
-    <VCardSubtitle>Choose the transmitter module that is having it's backpack flashed</VCardSubtitle>
-  </template>
-  <template v-if="store.targetType==='vrx'">
-    <VCardTitle>VRx Hardware Selection</VCardTitle>
-    <VCardSubtitle>Choose the video receiver type and hardware to be flashed</VCardSubtitle>
-  </template>
-  <template v-if="store.targetType==='aat'">
-    <VCardTitle>Antenna Tracker Hardware Selection</VCardTitle>
-    <VCardSubtitle>Choose the antenna tracker type and hardware to be flashed</VCardSubtitle>
-  </template>
-  <template v-if="store.targetType==='timer'">
-    <VCardTitle>Race Timer Hardware Selection</VCardTitle>
-    <VCardSubtitle>Choose the race timer and hardware to be flashed</VCardSubtitle>
-  </template>
-  <br>
-  <VSelect :items="versions" v-model="store.version" density="comfortable" label="Firmware Version"/>
-  <VSelect :items="vendors" v-model="store.vendor" density="comfortable" :label="vendorLabel" :disabled="!store.version"/>
-  <VAutocomplete :items="targets" v-model="store.target" density="comfortable" label="Hardware Target" :disabled="!store.vendor"/>
+  <VContainer max-width="600px">
+    <template v-if="store.targetType==='txbp'">
+      <VCardTitle>Transmitter Hardware Selection</VCardTitle>
+      <VCardSubtitle>Choose the transmitter module that is having it's backpack flashed</VCardSubtitle>
+    </template>
+    <template v-if="store.targetType==='vrx'">
+      <VCardTitle>VRx Hardware Selection</VCardTitle>
+      <VCardSubtitle>Choose the video receiver type and hardware to be flashed</VCardSubtitle>
+    </template>
+    <template v-if="store.targetType==='aat'">
+      <VCardTitle>Antenna Tracker Hardware Selection</VCardTitle>
+      <VCardSubtitle>Choose the antenna tracker type and hardware to be flashed</VCardSubtitle>
+    </template>
+    <template v-if="store.targetType==='timer'">
+      <VCardTitle>Race Timer Hardware Selection</VCardTitle>
+      <VCardSubtitle>Choose the race timer and hardware to be flashed</VCardSubtitle>
+    </template>
+    <br>
+    <VSelect :items="versions" v-model="store.version" density="comfortable" label="Firmware Version"/>
+    <VSelect :items="vendors" v-model="store.vendor" density="comfortable" :label="vendorLabel"
+             :disabled="!store.version"/>
+    <VAutocomplete :items="targets" v-model="store.target" density="comfortable" label="Hardware Target"
+                   :disabled="!store.vendor"/>
+  </VContainer>
 </template>

@@ -55,7 +55,7 @@ function disableNext() {
         </div>
       </VAppBar>
       <VMain>
-        <VContainer>
+        <VContainer max-width="1000px">
           <VStepper v-model="store.currentStep" :items="['Firmware', 'Hardware', 'Options', 'Flashing']" hideActions>
             <template v-slot:item.1>
               <FirmwareSelect @on-click="stepNext()"/>

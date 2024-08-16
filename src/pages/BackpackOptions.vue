@@ -10,30 +10,28 @@ import {watch, watchEffect} from "vue";
 watchEffect(() => {
   if (store.targetType === 'txbp') {
     store.name = store.target?.config?.product_name + " Backpack"
-  }
-  else if (store.targetType === 'vrx') {
+  } else if (store.targetType === 'vrx') {
     store.name = store.vendor_name + " " + store.target?.config?.product_name
-  }
-  else if (store.targetType === 'aat') {
+  } else if (store.targetType === 'aat') {
     store.name = store.vendor_name
-  }
-  else if (store.targetType === 'timer') {
+  } else if (store.targetType === 'timer') {
     store.name = store.vendor_name
-  }
-  else {
+  } else {
     store.name = store.target?.config?.product_name
   }
 })
 </script>
 
 <template>
-  <VCardTitle>Backpack Options</VCardTitle>
-  <VCardSubtitle>Set the flashing options and method for your <b>{{store.name}}</b></VCardSubtitle>
-  <br>
-  <BindPhraseInput v-model="store.options.uid"/>
-  <WiFiSettingsInput v-model:ssid="store.options.ssid" v-model:password="store.options.password"
-                     v-model:wifi-on-interval="store.options.wifiOnInternal"
-                     v-if="store.target?.config?.platform!=='stm32'"/>
+  <VContainer max-width="600px">
+    <VCardTitle>Backpack Options</VCardTitle>
+    <VCardText>Set the flashing options and method for your <b>{{ store.name }}</b></VCardText>
+    <br>
+    <BindPhraseInput v-model="store.options.uid"/>
+    <WiFiSettingsInput v-model:ssid="store.options.ssid" v-model:password="store.options.password"
+                       v-model:wifi-on-interval="store.options.wifiOnInternal"
+                       v-if="store.target?.config?.platform!=='stm32'"/>
 
-  <FlashMethodSelect v-model="store.options.flashMethod" :methods="store.target?.config?.upload_methods"/>
+    <FlashMethodSelect v-model="store.options.flashMethod" :methods="store.target?.config?.upload_methods"/>
+  </VContainer>
 </template>

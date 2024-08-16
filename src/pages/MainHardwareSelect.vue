@@ -39,7 +39,8 @@ watchPostEffect(() => {
         if (hasTargets && v.name) vendors.value.push({title: v.name, value: k})
       }
       // updateTargets()
-    }).catch((_ignore) => {})
+    }).catch((_ignore) => {
+    })
   }
 })
 
@@ -95,13 +96,17 @@ watch(() => store.target, (v, _oldValue) => {
 </script>
 
 <template>
-  <VCardTitle>Hardware Selection</VCardTitle>
-  <VCardSubtitle>Choose the vendor specific hardware that you are flashing, if the hardware is not in the list then the hardware is unsupported.</VCardSubtitle>
-  <br>
-  <VSelect :items="versions" v-model="store.version" density="comfortable" label="Firmware Version"/>
-  <VSelect :items="vendors" v-model="store.vendor" density="comfortable" label="Hardware Vendor"
-           :disabled="!store.version"/>
-  <VSelect :items="radios" v-model="store.radio" density="comfortable" label="Radio Frequency"
-           :disabled="!store.vendor"/>
-  <VAutocomplete :items="targets" v-model="store.target" density="comfortable" label="Hardware Target"/>
+  <VContainer max-width="600px">
+    <VCardTitle>Hardware Selection</VCardTitle>
+    <VCardText>Choose the vendor specific hardware that you are flashing, if the hardware is not in the list then the
+      hardware is unsupported.
+    </VCardText>
+    <br>
+    <VSelect :items="versions" v-model="store.version" density="comfortable" label="Firmware Version"/>
+    <VSelect :items="vendors" v-model="store.vendor" density="comfortable" label="Hardware Vendor"
+             :disabled="!store.version"/>
+    <VSelect :items="radios" v-model="store.radio" density="comfortable" label="Radio Frequency"
+             :disabled="!store.vendor"/>
+    <VAutocomplete :items="targets" v-model="store.target" density="comfortable" label="Hardware Target"/>
+  </VContainer>
 </template>

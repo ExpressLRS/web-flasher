@@ -54,8 +54,7 @@ async function closeDevice() {
   if (device != null) {
     try {
       await device.close()
-    }
-    catch (error) {
+    } catch (error) {
     }
   }
   device = null
@@ -139,47 +138,50 @@ async function flash() {
 </script>
 
 <template>
-  <VCardTitle>Flash Firmware File(s)</VCardTitle>
-  <VCardSubtitle>The firmware file(s) have been configured for your <b>{{ store.target?.config?.product_name }}</b> with
-    the specified options.
-  </VCardSubtitle>
-  <br>
+  <VContainer max-width="600px">
+    <VCardTitle>Flash Firmware File(s)</VCardTitle>
+    <VCardText>The firmware file(s) have been configured for your <b>{{ store.target?.config?.product_name }}</b> with
+      the specified options.
+    </VCardText>
+    <br>
 
-  <VStepperVertical v-model="step" :hide-actions="true" flat>
-    <VStepperVerticalItem title="Connect" value="1" :hide-actions="true" :complete="step > 1"
-                          :color="step > 1 ? 'green' : 'blue'">
-      <VBtn @click="connect" color="primary">Connect</VBtn>
-    </VStepperVerticalItem>
-    <VStepperVerticalItem title="Connecting" value="2" :hide-actions="true" :complete="step > 2"
-                          :color="step > 2 ? 'green' : 'blue'">
-      <template v-for="line in log">
-        <VLabel>{{ line }}</VLabel>
-        <br/>
-      </template>
-      <VBtn v-if="enableFlash && !failed" @click="flash" color="primary">Flash</VBtn>
-      <VBtn v-if="enableFlash && failed" @click="flash" color="amber">Flash Anyway</VBtn>
-      <VBtn v-if="failed" @click="reset" color="red">Reset</VBtn>
-    </VStepperVerticalItem>
-    <VStepperVerticalItem title="Flashing" value="3" :hide-actions="true" :complete="flashComplete"
-                          :color="flashComplete ? 'green' : (failed ? 'red' : 'blue')">
-      <VLabel>Flashing file {{ progressText }}</VLabel>
-      <VSpacer></VSpacer>
-      <VProgressCircular :model-value="progress" :rotate="360" :size="100" :width="15" :color="flashComplete ? 'green' : (failed ? 'red' : 'blue')">
-        <template v-slot:default> {{ progress }} %</template>
-      </VProgressCircular>
-      <VSpacer></VSpacer>
-      <br>
-      <VBtn v-if="flashComplete" @click="reset" color="primary">Flash Another</VBtn>
-      <div v-if="failed">
-      <VLabel>Flash failed</VLabel>
-      </div>
-      <VBtn v-if="failed" @click="reset" color="red">Reset</VBtn>
-    </VStepperVerticalItem>
-  </VStepperVertical>
+    <VStepperVertical v-model="step" :hide-actions="true" flat>
+      <VStepperVerticalItem title="Connect" value="1" :hide-actions="true" :complete="step > 1"
+                            :color="step > 1 ? 'green' : 'blue'">
+        <VBtn @click="connect" color="primary">Connect</VBtn>
+      </VStepperVerticalItem>
+      <VStepperVerticalItem title="Connecting" value="2" :hide-actions="true" :complete="step > 2"
+                            :color="step > 2 ? 'green' : 'blue'">
+        <template v-for="line in log">
+          <VLabel>{{ line }}</VLabel>
+          <br/>
+        </template>
+        <VBtn v-if="enableFlash && !failed" @click="flash" color="primary">Flash</VBtn>
+        <VBtn v-if="enableFlash && failed" @click="flash" color="amber">Flash Anyway</VBtn>
+        <VBtn v-if="failed" @click="reset" color="red">Reset</VBtn>
+      </VStepperVerticalItem>
+      <VStepperVerticalItem title="Flashing" value="3" :hide-actions="true" :complete="flashComplete"
+                            :color="flashComplete ? 'green' : (failed ? 'red' : 'blue')">
+        <VLabel>Flashing file {{ progressText }}</VLabel>
+        <VSpacer></VSpacer>
+        <VProgressCircular :model-value="progress" :rotate="360" :size="100" :width="15"
+                           :color="flashComplete ? 'green' : (failed ? 'red' : 'blue')">
+          <template v-slot:default> {{ progress }} %</template>
+        </VProgressCircular>
+        <VSpacer></VSpacer>
+        <br>
+        <VBtn v-if="flashComplete" @click="reset" color="primary">Flash Another</VBtn>
+        <div v-if="failed">
+          <VLabel>Flash failed</VLabel>
+        </div>
+        <VBtn v-if="failed" @click="reset" color="red">Reset</VBtn>
+      </VStepperVerticalItem>
+    </VStepperVertical>
 
-  <VSnackbar v-model="noDevice" vertical>
-    <div class="text-subtitle-1 pb-2">No Device Selected</div>
+    <VSnackbar v-model="noDevice" vertical>
+      <div class="text-subtitle-1 pb-2">No Device Selected</div>
 
-    <p>A serial device must be selected to perform flashing.</p>
-  </VSnackbar>
+      <p>A serial device must be selected to perform flashing.</p>
+    </VSnackbar>
+  </VContainer>
 </template>

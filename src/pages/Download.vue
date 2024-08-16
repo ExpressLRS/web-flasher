@@ -49,16 +49,20 @@ async function downloadFirmware() {
 </script>
 
 <template>
-  <VCardTitle>Download Firmware File(s)</VCardTitle>
-  <VCardSubtitle>The firmware file(s) have been configured for your <b>{{ store.target?.config?.product_name }}</b> with
-    the specified options.
-  </VCardSubtitle>
-  <VCardText v-if="store.target.config.platform === 'esp8285'">
-    The firmware file <b>firmware.bin.gz</b> should be flashed as-as, do NOT decompress or unzip the file or you <i>will</i> receive an error.
-  </VCardText>
-  <VCardText v-else-if="store.target.config.upload_methods.includes('zip')">
-    The firmware files are contained in the <b>firmware.zip</b> file and should be extracted before being uploaded to the device for flashing.
-  </VCardText>
-  <br>
-  <VBtn color="primary" @click="downloadFirmware()">Download</VBtn>
+  <VContainer max-width="600px">
+    <VCardTitle>Download Firmware File(s)</VCardTitle>
+    <VCardText>The firmware file(s) have been configured for your <b>{{ store.target?.config?.product_name }}</b> with
+      the specified options.
+    </VCardText>
+    <VCardText v-if="store.target.config.platform === 'esp8285'">
+      The firmware file <b>firmware.bin.gz</b> should be flashed as-as, do NOT decompress or unzip the file or you <i>will</i>
+      receive an error.
+    </VCardText>
+    <VCardText v-else-if="store.target.config.upload_methods.includes('zip')">
+      The firmware files are contained in the <b>firmware.zip</b> file and should be extracted before being uploaded to
+      the device for flashing.
+    </VCardText>
+    <br>
+    <VBtn color="primary" @click="downloadFirmware()">Download</VBtn>
+  </VContainer>
 </template>
