@@ -4,7 +4,7 @@ import {store} from "../js/state.js";
 import BindPhraseInput from "../components/BindPhraseInput.vue";
 import WiFiSettingsInput from "../components/WiFiSettingsInput.vue";
 import FlashMethodSelect from "../components/FlashMethodSelect.vue";
-import {watch, watchEffect} from "vue";
+import {watchEffect} from "vue";
 
 watchEffect(() => {
   if (store.targetType === 'txbp') {

@@ -12,18 +12,46 @@ import BackpackOptions from "./pages/BackpackOptions.vue";
 import Download from "./pages/Download.vue";
 import SerialFlash from "./pages/SerialFlash.vue";
 
-function stepNext() {
-  store.currentStep = 2;
+function stepPrev() {
+  if (store.currentStep === 1) {
+    store.targetType = null
+    store.vendor = null
+    store.radio = null
+    store.target = null
+    store.options = {
+      uid: null,
+      region: 'FCC',
+      domain: 1,
+      ssid: null,
+      password: null,
+      wifiOnInternal: 60,
+      tx: {
+        telemetryInterval: 240,
+        uartInverted: true,
+        fanMinRuntime: 30,
+        higherPower: false,
+        melodyType: 3,
+        melodyTune: null,
+      },
+      rx: {
+        uartBaud: 420000,
+        lockOnFirstConnect: true,
+        r9mmMiniSBUS: false,
+        fanMinRuntime: 30,
+      },
+      flashMethod: null,
+    }
+  } else {
+    store.currentStep--
+  }
 }
 
 function disableNext() {
   if (store.currentStep === 2) {
     return !store.target ? "next" : false
-  }
-  else if (store.currentStep === 3) {
+  } else if (store.currentStep === 3) {
     return !store.options.flashMethod ? "next" : false
-  }
-  else if (store.currentStep === 4) {
+  } else if (store.currentStep === 4) {
     return "next"
   }
   return false
@@ -54,28 +82,28 @@ function disableNext() {
         </div>
       </VAppBar>
       <VMain>
-        <VContainer max-width="1000px">
-          <VStepper v-model="store.currentStep" :items="['Firmware', 'Hardware', 'Options', 'Flashing']" hideActions>
+        <VContainer max-width="1200px" v-if="!store.targetType">
+          <FirmwareSelect/>
+        </VContainer>
+        <VContainer max-width="1000px" v-if="store.targetType">
+          <VStepper v-model="store.currentStep" :items="['Hardware', 'Options', 'Flashing']" hideActions>
             <template v-slot:item.1>
-              <FirmwareSelect @on-click="stepNext()"/>
-            </template>
-            <template v-slot:item.2>
               <MainHardwareSelect v-if="store.firmware==='firmware'"/>
               <VRXHardwareSelect vendor-label="Transmitter Module" v-if="store.targetType==='txbp'"/>
               <VRXHardwareSelect vendor-label="VRx Type" v-if="store.targetType==='vrx'"/>
               <VRXHardwareSelect vendor-label="Antenna Tracker Type" v-if="store.targetType==='aat'"/>
               <VRXHardwareSelect vendor-label="Timer Type" v-if="store.targetType==='timer'"/>
             </template>
-            <template v-slot:item.3>
+            <template v-slot:item.2>
               <TransmitterOptions v-if="store.targetType==='tx'"/>
               <ReceiverOptions v-else-if="store.targetType==='rx'"/>
-              <BackpackOptions v-else />
+              <BackpackOptions v-else/>
             </template>
-            <template v-slot:item.4>
+            <template v-slot:item.3>
               <Download v-if="store.options.flashMethod==='download'"/>
               <SerialFlash v-else/>
             </template>
-            <VStepperActions v-if="store.currentStep!==1" :disabled="disableNext()" @click:prev="store.currentStep--" @click:next="store.currentStep++" />
+            <VStepperActions :disabled="disableNext" @click:prev="stepPrev" @click:next="store.currentStep++"/>
           </VStepper>
         </VContainer>
       </VMain>
@@ -91,6 +119,7 @@ function disableNext() {
   font-weight: 900;
   line-height: 100%;
 }
+
 .elrs-background {
   color: rgba(255, 255, 255, 0.75);
   background-color: #4686a0;
@@ -99,6 +128,7 @@ function disableNext() {
   background-position: top left, center center, center center;
   background-size: auto, cover, cover;
 }
+
 .v-stepper-window {
   padding: 24px;
   margin: 0 !important;
