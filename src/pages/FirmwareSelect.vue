@@ -13,6 +13,9 @@ function setFirmware(firmware, targetType) {
 }
 
 watch(() => store.targetType, () => {
+  store.vendor = null
+  store.radio = null
+  store.target = null
   store.options = {
     uid: null,
     region: 'FCC',
@@ -66,8 +69,7 @@ watch(() => store.targetType, () => {
       <HoverCard min-height="100%" @click="setFirmware('backpack', 'txbp')"
                  image="backpack_723137.png" hover-image="backpack_723278.png"
                  title="Transmitter Module"
-                 text="Built in to most transmitters, this allows you to switch your goggles to the same frequency as
-                 your VTx, or for wireless head-tracking or wireless connection to Mission Planner for MAVLink craft."/>
+                 text="Built in to most transmitters, it communicates with the other backpacks or via WiFi to a computer running Mission Planner (or other) for MAVLink craft."/>
     </VCol>
     <VCol md="3">
       <HoverCard min-height="100%" @click="setFirmware('backpack', 'vrx')"

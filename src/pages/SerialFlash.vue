@@ -144,11 +144,11 @@ async function flash() {
     </VCardText>
 
     <VStepperVertical v-model="step" :hide-actions="true" flat>
-      <VStepperVerticalItem title="Connect" value="1" :hide-actions="true" :complete="step > 1"
+      <VStepperVerticalItem title="Connect to serial UART" value="1" :hide-actions="true" :complete="step > 1"
                             :color="step > 1 ? 'green' : 'blue'">
         <VBtn @click="connect" color="primary">Connect</VBtn>
       </VStepperVerticalItem>
-      <VStepperVerticalItem title="Connecting" value="2" :hide-actions="true" :complete="step > 2"
+      <VStepperVerticalItem title="Enter flashing mode" value="2" :hide-actions="true" :complete="step > 2"
                             :color="step > 2 ? 'green' : (failed ? 'red' : 'blue')">
         <template v-for="line in log">
           <VLabel>{{ line }}</VLabel>
