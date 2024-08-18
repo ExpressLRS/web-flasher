@@ -19,7 +19,6 @@ export class STLink {
     }
 
     info(msg) {
-        this.log('[INFO] ' + msg)
     }
 
     error(msg) {
@@ -50,13 +49,11 @@ export class STLink {
         if (percent > 100) {
             percent = 100
         }
-        this.info(`${this._msg}: ${percent}%`)
-        this.progressCallback(1, percent, 100)
+        this.progressCallback(this.fileNumber, percent, 100, this._msg)
     }
 
     bargraph_done() {
-        this.info(`${this._msg}: complete`)
-        this.progressCallback(1, 100, 100)
+        this.progressCallback(this.fileNumber, 100, 100)
     }
 
     update_debugger_info(stlink, device) {
@@ -69,9 +66,8 @@ export class STLink {
 
     update_target_status(status, target = null) {
         if (target !== null) {
-            this.log('target type: ' + target.type)
             const fields = [
-                ['type', 'Type', ''],
+                ['type', 'MCU Type', ''],
                 ['core', 'Core', ''],
                 ['dev_id', 'Device ID', ''],
                 ['flash_size', 'Flash Size', 'KiB'],
@@ -135,11 +131,8 @@ export class STLink {
         this.device = null
     }
 
-    connect = async (config, firmwareUrl, options, handler) => {
+    connect = async (config, handler) => {
         this.config = config
-        this.firmwareUrl = firmwareUrl
-        this.options = options
-
         if (this.stlink !== null) {
             await this.stlink.detach()
             this.on_disconnect()
@@ -161,52 +154,28 @@ export class STLink {
         }
         if (this.stlink !== null) {
             await this.on_successful_attach(this.stlink, this.device)
-            return 'ST-Link/' + this.stlink._stlink.ver_str
         }
-        throw new Error('not connected')
     }
-
-    checkStatus = (response) => {
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status} - ${response.statusText}`)
-        }
-        return response
-    }
-
-    fetch_file = async (file, transform = (e) => e) => {
-        const response = await fetch(file)
-        const blob = await this.checkStatus(response).blob()
-        const binary = await new Promise((resolve, _reject) => {
-            const reader = new FileReader()
-            reader.onload = function found() {
-                resolve(reader.result)
-            }
-            reader.readAsArrayBuffer(blob)
-        })
-        return transform(binary)
-    }
-
 
     // PK pass in bootloader binary if we want to flash that!
-    flash = async (binary, flashBootloader, progressCallback) => {
+    flash = async (binary, bootloader, progressCallback) => {
         this.progressCallback = progressCallback
         if (this.stlink !== null && this.stlink.connected) {
-            if (flashBootloader) {
+            this.fileNumber = 0
+            if (bootloader) {
                 this.log('Flash bootloader')
-                this.log('================')
-                const data = await this.fetch_file('firmware/' + document.getElementById('version').value + '/bootloader/' + this.config.stlink.bootloader)
                 try {
                     await this.stlink.halt()
-                    await this.stlink.flash(this.target.flash_start, data)
+                    await this.stlink.flash(this.target.flash_start, bootloader)
                 } catch (err) {
                     this.error(err)
                     throw err
                 }
+                this.fileNumber++
             }
 
             const addr = parseInt(this.config.stlink.offset, 16)
             this.log('Flash ExpressLRS')
-            this.log('================')
             try {
                 await this.stlink.halt()
                 await this.stlink.flash(this.target.flash_start + addr, binary[0].data)
@@ -215,5 +184,10 @@ export class STLink {
                 throw err
             }
         }
+    }
+
+    close = async () => {
+        this.stlink.detach()
+        this.stlink = null
     }
 }

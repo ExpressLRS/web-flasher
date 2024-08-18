@@ -2,9 +2,22 @@
 import {ref, watchPostEffect} from "vue";
 import {resetState, store} from "../js/state.js";
 import {generateFirmware} from "../js/firmware.js";
-import {XmodemFlasher} from "../js/xmodem.js";
-import {ESPFlasher} from "../js/espflasher.js";
-import {MismatchError} from "../js/error.js";
+import {STLink} from "../js/stlink.js";
+
+let term = {
+  write: (e) => {
+    if (newline) {
+      log.value.push(e)
+    } else {
+      log.value[log.value.length - 1] = log.value[log.value.length - 1] + e
+    }
+    newline = false
+  },
+  writeln: (e) => {
+    log.value.push(e)
+    newline = true
+  }
+}
 
 watchPostEffect(async (onCleanup) => {
   onCleanup(closeDevice)
@@ -44,7 +57,6 @@ let log = ref([])
 let newline = false
 
 let noDevice = ref(false)
-let flasher;
 let device = null;
 
 let progress = ref(0)
@@ -68,53 +80,21 @@ async function closeDevice() {
 
 async function connect() {
   try {
-    device = await navigator.serial.requestPort()
-    device.ondisconnect = async (_p, _e) => {
-      console.log("disconnected")
+    if (device) await closeDevice()
+    device = new STLink(term)
+    await device.connect(store.target.config, async () => {
       await closeDevice()
-    }
-  } catch {
-    await closeDevice()
+    })
+  } catch(e) {
+    console.log(e)
+    term.writeln('Failed to connect to device, restart device and try again')
+    failed.value = true
     noDevice.value = true
+    return
   }
 
-  if (device) {
-    step.value++
-    const method = store.options.flashMethod
-    let term = {
-      write: (e) => {
-        if (newline) {
-          log.value.push(e)
-        } else {
-          log.value[log.value.length - 1] = log.value[log.value.length - 1] + e
-        }
-        newline = false
-      },
-      writeln: (e) => {
-        log.value.push(e)
-        newline = true
-      }
-    }
-
-    if (store.target.config.platform === 'stm32') {
-      flasher = new XmodemFlasher(device, files.deviceType, method, files.config, files.options, files.firmwareUrl, term)
-    } else {
-      flasher = new ESPFlasher(device, files.deviceType, method, files.config, files.options, files.firmwareUrl, term)
-    }
-    try {
-      await flasher.connect()
-      enableFlash.value = true
-    } catch (e) {
-      if (e instanceof MismatchError) {
-        term.writeln('Target mismatch, flashing cancelled')
-        failed.value = true
-        enableFlash.value = true
-      } else {
-        term.writeln('Failed to connect to device, restart device and try again')
-        failed.value = true
-      }
-    }
-  }
+  step.value++
+  enableFlash.value = true
 }
 
 function reset() {
@@ -125,13 +105,11 @@ function reset() {
 async function flash() {
   step.value++
   try {
-    await flasher.flash(files.firmwareFiles, false, (fileIndex, written, total) => {
-      progressText.value = (fileIndex + 1) + ' of ' + (files.firmwareFiles.length)
+    await device.flash(files.firmwareFiles, undefined, (fileIndex, written, total, msg) => {
+      progressText.value = (fileIndex + 1) + ' of ' + (files.firmwareFiles.length) + ' (' + msg + ')'
       progress.value = Math.round(written / total * 100)
     })
-    if (device != null) {
-      await device.close()
-    }
+    await device.close()
     device = null
     flashComplete.value = true
     step.value++

@@ -11,6 +11,7 @@ import BackpackOptions from "./pages/BackpackOptions.vue";
 
 import Download from "./pages/Download.vue";
 import SerialFlash from "./pages/SerialFlash.vue";
+import STLinkFlash from "./pages/STLinkFlash.vue";
 
 function stepPrev() {
   if (store.currentStep === 1) {
@@ -75,6 +76,7 @@ function disableNext() {
             </template>
             <template v-slot:item.3>
               <Download v-if="store.options.flashMethod==='download'"/>
+              <STLinkFlash v-if="store.options.flashMethod==='stlink'"/>
               <SerialFlash v-else/>
             </template>
             <VStepperActions :disabled="disableNext()" @click:prev="stepPrev" @click:next="store.currentStep++"/>

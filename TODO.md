@@ -1,4 +1,4 @@
-- [ ] Implement ST-Link flashing
+- [x] Implement ST-Link flashing
 - [ ] Advanced Options
     - [ ] RX as TX
     - [ ] Flashing branches
