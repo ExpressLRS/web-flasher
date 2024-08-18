@@ -34,10 +34,12 @@ async function buildFirmware() {
   files.deviceType = deviceType
   files.radioType = radioType
   files.txType = txType
+  fullErase.value = false
 }
 
 let step = ref(1)
 let enableFlash = ref(false)
+let fullErase = ref(false)
 let flashComplete = ref(false)
 let failed = ref(false)
 let log = ref([])
@@ -125,7 +127,8 @@ function reset() {
 async function flash() {
   step.value++
   try {
-    await flasher.flash(files.firmwareFiles, false, (fileIndex, written, total) => {
+    progressText.value = ''
+    await flasher.flash(files.firmwareFiles, fullErase.value, (fileIndex, written, total) => {
       progressText.value = (fileIndex + 1) + ' of ' + (files.firmwareFiles.length)
       progress.value = Math.round(written / total * 100)
     })
@@ -159,15 +162,30 @@ async function flash() {
           <VLabel>{{ line }}</VLabel>
           <br/>
         </template>
-        <VBtn v-if="enableFlash && !failed" @click="flash" color="primary">Flash</VBtn>
-        <VBtn v-if="enableFlash && failed" @click="flash" color="amber">Flash Anyway</VBtn>
-        <VBtn v-if="failed" @click="closeDevice" color="red">Try Again</VBtn>
+        <VContainer v-if="failed || enableFlash">
+          <br/>
+          <VRow v-if="enableFlash">
+            <VCheckbox v-model="fullErase" label="Full chip erase" />
+          </VRow>
+          <VRow>
+            <VCol v-if="enableFlash && !failed">
+              <VBtn @click="flash" color="primary">Flash</VBtn>
+            </VCol>
+            <VCol v-if="enableFlash && failed" >
+              <VBtn @click="flash" color="amber">Flash Anyway</VBtn>
+            </VCol>
+            <VCol v-if="failed">
+              <VBtn @click="closeDevice" color="red">Try Again</VBtn>
+            </VCol>
+          </VRow>
+        </VContainer>
       </VStepperVerticalItem>
       <VStepperVerticalItem title="Flashing" value="3" :hide-actions="true" :complete="flashComplete"
                             :color="flashComplete ? 'green' : (failed ? 'red' : 'blue')">
         <VRow>
           <VCol class="d-flex align-center flex-column flex-grow-0 flex-shrink-0">
-            <VLabel>Flashing file {{ progressText }}</VLabel>
+            <VLabel v-if="progressText===''">Erasing flash, please wait...</VLabel>
+            <VLabel v-else>Flashing file {{ progressText }}</VLabel>
             <br>
             <VProgressCircular :model-value="progress" :rotate="360" :size="100" :width="15"
                                :color="flashComplete ? 'green' : (failed ? 'red' : 'blue')">
@@ -182,7 +200,7 @@ async function flash() {
         </VRow>
       </VStepperVerticalItem>
       <VStepperVerticalItem title="Done" value="4" :hide-actions="true" :complete="flashComplete"
-                             :color="flashComplete ? 'green' : (failed ? 'red' : 'blue')">
+                            :color="flashComplete ? 'green' : (failed ? 'red' : 'blue')">
         <VContainer>
           <VRow>
             <VCol>

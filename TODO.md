@@ -1,4 +1,5 @@
 - [x] Implement ST-Link flashing
+- [x] Full chip-erase before flashing
 - [ ] Advanced Options
     - [ ] RX as TX
     - [ ] Flashing branches
