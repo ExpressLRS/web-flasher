@@ -47,11 +47,11 @@ function stepPrev() {
 }
 
 function disableNext() {
-  if (store.currentStep === 2) {
+  if (store.currentStep === 1) {
     return !store.target ? "next" : false
-  } else if (store.currentStep === 3) {
+  } else if (store.currentStep === 2) {
     return !store.options.flashMethod ? "next" : false
-  } else if (store.currentStep === 4) {
+  } else if (store.currentStep === 3) {
     return "next"
   }
   return false
@@ -103,7 +103,7 @@ function disableNext() {
               <Download v-if="store.options.flashMethod==='download'"/>
               <SerialFlash v-else/>
             </template>
-            <VStepperActions :disabled="disableNext" @click:prev="stepPrev" @click:next="store.currentStep++"/>
+            <VStepperActions :disabled="disableNext()" @click:prev="stepPrev" @click:next="store.currentStep++"/>
           </VStepper>
         </VContainer>
       </VMain>

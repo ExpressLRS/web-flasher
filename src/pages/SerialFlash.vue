@@ -8,7 +8,7 @@ import {MismatchError} from "../js/error.js";
 
 watchPostEffect((onCleanup) => {
   onCleanup(closeDevice)
-  if (store.currentStep === 4) {
+  if (store.currentStep === 3) {
     buildFirmware()
   }
 })

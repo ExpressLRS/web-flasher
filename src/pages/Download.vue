@@ -16,7 +16,7 @@ const files = {
 }
 
 async function buildFirmware() {
-  if (store.currentStep === 4) {
+  if (store.currentStep === 3) {
     const [binary, {config, firmwareUrl, options}] = await generateFirmware()
 
     files.firmwareFiles = binary
