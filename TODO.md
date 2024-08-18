@@ -1,6 +1,8 @@
-- [ ] Check ST-Link flashing
+- [ ] Implement ST-Link flashing
 - [ ] Advanced Options
     - [ ] RX as TX
-    - [ ] flashing branches
+    - [ ] Flashing branches
     - [ ] Hide options other than bind-phrase & wifi settings
 - [ ] WiFi flashing
+- [x] (4) Flash Done
+  - [x] With the buttons [Flash Another] [Back to Start] 

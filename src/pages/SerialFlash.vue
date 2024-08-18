@@ -1,15 +1,16 @@
 <script setup>
 import {ref, watchPostEffect} from "vue";
-import {store} from "../js/state.js";
+import {resetState, store} from "../js/state.js";
 import {generateFirmware} from "../js/firmware.js";
 import {XmodemFlasher} from "../js/xmodem.js";
 import {ESPFlasher} from "../js/espflasher.js";
 import {MismatchError} from "../js/error.js";
 
-watchPostEffect((onCleanup) => {
+watchPostEffect(async (onCleanup) => {
   onCleanup(closeDevice)
   if (store.currentStep === 3) {
-    buildFirmware()
+    await buildFirmware()
+    await connect()
   }
 })
 
@@ -65,8 +66,6 @@ async function closeDevice() {
 }
 
 async function connect() {
-  step.value++
-
   try {
     device = await navigator.serial.requestPort()
     device.ondisconnect = async (_p, _e) => {
@@ -78,44 +77,48 @@ async function connect() {
     noDevice.value = true
   }
 
-  const method = store.options.flashMethod
-  let term = {
-    write: (e) => {
-      if (newline) {
+  if (device) {
+    step.value++
+    const method = store.options.flashMethod
+    let term = {
+      write: (e) => {
+        if (newline) {
+          log.value.push(e)
+        } else {
+          log.value[log.value.length - 1] = log.value[log.value.length - 1] + e
+        }
+        newline = false
+      },
+      writeln: (e) => {
         log.value.push(e)
-      } else {
-        log.value[log.value.length - 1] = log.value[log.value.length - 1] + e
+        newline = true
       }
-      newline = false
-    },
-    writeln: (e) => {
-      log.value.push(e)
-      newline = true
     }
-  }
 
-  if (store.target.config.platform === 'stm32') {
-    flasher = new XmodemFlasher(device, files.deviceType, method, files.config, files.options, files.firmwareUrl, term)
-  } else {
-    flasher = new ESPFlasher(device, files.deviceType, method, files.config, files.options, files.firmwareUrl, term)
-  }
-  try {
-    await flasher.connect()
-    enableFlash.value = true
-  } catch (e) {
-    if (e instanceof MismatchError) {
-      term.writeln('Target mismatch, flashing cancelled')
-      failed.value = true
-      enableFlash.value = true
+    if (store.target.config.platform === 'stm32') {
+      flasher = new XmodemFlasher(device, files.deviceType, method, files.config, files.options, files.firmwareUrl, term)
     } else {
-      term.writeln('Failed to connect to device, restart device and try again')
-      failed.value = true
+      flasher = new ESPFlasher(device, files.deviceType, method, files.config, files.options, files.firmwareUrl, term)
+    }
+    try {
+      await flasher.connect()
+      enableFlash.value = true
+    } catch (e) {
+      if (e instanceof MismatchError) {
+        term.writeln('Target mismatch, flashing cancelled')
+        failed.value = true
+        enableFlash.value = true
+      } else {
+        term.writeln('Failed to connect to device, restart device and try again')
+        failed.value = true
+      }
     }
   }
 }
 
 function reset() {
   closeDevice()
+  resetState()
 }
 
 async function flash() {
@@ -130,6 +133,7 @@ async function flash() {
     }
     device = null
     flashComplete.value = true
+    step.value++
   } catch (e) {
     failed.value = true
   }
@@ -156,7 +160,7 @@ async function flash() {
         </template>
         <VBtn v-if="enableFlash && !failed" @click="flash" color="primary">Flash</VBtn>
         <VBtn v-if="enableFlash && failed" @click="flash" color="amber">Flash Anyway</VBtn>
-        <VBtn v-if="failed" @click="reset" color="red">Reset</VBtn>
+        <VBtn v-if="failed" @click="closeDevice" color="red">Try Again</VBtn>
       </VStepperVerticalItem>
       <VStepperVerticalItem title="Flashing" value="3" :hide-actions="true" :complete="flashComplete"
                             :color="flashComplete ? 'green' : (failed ? 'red' : 'blue')">
@@ -167,15 +171,26 @@ async function flash() {
                                :color="flashComplete ? 'green' : (failed ? 'red' : 'blue')">
               <template v-slot:default> {{ progress }} %</template>
             </VProgressCircular>
-            <br>
-            <VBtn v-if="flashComplete" @click="reset" color="primary">Flash Another</VBtn>
             <div v-if="failed">
               <VLabel>Flash failed</VLabel>
             </div>
-            <VBtn v-if="failed" @click="reset" color="red">Reset</VBtn>
+            <VBtn v-if="failed" @click="closeDevice" color="red">Try Again</VBtn>
           </VCol>
           <VCol cols="1" class="flex-grow-1 flex-shrink-0"/>
         </VRow>
+      </VStepperVerticalItem>
+      <VStepperVerticalItem title="Done" value="4" :hide-actions="true" :complete="flashComplete"
+                             :color="flashComplete ? 'green' : (failed ? 'red' : 'blue')">
+        <VContainer>
+          <VRow>
+            <VCol>
+              <VBtn v-if="flashComplete" @click="closeDevice" color="primary">Flash Another</VBtn>
+            </VCol>
+            <VCol>
+              <VBtn v-if="flashComplete" @click="reset" color="secondary">Back to Start</VBtn>
+            </VCol>
+          </VRow>
+        </VContainer>
       </VStepperVerticalItem>
     </VStepperVertical>
 

@@ -11,8 +11,9 @@ let uid = ref('Bind Phrase')
 function generateUID() {
   if (bindPhrase.value === '') uid.value = 'Bind Phrase'
   else {
-    model.value = uidBytesFromText(bindPhrase.value)
-    uid.value = 'UID: ' + model.value
+    let val = uidBytesFromText(bindPhrase.value)
+    model.value = val
+    uid.value = 'UID: ' + val
   }
 }
 </script>
