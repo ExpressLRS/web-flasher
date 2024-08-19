@@ -14,7 +14,7 @@ let targets = ref([]);
 
 watchEffect(() => {
   hardware = null
-  fetch(`/assets/${store.firmware}/index.json`).then(r => r.json()).then(r => {
+  fetch(`./assets/${store.firmware}/index.json`).then(r => r.json()).then(r => {
     firmware = r
     store.version = null
     versions.value = []
@@ -30,7 +30,7 @@ watchEffect(() => {
 
 function updateVRXType() {
   if (store.firmware && store.version && store.targetType) {
-    fetch(`/assets/${store.firmware}/${store.version}/hardware/targets.json`).then(r => r.json()).then(r => {
+    fetch(`./assets/${store.firmware}/${store.version}/hardware/targets.json`).then(r => r.json()).then(r => {
       hardware = r
       store.vendor = null
       vendors.value = []

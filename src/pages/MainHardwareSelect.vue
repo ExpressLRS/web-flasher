@@ -14,7 +14,7 @@ let targets = ref([]);
 
 watchPostEffect(() => {
   hardware.value = null
-  fetch(`/assets/${store.firmware}/index.json`).then(r => r.json()).then(r => {
+  fetch(`./assets/${store.firmware}/index.json`).then(r => r.json()).then(r => {
     firmware = r
     store.version = null
     versions.value = []
@@ -29,7 +29,7 @@ watchPostEffect(() => {
 
 watchPostEffect(() => {
   if (store.firmware && store.version && store.targetType) {
-    fetch(`/assets/${store.firmware}/${store.version}/hardware/targets.json`).then(r => r.json()).then(r => {
+    fetch(`./assets/${store.firmware}/${store.version}/hardware/targets.json`).then(r => r.json()).then(r => {
       hardware.value = r
       store.vendor = null
       vendors.value = []

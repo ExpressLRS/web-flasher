@@ -18,7 +18,7 @@ const getSettings = async (deviceType) => {
     }
     let firmwareUrl
     if (store.firmware === 'firmware') {
-        firmwareUrl = `/assets/firmware/${store.version}/${store.options.region}/${store.target.config.firmware}/firmware.bin`
+        firmwareUrl = `./assets/firmware/${store.version}/${store.options.region}/${store.target.config.firmware}/firmware.bin`
         if (deviceType === 'RX') {// && !_('rx-as-tx').checked) {
             options['rcvr-uart-baud'] = store.options.rx.uartBaud
             options['lock-on-first-connection'] = store.options.rx.lockOnFirstConnect
@@ -48,7 +48,7 @@ const getSettings = async (deviceType) => {
         }
     } else {
         options['product-name'] = store.target.config.product_name
-        firmwareUrl = `/assets/backpack/${store.version}/${store.target.config.firmware}/firmware.bin`
+        firmwareUrl = `./assets/backpack/${store.version}/${store.target.config.firmware}/firmware.bin`
     }
     let config = store.target.config
     return {config, firmwareUrl, options}
@@ -63,7 +63,7 @@ export async function generateFirmware() {
         radioType = store.radio.endsWith('_900') ? 'sx127x' : (store.radio.endsWith('_2400') ? 'sx128x' : 'lr1121')
         txType = undefined //_('rx-as-tx').checked ? _('connection').value : undefined // 'internal'/'external'
     }
-    const folder = `/assets/${store.firmware}/${store.version}`
+    const folder = `./assets/${store.firmware}/${store.version}`
     const {config, firmwareUrl, options} = await getSettings(deviceType)
     const firmwareFiles = await Configure.download(folder, deviceType, txType, radioType, config, firmwareUrl, options)
     return [
