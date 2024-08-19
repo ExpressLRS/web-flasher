@@ -3,7 +3,7 @@ name: GitHub Pages
 on:
   push:
     branches:
-      - master  # Set a branch to deploy
+      - vue-rewrite  # Set a branch to deploy
   pull_request:
 
   # Allows you to run this workflow manually from the Actions tab
@@ -25,26 +25,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build
-        run: npm install && npm run dist
       - name: Get supported target version artifacts
         run: |
-            cd dist
-            bash ../get_artifacts.sh
+            bash get_artifacts.sh
             GITHASH=`git rev-parse --short HEAD`
             sed -i~ "s/@GITHASH@/$GITHASH/" index.html
+      - name: Build
+        run: npm install && npm run build
       - name: Setup Pages
-        if: ${{ github.ref == 'refs/heads/master' }}
         uses: actions/configure-pages@v5
       - name: Configure page artifact
-        if: ${{ github.ref == 'refs/heads/master' }}
         run: mv dist _site
       - name: Upload artifact
-        if: ${{ github.ref == 'refs/heads/master' }}
         uses: actions/upload-pages-artifact@v3
 
   deploy:
-    if: ${{ github.ref == 'refs/heads/master' }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
