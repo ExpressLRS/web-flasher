@@ -76,7 +76,7 @@ function disableNext() {
             </template>
             <template v-slot:item.3>
               <Download v-if="store.options.flashMethod==='download'"/>
-              <STLinkFlash v-if="store.options.flashMethod==='stlink'"/>
+              <STLinkFlash v-else-if="store.options.flashMethod==='stlink'"/>
               <SerialFlash v-else/>
             </template>
             <VStepperActions :disabled="disableNext()" @click:prev="stepPrev" @click:next="store.currentStep++"/>
