@@ -1,11 +1,10 @@
 <script setup>
-import {ref, watch, watchPostEffect} from 'vue';
+import {onMounted, ref, watch, watchPostEffect} from 'vue';
 import {store} from '../js/state';
 import {compareSemanticVersions} from '../js/version';
 
-const showRCs = false;
-
-let firmware;
+let firmware = ref(null);
+let flashBranch = ref(false);
 let hardware = ref(null);
 let versions = ref([]);
 let vendors = ref([]);
@@ -13,22 +12,37 @@ let radios = ref([]);
 let targets = ref([]);
 
 watchPostEffect(() => {
-  hardware.value = null
   fetch(`./assets/${store.firmware}/index.json`).then(r => r.json()).then(r => {
-    firmware = r
-    store.version = null
-    versions.value = []
-    Object.keys(firmware.tags).sort(compareSemanticVersions).reverse().forEach((key) => {
-      if (key.indexOf('-') === -1 || showRCs) {
-        versions.value.push({title: key, value: firmware.tags[key]})
-        if (!store.version) store.version = firmware.tags[key]
-      }
-    })
+    firmware.value = r
   })
 })
 
+function updateVersions() {
+  if (firmware.value) {
+    hardware.value = null
+    store.version = null
+    versions.value = []
+    if (flashBranch.value) {
+      Object.entries(firmware.value.branches).sort(([a,_a], [b, _b]) => a.localeCompare(b)).forEach(([key, value]) => {
+        versions.value.push({title: key, value: value})
+        if (!store.version) store.version = value
+      })
+
+    } else {
+      Object.keys(firmware.value.tags).sort(compareSemanticVersions).reverse().forEach((key) => {
+        if (key.indexOf('-') === -1 || flashBranch.value) {
+          versions.value.push({title: key, value: firmware.value.tags[key]})
+          if (!store.version) store.version = firmware.value.tags[key]
+        }
+      })
+    }
+  }
+}
+watch(() => firmware.value, updateVersions)
+watch(() => flashBranch.value, updateVersions)
+
 watchPostEffect(() => {
-  if (store.firmware && store.version && store.targetType) {
+  if (store.version) {
     fetch(`./assets/${store.firmware}/${store.version}/hardware/targets.json`).then(r => r.json()).then(r => {
       hardware.value = r
       store.vendor = null
@@ -93,9 +107,17 @@ watch(() => store.target, (v, _oldValue) => {
     store.radio = v.radio
   }
 })
+
+function flashType() {
+  return flashBranch.value ? 'Branches' : 'Releases'
+}
 </script>
 
 <template>
+  <VRow justify="end">
+    <VSwitch v-model="flashBranch" :label="flashType()" color="secondary"/>
+  </VRow>
+
   <VContainer max-width="600px">
     <VCardTitle>Hardware Selection</VCardTitle>
     <VCardText>Choose the vendor specific hardware that you are flashing, if the hardware is not in the list then the
