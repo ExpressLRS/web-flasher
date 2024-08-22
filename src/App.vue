@@ -57,31 +57,33 @@ function disableNext() {
         </div>
       </VAppBar>
       <VMain>
-        <VContainer max-width="1200px" v-if="!store.targetType">
-          <FirmwareSelect/>
-        </VContainer>
-        <VContainer max-width="1000px" v-if="store.targetType">
-          <VStepper v-model="store.currentStep" :items="['Hardware', 'Options', 'Flashing']" hideActions>
-            <template v-slot:item.1>
-              <MainHardwareSelect v-if="store.firmware==='firmware'"/>
-              <VRXHardwareSelect vendor-label="Transmitter Module" v-if="store.targetType==='txbp'"/>
-              <VRXHardwareSelect vendor-label="VRx Type" v-if="store.targetType==='vrx'"/>
-              <VRXHardwareSelect vendor-label="Antenna Tracker Type" v-if="store.targetType==='aat'"/>
-              <VRXHardwareSelect vendor-label="Timer Type" v-if="store.targetType==='timer'"/>
-            </template>
-            <template v-slot:item.2>
-              <TransmitterOptions v-if="store.targetType==='tx'"/>
-              <ReceiverOptions v-else-if="store.targetType==='rx'"/>
-              <BackpackOptions v-else/>
-            </template>
-            <template v-slot:item.3>
-              <Download v-if="store.options.flashMethod==='download'"/>
-              <STLinkFlash v-else-if="store.options.flashMethod==='stlink'"/>
-              <SerialFlash v-else/>
-            </template>
-            <VStepperActions :disabled="disableNext()" @click:prev="stepPrev" @click:next="store.currentStep++"/>
-          </VStepper>
-        </VContainer>
+        <VFadeTransition mode="out-in" >
+          <VContainer max-width="1200px" v-if="!store.targetType">
+            <FirmwareSelect/>
+          </VContainer>
+          <VContainer max-width="1000px" v-else>
+            <VStepper v-model="store.currentStep" :items="['Hardware', 'Options', 'Flashing']" hideActions>
+              <template v-slot:item.1>
+                <MainHardwareSelect v-if="store.firmware==='firmware'"/>
+                <VRXHardwareSelect vendor-label="Transmitter Module" v-if="store.targetType==='txbp'"/>
+                <VRXHardwareSelect vendor-label="VRx Type" v-if="store.targetType==='vrx'"/>
+                <VRXHardwareSelect vendor-label="Antenna Tracker Type" v-if="store.targetType==='aat'"/>
+                <VRXHardwareSelect vendor-label="Timer Type" v-if="store.targetType==='timer'"/>
+              </template>
+              <template v-slot:item.2>
+                <TransmitterOptions v-if="store.targetType==='tx'"/>
+                <ReceiverOptions v-else-if="store.targetType==='rx'"/>
+                <BackpackOptions v-else/>
+              </template>
+              <template v-slot:item.3>
+                <Download v-if="store.options.flashMethod==='download'"/>
+                <STLinkFlash v-else-if="store.options.flashMethod==='stlink'"/>
+                <SerialFlash v-else/>
+              </template>
+              <VStepperActions :disabled="disableNext()" @click:prev="stepPrev" @click:next="store.currentStep++"/>
+            </VStepper>
+          </VContainer>
+        </VFadeTransition>
       </VMain>
     </VLayout>
   </VApp>
