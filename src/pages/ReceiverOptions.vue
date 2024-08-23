@@ -1,12 +1,14 @@
 <script setup>
-import {hasFeature, store} from "../js/state.js";
+import {store} from "../js/state.js";
 
 import BindPhraseInput from "../components/BindPhraseInput.vue";
 import RFSelect from "../components/RFSelect.vue";
 import WiFiSettingsInput from "../components/WiFiSettingsInput.vue";
 import FlashMethodSelect from "../components/FlashMethodSelect.vue";
 import WiFiAutoOn from "../components/WiFiAutoOn.vue";
-import FanRuntime from "../components/FanRuntime.vue";
+import RXasTX from "../components/RXasTX.vue";
+import RXOptions from "../components/RXOptions.vue";
+import TXOptions from "../components/TXOptions.vue";
 </script>
 
 <template>
@@ -26,10 +28,9 @@ import FanRuntime from "../components/FanRuntime.vue";
         <VExpansionPanel title="Advanced Settings">
           <VExpansionPanelText>
             <WiFiAutoOn v-model="store.options.wifiOnInternal"/>
-            <VTextField v-model="store.options.rx.uartBaud" label='UART baud rate'/>
-            <VCheckbox v-model="store.options.rx.lockOnFirstConnect" label='Lock on first connection'/>
-            <VCheckbox v-model="store.options.rx.r9mmMiniSBUS" label='Use SBUS Pins as UART' v-if="hasFeature('sbus-uart')"/>
-            <FanRuntime v-model="store.options.tx.fanMinRuntime" />
+            <RXasTX v-model:enabled="store.options.rx.rxAsTx" v-model:type="store.options.rx.rxAsTxType"/>
+            <RXOptions v-if="!store.options.rx.rxAsTx"/>
+            <TXOptions v-else/>
           </VExpansionPanelText>
         </VExpansionPanel>
       </VExpansionPanels>

@@ -19,7 +19,7 @@ const getSettings = async (deviceType) => {
     let firmwareUrl
     if (store.firmware === 'firmware') {
         firmwareUrl = `./assets/firmware/${store.version}/${store.options.region}/${store.target.config.firmware}/firmware.bin`
-        if (deviceType === 'RX') {// && !_('rx-as-tx').checked) {
+        if (deviceType === 'RX' && !store.options.rx.rxAsTx) {
             options['rcvr-uart-baud'] = store.options.rx.uartBaud
             options['lock-on-first-connection'] = store.options.rx.lockOnFirstConnect
         } else {
@@ -61,7 +61,9 @@ export async function generateFirmware() {
     if (store.firmware === 'firmware') {
         deviceType = store.targetType === 'tx' ? 'TX' : 'RX'
         radioType = store.radio.endsWith('_900') ? 'sx127x' : (store.radio.endsWith('_2400') ? 'sx128x' : 'lr1121')
-        txType = undefined //_('rx-as-tx').checked ? _('connection').value : undefined // 'internal'/'external'
+        txType = undefined
+        if (store.targetType === 'rx' && store.options.rx.rxAsTx)
+            txType = store.options.rx.rxAsTxType ? 'external' : 'internal'
     }
     const folder = `./assets/${store.firmware}/${store.version}`
     const {config, firmwareUrl, options} = await getSettings(deviceType)

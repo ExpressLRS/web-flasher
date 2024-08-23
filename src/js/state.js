@@ -30,6 +30,8 @@ export const store = reactive({
             lockOnFirstConnect: true,
             r9mmMiniSBUS: false,
             fanMinRuntime: 30,
+            rxAsTx: false,
+            rxAsTxType: 0   // 0 = Internal (Full-duplex), 1 = External (Half-duplex)
         },
         flashMethod: null,
     }
