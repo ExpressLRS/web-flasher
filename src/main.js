@@ -11,7 +11,7 @@ import { VNumberInput } from 'vuetify/labs/VNumberInput'
 
 const vuetify = createVuetify({
     components: {...components, ...vertical, VNumberInput},
-    directives,
+    directives: directives,
     theme: {
         defaultTheme: 'light'
     },

@@ -19,5 +19,5 @@ function generateUID() {
 </script>
 
 <template>
-  <VTextField v-model="bindPhrase" :label="uid" :oninput="generateUID"/>
+  <VTextField v-model="bindPhrase" name="bind-phrase" :label="uid" :oninput="generateUID"/>
 </template>

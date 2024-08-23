@@ -14,25 +14,25 @@ import FanRuntime from "../components/FanRuntime.vue";
     <VCardTitle>Receiver Options</VCardTitle>
     <VCardText>Set the flashing options and method for your <b>{{ store.target?.config?.product_name }}</b></VCardText>
     <br>
-    <BindPhraseInput v-model="store.options.uid"/>
-    <RFSelect v-model:region="store.options.region" v-model:domain="store.options.domain" :radio="store.radio"/>
-    <WiFiSettingsInput v-model:ssid="store.options.ssid" v-model:password="store.options.password"
-                       v-if="store.target?.config?.platform!=='stm32'"/>
+    <VForm autocomplete="on" method="POST">
+      <BindPhraseInput v-model="store.options.uid"/>
+      <RFSelect v-model:region="store.options.region" v-model:domain="store.options.domain" :radio="store.radio"/>
+      <WiFiSettingsInput v-model:ssid="store.options.ssid" v-model:password="store.options.password"
+                         v-if="store.target?.config?.platform!=='stm32'"/>
 
-    <FlashMethodSelect v-model="store.options.flashMethod" :methods="store.target?.config?.upload_methods"/>
+      <FlashMethodSelect v-model="store.options.flashMethod" :methods="store.target?.config?.upload_methods"/>
 
-    <VExpansionPanels variant="popout">
-      <VExpansionPanel title="Advanced Settings">
-        <VExpansionPanelText>
-          <WiFiAutoOn v-model="store.options.wifiOnInternal"/>
-          <VTextField v-model="store.options.rx.uartBaud" label='UART baud rate'/>
-          <VCheckbox v-model="store.options.rx.lockOnFirstConnect" label='Lock on first connection'/>
-          <VCheckbox v-model="store.options.rx.r9mmMiniSBUS" label='Use SBUS Pins as UART' v-if="hasFeature('sbus-uart')"/>
-          <FanRuntime v-model="store.options.tx.fanMinRuntime" />
-        </VExpansionPanelText>
-      </VExpansionPanel>
-    </VExpansionPanels>
-
-
+      <VExpansionPanels variant="popout">
+        <VExpansionPanel title="Advanced Settings">
+          <VExpansionPanelText>
+            <WiFiAutoOn v-model="store.options.wifiOnInternal"/>
+            <VTextField v-model="store.options.rx.uartBaud" label='UART baud rate'/>
+            <VCheckbox v-model="store.options.rx.lockOnFirstConnect" label='Lock on first connection'/>
+            <VCheckbox v-model="store.options.rx.r9mmMiniSBUS" label='Use SBUS Pins as UART' v-if="hasFeature('sbus-uart')"/>
+            <FanRuntime v-model="store.options.tx.fanMinRuntime" />
+          </VExpansionPanelText>
+        </VExpansionPanel>
+      </VExpansionPanels>
+    </VForm>
   </VContainer>
 </template>

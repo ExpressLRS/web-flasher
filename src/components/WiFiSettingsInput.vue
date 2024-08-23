@@ -8,8 +8,8 @@ let showPassword = ref(false)
 </script>
 
 <template>
-  <VTextField v-model="ssid" label="WiFi SSID"/>
-  <VTextField v-model="password" label="WiFi Password"
+  <VTextField v-model="ssid" name="wifi-ssid" label="WiFi SSID"/>
+  <VTextField v-model="password" name="wifi-password" label="WiFi Password"
               :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
               :type="showPassword ? 'text' : 'password'"
               @click:append-inner="showPassword = !showPassword"/>
