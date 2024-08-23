@@ -24,14 +24,15 @@ function has(feature) {
     <FlashMethodSelect v-model="store.options.flashMethod" :methods="store.target?.config?.upload_methods"/>
 
     <VExpansionPanels variant="popout">
-      <VExpansionPanel title="Custom Settings">
+      <VExpansionPanel title="Advanced Settings">
         <VExpansionPanelText>
-          <VTextField v-model="store.options.wifiOnInternal" label='WiFi "auto on" interval (s)'
+          <VTextField v-model="store.options.wifiOnInternal" label='WiFi "auto on" interval' suffix="seconds"
                       v-if="store.target?.config?.platform!=='stm32'"/>
           <VTextField v-model="store.options.rx.uartBaud" label='UART baud rate'/>
           <VCheckbox v-model="store.options.rx.lockOnFirstConnect" label='Lock on first connection'/>
           <VCheckbox v-model="store.options.rx.r9mmMiniSBUS" label='Use SBUS Pins as UART' v-if="has('sbus-uart')"/>
-          <VTextField v-model="store.options.rx.fanMinRuntime" label='Minimum fan runtime (seconds)' v-if="has('fan')"/>
+          <VTextField v-model="store.options.rx.fanMinRuntime" label='Minimum fan runtime' suffix="seconds"
+                      v-if="has('fan')"/>
         </VExpansionPanelText>
       </VExpansionPanel>
     </VExpansionPanels>

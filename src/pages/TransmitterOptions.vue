@@ -24,16 +24,19 @@ function has(feature) {
     <FlashMethodSelect v-model="store.options.flashMethod" :methods="store.target?.config?.upload_methods"/>
 
     <VExpansionPanels variant="popout">
-      <VExpansionPanel title="Custom Settings">
+      <VExpansionPanel title="Advanced Settings">
         <VExpansionPanelText>
-          <VTextField v-model="store.options.wifiOnInternal" label='WiFi "auto on" interval (s)'
-                  v-if="store.target?.config?.platform!=='stm32'"/>
-          <VTextField v-model="store.options.tx.telemetryInterval" label='TLM report interval (milliseconds)'/>
+          <VTextField v-model="store.options.wifiOnInternal" label='WiFi "auto on" interval' suffix="seconds"
+                      v-if="store.target?.config?.platform!=='stm32'"/>
+          <VTextField v-model="store.options.tx.telemetryInterval" label='TLM report interval' suffix="milliseconds"/>
           <VCheckbox v-model="store.options.tx.uartInverted" label="UART inverted"
                      v-if="store.target?.config?.platform==='stm32'"/>
-          <VTextField v-model="store.options.tx.fanMinRuntime" label='Minimum fan runtime (seconds)' v-if="has('fan')"/>
-          <VCheckbox v-model="store.options.tx.higherPower" label='Unlock higher power' v-if="has('unlock-higher-power')"/>
-          <MelodyInput v-model:melody-type="store.options.tx.melodyType" v-model:melody-tune="store.options.tx.melodyTune"
+          <VTextField v-model="store.options.tx.fanMinRuntime" label='Minimum fan runtime' suffix="seconds"
+                      v-if="has('fan')"/>
+          <VCheckbox v-model="store.options.tx.higherPower" label='Unlock higher power'
+                     v-if="has('unlock-higher-power')"/>
+          <MelodyInput v-model:melody-type="store.options.tx.melodyType"
+                       v-model:melody-tune="store.options.tx.melodyTune"
                        v-if="has('buzzer')"/>
         </VExpansionPanelText>
       </VExpansionPanel>
