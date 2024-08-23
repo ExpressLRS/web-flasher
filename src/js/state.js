@@ -66,3 +66,7 @@ export function resetState() {
         flashMethod: null,
     }
 }
+
+export function hasFeature(feature) {
+    return store.target?.config?.features?.includes(feature)
+}

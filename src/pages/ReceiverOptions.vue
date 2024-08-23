@@ -1,14 +1,12 @@
 <script setup>
-import {store} from "../js/state.js";
+import {hasFeature, store} from "../js/state.js";
 
 import BindPhraseInput from "../components/BindPhraseInput.vue";
 import RFSelect from "../components/RFSelect.vue";
 import WiFiSettingsInput from "../components/WiFiSettingsInput.vue";
 import FlashMethodSelect from "../components/FlashMethodSelect.vue";
-
-function has(feature) {
-  return store.target?.config?.features?.includes(feature)
-}
+import WiFiAutoOn from "../components/WiFiAutoOn.vue";
+import FanRuntime from "../components/FanRuntime.vue";
 </script>
 
 <template>
@@ -26,13 +24,11 @@ function has(feature) {
     <VExpansionPanels variant="popout">
       <VExpansionPanel title="Advanced Settings">
         <VExpansionPanelText>
-          <VTextField v-model="store.options.wifiOnInternal" label='WiFi "auto on" interval' suffix="seconds"
-                      v-if="store.target?.config?.platform!=='stm32'"/>
+          <WiFiAutoOn v-model="store.options.wifiOnInternal"/>
           <VTextField v-model="store.options.rx.uartBaud" label='UART baud rate'/>
           <VCheckbox v-model="store.options.rx.lockOnFirstConnect" label='Lock on first connection'/>
-          <VCheckbox v-model="store.options.rx.r9mmMiniSBUS" label='Use SBUS Pins as UART' v-if="has('sbus-uart')"/>
-          <VTextField v-model="store.options.rx.fanMinRuntime" label='Minimum fan runtime' suffix="seconds"
-                      v-if="has('fan')"/>
+          <VCheckbox v-model="store.options.rx.r9mmMiniSBUS" label='Use SBUS Pins as UART' v-if="hasFeature('sbus-uart')"/>
+          <FanRuntime v-model="store.options.tx.fanMinRuntime" />
         </VExpansionPanelText>
       </VExpansionPanel>
     </VExpansionPanels>
