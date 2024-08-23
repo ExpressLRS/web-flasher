@@ -23,11 +23,14 @@ function updateVersions() {
     store.version = null
     versions.value = []
     if (flashBranch.value) {
-      Object.entries(firmware.value.branches).sort(([a,_a], [b, _b]) => a.localeCompare(b)).forEach(([key, value]) => {
+      Object.entries(firmware.value.branches).forEach(([key, value]) => {
         versions.value.push({title: key, value: value})
         if (!store.version) store.version = value
       })
-
+      Object.entries(firmware.value.tags).forEach(([key, value]) => {
+        if (key.indexOf('-') !== -1) versions.value.push({title: key, value: value})
+      })
+      versions.value = versions.value.sort((a,b) => a.title.localeCompare(b.title) )
     } else {
       Object.keys(firmware.value.tags).sort(compareSemanticVersions).reverse().forEach((key) => {
         if (key.indexOf('-') === -1 || flashBranch.value) {
