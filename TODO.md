@@ -1,9 +1,9 @@
 - [x] Implement ST-Link flashing
 - [x] Full chip-erase before flashing
-- [ ] Advanced Options
-    - [ ] RX as TX
-    - [ ] Flashing branches
-    - [ ] Hide options other than bind-phrase & wifi settings
-- [ ] WiFi flashing
+- [x] Advanced Options
+    - [x] RX as TX
+    - [x] Flashing branches
+    - [x] Hide options other than bind-phrase & wifi settings
 - [x] (4) Flash Done
-  - [x] With the buttons [Flash Another] [Back to Start] 
+  - [x] With the buttons [Flash Another] [Back to Start]
+- [ ] WiFi flashing
