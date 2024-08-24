@@ -72,22 +72,24 @@ const radioTitles = {
 
 watchPostEffect(() => {
   radios.value = []
+  let keepTarget = false
   if (store.vendor && hardware.value) {
-    let keepTarget = false
     Object.keys(hardware.value[store.vendor]).forEach(k => {
       if (k.startsWith(store.targetType)) radios.value.push({title: radioTitles[k], value: k})
       if (store.target && store.target.vendor === store.vendor && store.target.radio === k) keepTarget = true
     })
     if (radios.value.length === 1) {
       store.radio = radios.value[0].value
-    } else if (!keepTarget) store.radio = null
+      keepTarget = true
+    }
   }
+  if (!keepTarget) store.radio = null
 })
 
 watchPostEffect(() => {
   targets.value = []
+  let keepTarget = false
   if (store.version && hardware.value) {
-    let keepTarget = false
     for (const [vk, v] of Object.entries(hardware.value)) {
       if (vk === store.vendor || store.vendor === null) {
         for (const [rk, r] of Object.entries(v)) {
@@ -100,8 +102,8 @@ watchPostEffect(() => {
         }
       }
     }
-    if (!keepTarget) store.target = null
   }
+  if (!keepTarget) store.target = null
 })
 
 watch(() => store.target, (v, _oldValue) => {
