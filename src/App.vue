@@ -77,6 +77,7 @@ function disableNext() {
               </template>
               <template v-slot:item.3>
                 <Download v-if="store.options.flashMethod==='download'"/>
+                <Download v-else-if="store.options.flashMethod==='wifi'"/>
                 <STLinkFlash v-else-if="store.options.flashMethod==='stlink'"/>
                 <SerialFlash v-else/>
               </template>

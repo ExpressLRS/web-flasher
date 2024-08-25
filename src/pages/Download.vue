@@ -52,6 +52,10 @@ async function downloadFirmware() {
     <VCardTitle>Download Firmware File(s)</VCardTitle>
     <VCardText>The firmware file(s) have been configured for your <b>{{ store.target?.config?.product_name }}</b> with
       the specified options.
+      <br/>
+      To flash the firmware file to your device, put it into WiFi mode and connect to it via the browser
+      then upload the <b>firmware.bin{{ store.target.config.platform === 'esp8285' ? '.gz' : '' }}</b> file on the
+      <b>Update</b> tab.
     </VCardText>
     <VCardText v-if="store.target.config.platform === 'esp8285'">
       The firmware file <b>firmware.bin.gz</b> should be flashed as-as, do NOT decompress or unzip the file or you <i>will</i>
