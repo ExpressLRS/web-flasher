@@ -9,7 +9,10 @@ defineProps(['image', 'hoverImage', 'title', 'text'])
     <VCard v-bind="$attrs, props" :class="isHovering ? 'elevation-16' : undefined" variant="tonal">
       <VLabel/>
       <VLayout align-center>
-        <VImg :src="isHovering ? hoverImage : image" height="100px" width="100px"></VImg>
+        <VFadeTransition  mode="out-in" type="transition" duration="200">
+          <VImg :src="hoverImage" height="100px" width="100px" v-if="isHovering"/>
+          <VImg :src="image" height="100px" width="100px" v-else/>
+        </VFadeTransition>
       </VLayout>
       <VCardTitle>{{ title }}</VCardTitle>
       <VCardText>{{ text }}
