@@ -21,7 +21,8 @@ function setFirmware(firmware, targetType) {
       <HoverCard min-height="100%" @click="setFirmware('firmware', 'tx')"
                  image="remote-control_1287373.png" hover-image="remote-control_1287311.png"
                  title="Transmitter"
-                 text="Flash your external transmitter module, JR Bay (Micro) or Nano module; or an internal"/>
+                 text="Flash your external transmitter module, JR Bay (Micro) or Nano module; or an internal module
+                 built into your radio handset."/>
     </VCol>
     <VCol md="6">
       <HoverCard min-height="100%" @click="setFirmware('firmware', 'rx')"
@@ -39,7 +40,8 @@ function setFirmware(firmware, targetType) {
       <HoverCard min-height="100%" @click="setFirmware('backpack', 'txbp')"
                  image="backpack_723137.png" hover-image="backpack_723278.png"
                  title="Transmitter Module"
-                 text="Built in to most transmitters, it communicates with the other backpacks or via WiFi to a computer running Mission Planner (or other) for MAVLink craft."/>
+                 text="Built in to most transmitters, it communicates with the other backpacks or via WiFi to a computer
+                 running Mission Planner (or other) for MAVLink craft."/>
     </VCol>
     <VCol md="3">
       <HoverCard min-height="100%" @click="setFirmware('backpack', 'vrx')"
