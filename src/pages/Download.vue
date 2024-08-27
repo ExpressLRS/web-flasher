@@ -58,7 +58,7 @@ async function downloadFirmware() {
       <b>Update</b> tab.
     </VCardText>
     <VCardText v-if="store.target.config.platform === 'esp8285'">
-      The firmware file <b>firmware.bin.gz</b> should be flashed as-as, do NOT decompress or unzip the file or you <i>will</i>
+      The firmware file <b>firmware.bin.gz</b> should be flashed as-is, do NOT decompress or unzip the file or you <i>will</i>
       receive an error.
     </VCardText>
     <VCardText v-else-if="store.target.config.upload_methods.includes('zip')">

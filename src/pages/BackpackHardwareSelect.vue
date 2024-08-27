@@ -45,7 +45,7 @@ function updateVRXType() {
 
 watchEffect(() => {
   targets.value = []
-  if (store.version && hardware) {
+  if (store.version&& store.vendor && hardware) {
     let keepTarget = false
     for (const [vk, v] of Object.entries(hardware)) {
       if (v[store.targetType] && (vk === store.vendor || store.vendor === null)) {

@@ -1,10 +1,11 @@
 <script setup>
 import {store} from "../js/state.js";
+import {watchEffect} from "vue";
 
 import BindPhraseInput from "../components/BindPhraseInput.vue";
 import WiFiSettingsInput from "../components/WiFiSettingsInput.vue";
 import FlashMethodSelect from "../components/FlashMethodSelect.vue";
-import {watchEffect} from "vue";
+import WiFiAutoOn from "../components/WiFiAutoOn.vue";
 
 watchEffect(() => {
   if (store.targetType === 'txbp') {
@@ -28,8 +29,8 @@ watchEffect(() => {
     <br>
     <BindPhraseInput v-model="store.options.uid"/>
     <WiFiSettingsInput v-model:ssid="store.options.ssid" v-model:password="store.options.password"
-                       v-model:wifi-on-interval="store.options.wifiOnInternal"
                        v-if="store.target?.config?.platform!=='stm32'"/>
+    <WiFiAutoOn v-model="store.options.wifiOnInternal"/>
 
     <FlashMethodSelect v-model="store.options.flashMethod" :methods="store.target?.config?.upload_methods"/>
   </VContainer>
