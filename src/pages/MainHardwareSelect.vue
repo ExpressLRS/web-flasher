@@ -55,7 +55,6 @@ watchPostEffect(() => {
         Object.keys(v).forEach(type => hasTargets |= type.startsWith(store.targetType))
         if (hasTargets && v.name) vendors.value.push({title: v.name, value: k})
       }
-      // updateTargets()
     }).catch((_ignore) => {
     })
   }

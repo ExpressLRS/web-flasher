@@ -1,53 +1,70 @@
 <script setup>
-import {ref, watch, watchEffect} from 'vue';
+import {ref, watch, watchEffect, watchPostEffect} from 'vue';
 import {store} from '../js/state';
 import {compareSemanticVersions} from '../js/version';
 
 defineProps(['vendorLabel'])
-const showRCs = false;
 
-let firmware;
-let hardware;
+let firmware = ref(null);
+let flashBranch = ref(false);
+let hardware = ref(null);
 let versions = ref([]);
 let vendors = ref([]);
 let targets = ref([]);
 
-watchEffect(() => {
-  hardware = null
+watchPostEffect(() => {
   fetch(`./assets/${store.firmware}/index.json`).then(r => r.json()).then(r => {
-    firmware = r
-    store.version = null
-    versions.value = []
-    Object.keys(firmware.tags).sort(compareSemanticVersions).reverse().forEach((key) => {
-      if (key.indexOf('-') === -1 || showRCs) {
-        versions.value.push({title: key, value: firmware.tags[key]})
-        if (!store.version) store.version = firmware.tags[key]
-      }
-    })
-    updateVRXType()
+    firmware.value = r
   })
 })
 
-function updateVRXType() {
-  if (store.firmware && store.version && store.targetType) {
+function updateVersions() {
+  if (firmware.value) {
+    hardware.value = null
+    store.version = null
+    versions.value = []
+    if (flashBranch.value) {
+      Object.entries(firmware.value.branches).forEach(([key, value]) => {
+        versions.value.push({title: key, value: value})
+        if (!store.version) store.version = value
+      })
+      Object.entries(firmware.value.tags).forEach(([key, value]) => {
+        if (key.indexOf('-') !== -1) versions.value.push({title: key, value: value})
+      })
+      versions.value = versions.value.sort((a,b) => a.title.localeCompare(b.title) )
+    } else {
+      Object.keys(firmware.value.tags).sort(compareSemanticVersions).reverse().forEach((key) => {
+        if (key.indexOf('-') === -1 || flashBranch.value) {
+          versions.value.push({title: key, value: firmware.value.tags[key]})
+          if (!store.version) store.version = firmware.value.tags[key]
+        }
+      })
+    }
+  }
+}
+watch(() => firmware.value, updateVersions)
+watch(() => flashBranch.value, updateVersions)
+
+watchPostEffect(() => {
+  if (store.version) {
     fetch(`./assets/${store.firmware}/${store.version}/hardware/targets.json`).then(r => r.json()).then(r => {
-      hardware = r
+      hardware.value = r
       store.vendor = null
       vendors.value = []
-      for (const [k, v] of Object.entries(hardware)) {
+      for (const [k, v] of Object.entries(hardware.value)) {
         let hasTargets = v.hasOwnProperty(store.targetType);
         if (hasTargets && v.name) vendors.value.push({title: v.name, value: k})
       }
     }).catch((_ignore) => {
     })
   }
-}
+})
 
 watchEffect(() => {
   targets.value = []
-  if (store.version&& store.vendor && hardware) {
-    let keepTarget = false
-    for (const [vk, v] of Object.entries(hardware)) {
+  let keepTarget = false
+  if (store.vendor && hardware.value) {
+    for (const [vk, v] of Object.entries(hardware.value)) {
       if (v[store.targetType] && (vk === store.vendor || store.vendor === null)) {
         for (const [ck, c] of Object.entries(v[store.targetType])) {
           targets.value.push({title: c.product_name, value: {vendor: vk, target: ck, config: c}})
@@ -57,19 +74,29 @@ watchEffect(() => {
     }
     if (targets.value.length === 1) {
       store.target = targets.value[0].value
-    } else if (!keepTarget) store.target = null
+      keepTarget = true
+    }
   }
+  if (!keepTarget) store.target = null
 })
 
 watch(() => store.target, (v, _oldValue) => {
   if (v) {
     store.vendor = v.vendor
-    store.vendor_name = hardware[v.vendor].name
+    store.vendor_name = hardware.value[v.vendor].name
   }
 })
+
+function flashType() {
+  return flashBranch.value ? 'Branches' : 'Releases'
+}
 </script>
 
 <template>
+  <VRow justify="end">
+    <VSwitch v-model="flashBranch" :label="flashType()" color="secondary"/>
+  </VRow>
+
   <VContainer max-width="600px">
     <template v-if="store.targetType==='txbp'">
       <VCardTitle>Transmitter Hardware Selection</VCardTitle>
