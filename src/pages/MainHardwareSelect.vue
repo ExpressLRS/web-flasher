@@ -32,10 +32,12 @@ function updateVersions() {
       })
       versions.value = versions.value.sort((a,b) => a.title.localeCompare(b.title) )
     } else {
+      let first = true;
       Object.keys(firmware.value.tags).sort(compareSemanticVersions).reverse().forEach((key) => {
-        if (key.indexOf('-') === -1 || flashBranch.value) {
+        if (key.indexOf('-') === -1 || first) {
           versions.value.push({title: key, value: firmware.value.tags[key]})
-          if (!store.version) store.version = firmware.value.tags[key]
+          if (!store.version && key.indexOf('-') === -1) store.version = firmware.value.tags[key]
+          first = false
         }
       })
     }
