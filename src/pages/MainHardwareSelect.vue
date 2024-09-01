@@ -1,5 +1,5 @@
 <script setup>
-import {onMounted, ref, watch, watchPostEffect} from 'vue';
+import {ref, watch, watchPostEffect} from 'vue';
 import {store} from '../js/state';
 import {compareSemanticVersions} from '../js/version';
 

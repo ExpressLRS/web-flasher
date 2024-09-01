@@ -10,7 +10,7 @@ rm -rf firmware backpack
 mkdir -p firmware
 cd firmware
 curl -L -o index.json https://artifactory.expresslrs.org/ExpressLRS/index.json
-for HASH in `cat index.json | jq '.tags,.branches | values[]' | sed 's/"//g' | sort -r` ; do
+for HASH in `cat index.json | jq '.tags,.branches | values[]' | sed 's/"//g' | sort -ru` ; do
     curl -L -o firmware.zip "https://artifactory.expresslrs.org/ExpressLRS/$HASH/firmware.zip"
     mkdir $HASH
     cd $HASH
@@ -33,7 +33,7 @@ cd ../..
 mkdir -p backpack
 cd backpack
 curl -L -o index.json https://artifactory.expresslrs.org/Backpack/index.json
-for HASH in `cat index.json | jq '.tags,.branches | values[]' | sed 's/"//g' | sort -r` ; do
+for HASH in `cat index.json | jq '.tags,.branches | values[]' | sed 's/"//g' | sort -ru` ; do
     curl -L -o firmware.zip "https://artifactory.expresslrs.org/Backpack/$HASH/firmware.zip"
     mkdir $HASH
     cd $HASH
