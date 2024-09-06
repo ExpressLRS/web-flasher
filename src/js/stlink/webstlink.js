@@ -10,10 +10,7 @@
 
 import * as libstlink from './lib/package.js';
 import Mutex from './mutex.js';
-import {
-    hex_word as H32,
-    hex_string
-} from './lib/util.js';
+import {hex_string, hex_word as H32} from './lib/util.js';
 
 
 const CPUID_REG = 0xe000ed00;

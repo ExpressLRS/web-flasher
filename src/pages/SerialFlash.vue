@@ -165,13 +165,13 @@ async function flash() {
         <VContainer v-if="failed || enableFlash">
           <br/>
           <VRow v-if="enableFlash">
-            <VCheckbox v-model="fullErase" label="Full chip erase" />
+            <VCheckbox v-model="fullErase" label="Full chip erase"/>
           </VRow>
           <VRow>
             <VCol v-if="enableFlash && !failed">
               <VBtn @click="flash" color="primary">Flash</VBtn>
             </VCol>
-            <VCol v-if="enableFlash && failed" >
+            <VCol v-if="enableFlash && failed">
               <VBtn @click="flash" color="amber">Flash Anyway</VBtn>
             </VCol>
             <VCol v-if="failed">

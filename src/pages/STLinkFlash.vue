@@ -85,7 +85,7 @@ async function connect() {
     await device.connect(store.target.config, async () => {
       await closeDevice()
     })
-  } catch(e) {
+  } catch (e) {
     console.log(e)
     term.writeln('Failed to connect to device, restart device and try again')
     failed.value = true
@@ -160,7 +160,7 @@ async function flash() {
         </VRow>
       </VStepperVerticalItem>
       <VStepperVerticalItem title="Done" value="4" :hide-actions="true" :complete="flashComplete"
-                             :color="flashComplete ? 'green' : (failed ? 'red' : 'blue')">
+                            :color="flashComplete ? 'green' : (failed ? 'red' : 'blue')">
         <VContainer>
           <VRow>
             <VCol>

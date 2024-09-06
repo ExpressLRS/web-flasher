@@ -115,7 +115,7 @@ export class ESPFlasher {
             calculateMD5Hash: (image) => CryptoJS.MD5(CryptoJS.enc.Latin1.parse(image))
         })
             .then(_ => {
-                progress(fileArray.length-1, 100, 100)
+                progress(fileArray.length - 1, 100, 100)
                 if (this.config.platform.startsWith('esp32')) {
                     return loader.hardReset().catch(() => {
                     })

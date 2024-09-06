@@ -31,7 +31,7 @@ function updateVersions() {
       Object.entries(firmware.value.tags).forEach(([key, value]) => {
         if (key.indexOf('-') !== -1) versions.value.push({title: key, value: value})
       })
-      versions.value = versions.value.sort((a,b) => a.title.localeCompare(b.title) )
+      versions.value = versions.value.sort((a, b) => a.title.localeCompare(b.title))
     } else {
       Object.keys(firmware.value.tags).sort(compareSemanticVersions).reverse().forEach((key) => {
         if (key.indexOf('-') === -1 || flashBranch.value) {
@@ -42,6 +42,7 @@ function updateVersions() {
     }
   }
 }
+
 watch(() => firmware.value, updateVersions)
 watch(() => flashBranch.value, updateVersions)
 

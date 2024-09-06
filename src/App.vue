@@ -56,7 +56,7 @@ function disableNext() {
         </div>
       </VAppBar>
       <VMain>
-        <VFadeTransition mode="out-in" >
+        <VFadeTransition mode="out-in">
           <VContainer max-width="1000px" v-if="!store.targetType">
             <FirmwareSelect/>
           </VContainer>
@@ -98,9 +98,11 @@ function disableNext() {
 .header {
   background-color: red;
 }
+
 .v-app-bar {
   background: linear-gradient(45deg, #9dc66b 5%, #4fa49a 30%, #4361c2) !important;
 }
+
 .v-toolbar__content {
   justify-content: center;
 }
@@ -117,21 +119,25 @@ function disableNext() {
   line-height: normal;
   margin-bottom: 4rem;
 }
+
 .logoContainer {
   margin-bottom: 4.25rem;
   padding: 20px;
 }
+
 .header-main h1 {
   font-size: clamp(3rem, 5vw, 4rem);
   color: #fff;
-  font-weight:600;
+  font-weight: 600;
 }
+
 .header-main h2 {
   font-size: clamp(1.5rem, 2.9vw, 2.5rem);
   color: #fff;
   letter-spacing: 1.075rem;
   font-weight: 200;
 }
+
 @media (max-width: 640px) {
   .v-toolbar__content {
     justify-content: center;

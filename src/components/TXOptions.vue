@@ -9,7 +9,7 @@ import MelodyInput from "./MelodyInput.vue";
                 :step="10" :min="100" :max="1000"/>
   <VCheckbox v-model="store.options.tx.uartInverted" label="UART inverted"
              v-if="store.target?.config?.platform==='stm32'"/>
-  <FanRuntime v-model="store.options.tx.fanMinRuntime" />
+  <FanRuntime v-model="store.options.tx.fanMinRuntime"/>
   <VCheckbox v-model="store.options.tx.higherPower" label='Unlock higher power'
              v-if="hasFeature('unlock-higher-power')"/>
   <MelodyInput v-model:melody-type="store.options.tx.melodyType"

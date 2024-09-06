@@ -8,7 +8,7 @@
  *
  */
 
-import {Exception, Warning, UsbError} from './stlinkex.js';
+import {Exception, Warning} from './stlinkex.js';
 
 const STLINK_GET_VERSION = 0xf1;
 const STLINK_DEBUG_COMMAND = 0xf2;

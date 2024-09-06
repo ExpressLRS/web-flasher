@@ -81,6 +81,7 @@ function setFirmware(firmware, targetType) {
   font-weight: 600;
   color: #242527;
 }
+
 .v-card-subtitle {
   padding: 0;
   font-size: 1rem;

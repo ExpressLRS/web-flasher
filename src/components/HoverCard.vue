@@ -1,5 +1,5 @@
 <script setup>
-import {VHover, VCard, VCardTitle, VCardText, VLayout, VImg, VLabel} from 'vuetify/components'
+import {VCard, VCardText, VCardTitle, VHover} from 'vuetify/components'
 
 defineProps(['image', 'hoverImage', 'title', 'text'])
 </script>

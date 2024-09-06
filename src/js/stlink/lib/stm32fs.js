@@ -8,13 +8,9 @@
  *
  */
 
-import {Exception, Warning, UsbError} from './stlinkex.js';
+import {Exception} from './stlinkex.js';
 import {Stm32} from './stm32.js';
-import {
-    hex_word as H32,
-    async_sleep,
-    async_timeout
-} from './util.js';
+import {async_sleep, hex_word as H32} from './util.js';
 
 const FLASH_REG_BASE = 0x40023c00;
 const FLASH_KEYR_REG = FLASH_REG_BASE + 0x04;

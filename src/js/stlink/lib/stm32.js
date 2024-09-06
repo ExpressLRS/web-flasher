@@ -8,11 +8,8 @@
  *
  */
 
-import {Exception, Warning, UsbError} from './stlinkex.js';
-import {
-    hex_word as H32,
-    hex_octet as H8
-} from './util.js';
+import {Exception} from './stlinkex.js';
+import {hex_octet as H8, hex_word as H32} from './util.js';
 
 const REGISTERS = [
     'R0', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9',
@@ -166,7 +163,7 @@ class Stm32 {
             await this._stlink.set_mem8((addr + written_size), data.slice(written_size));
         }
         this._dbg.bargraph_done();
-        return;
+
     }
 
     fill_mem(addr, size, pattern) {

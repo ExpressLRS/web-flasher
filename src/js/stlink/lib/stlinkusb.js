@@ -9,10 +9,7 @@
  */
 
 import {Exception, UsbError} from './stlinkex.js';
-import {
-    hex_halfword as H16,
-    hex_octet_array
-} from './util.js';
+import {hex_halfword as H16, hex_octet_array} from './util.js';
 
 const STLINK_CMD_SIZE_V2 = 16;
 const DEV_TYPES = [
