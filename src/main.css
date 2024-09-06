@@ -1,0 +1,25 @@
+.containerMain {
+    z-index: 9999;
+    background-color: #fff;
+    padding: 40px;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.16);
+}
+.containerHeader {
+    margin-bottom: 40px;
+}
+.section {
+    margin-top: -80px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    text-align: center;
+}
+@media (max-width: 640px) {
+    .containerMain{
+        padding: 20px;
+    }
+    .section{
+        margin-top: -60px;
+    }
+}
