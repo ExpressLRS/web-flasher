@@ -13,6 +13,6 @@ let items = ref([
 </script>
 
 <template>
-  <VCheckbox v-model="enabled" label='Flash RX as TX'/>
+  <VCheckbox v-model="enabled" :label="'Flash RX as TX' + (store.target.config.platform.startsWith('esp32') ? '' : ' (full-duplex internal module only)')"/>
   <VSelect v-model="type" :items="items" v-if="store.target.config.platform.startsWith('esp32') && enabled"/>
 </template>
