@@ -22,14 +22,14 @@ function setFirmware(firmware, targetType) {
       <VRow>
         <VCol md="6">
           <HoverCard min-height="100%" @click="setFirmware('firmware', 'tx')"
-                     image="remote-control_1287373.png" hover-image="remote-control_1287311.png"
+                     image="transmitter_6275858.png" hover-image="transmitter_6276574.png"
                      title="Transmitter"
                      text="Flash your external transmitter module, JR Bay (Micro) or Nano module; or an internal module
                      built into your radio handset."/>
         </VCol>
         <VCol md="6">
           <HoverCard min-height="100%" @click="setFirmware('firmware', 'rx')"
-                     image="ear_6598299.png" hover-image="ear_6598275.png"
+                     image="reciever_6276002.png" hover-image="reciever_6276814.png"
                      title="Receiver"
                      text="Serial connected and PWM receivers alike may flashed here."/>
         </VCol>
