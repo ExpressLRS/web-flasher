@@ -49,7 +49,7 @@ defineProps(['image', 'hoverImage', 'title', 'text'])
 
 .default-card {
   border-radius: 0.5rem;
-  border: 1px solid #EFEFEF;
+  border: 1px solid #E8E8E8;
   background-color: #F0F0F0;
   transition: all ease-in 300ms;
   box-shadow: none;
@@ -59,6 +59,7 @@ defineProps(['image', 'hoverImage', 'title', 'text'])
 
 .hover-card {
   border-radius: 0.5rem;
+  border: 1px solid #E8E8E8;
   background-color: #F0F0F0;
   transform: scale(104%);
   transition: all ease-in 300ms;
