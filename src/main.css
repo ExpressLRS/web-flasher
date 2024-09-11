@@ -17,6 +17,8 @@
     flex-direction: column;
     gap: 40px;
     text-align: center;
+    position: relative;
+    z-index: 1200;
 }
 
 @media (max-width: 640px) {

@@ -56,12 +56,12 @@ function disableNext() {
         </div>
       </VAppBar>
       <VMain>
-        <VFadeTransition mode="out-in">
-          <VContainer max-width="1000px" v-if="!store.targetType">
-            <FirmwareSelect/>
-          </VContainer>
-          <VContainer max-width="1000px" v-else>
-            <div class="section">
+        <div class="section">
+          <VFadeTransition mode="out-in" >
+            <VContainer max-width="1000px" v-if="!store.targetType" style="display: grid; gap: 40px;">
+              <FirmwareSelect/>
+            </VContainer>
+            <VContainer max-width="1000px" v-else>
               <div class="containerMain">
 
                 <VStepper v-model="store.currentStep" :items="['Hardware', 'Options', 'Flashing']" hideActions>
@@ -86,9 +86,9 @@ function disableNext() {
                   <VStepperActions :disabled="disableNext()" @click:prev="stepPrev" @click:next="store.currentStep++"/>
                 </VStepper>
               </div>
-            </div>
-          </VContainer>
-        </VFadeTransition>
+            </VContainer>
+          </VFadeTransition>
+        </div>
       </VMain>
     </VLayout>
   </VApp>
