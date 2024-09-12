@@ -9,6 +9,7 @@
 
 .containerHeader {
     margin-bottom: 40px;
+    text-align: center;
 }
 
 .section {
@@ -16,7 +17,6 @@
     display: flex;
     flex-direction: column;
     gap: 40px;
-    text-align: center;
     position: relative;
     z-index: 1200;
 }
