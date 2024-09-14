@@ -49,7 +49,13 @@ watch(() => flashBranch.value, updateVersions)
 
 watchPostEffect(() => {
   if (store.version) {
-    fetch(`./assets/${store.firmware}/${store.version}/hardware/targets.json`).then(r => r.json()).then(r => {
+    // Check version to see if it's a branch or pre-release, and use latest hardware definitions
+    if (flashBranch.value || (store.version === versions.value[0].value && versions.value[0].title.indexOf('-') !== -1))
+      store.folder = `./assets/${store.firmware}`
+    else
+      store.folder = `./assets/${store.firmware}/${store.version}`
+
+    fetch(`./assets/${store.firmware}/hardware/targets.json`).then(r => r.json()).then(r => {
       hardware.value = r
       store.vendor = null
       vendors.value = []

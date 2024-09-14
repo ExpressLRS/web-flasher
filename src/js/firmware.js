@@ -65,9 +65,8 @@ export async function generateFirmware() {
         if (store.targetType === 'rx' && store.options.rx.rxAsTx)
             txType = store.options.rx.rxAsTxType ? 'external' : 'internal'
     }
-    const folder = `./assets/${store.firmware}/${store.version}`
     const {config, firmwareUrl, options} = await getSettings(deviceType)
-    const firmwareFiles = await Configure.download(folder, deviceType, txType, radioType, config, firmwareUrl, options)
+    const firmwareFiles = await Configure.download(store.folder, deviceType, txType, radioType, config, firmwareUrl, options)
     return [
         firmwareFiles,
         {config, firmwareUrl, options, deviceType, radioType, txType}

@@ -13,6 +13,7 @@ let vendors = ref([]);
 let targets = ref([]);
 
 watchPostEffect(() => {
+  store.folder = `./assets/${store.firmware}/${store.version}`
   fetch(`./assets/${store.firmware}/index.json`).then(r => r.json()).then(r => {
     firmware.value = r
   })

@@ -3,6 +3,7 @@ import {reactive} from 'vue'
 export const store = reactive({
     currentStep: 1,
     firmware: null,
+    folder: '',
     targetType: null,
     version: null,
     vendor: null,
@@ -40,6 +41,7 @@ export const store = reactive({
 export function resetState() {
     store.currentStep = 1
     store.firmware = null
+    store.folder = ''
     store.targetType = null
     store.vendor = null
     store.radio = null
