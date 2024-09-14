@@ -1,7 +1,16 @@
 <script setup>
 import {VCard, VCardText, VCardTitle, VHover} from 'vuetify/components'
+import {ref} from "vue";
 
 defineProps(['image', 'hoverImage', 'title', 'text'])
+
+let hovered = ref(false)
+function imageClass(isHovering) {
+  if (isHovering) {
+    hovered = true
+  }
+  return isHovering ? 'fadeInImage' : 'fadeOutImage'
+}
 </script>
 
 <template>
@@ -9,7 +18,7 @@ defineProps(['image', 'hoverImage', 'title', 'text'])
     <VCard v-bind="$attrs, props" :class="isHovering ? 'hover-card' : 'default-card'">
       <div class="parent">
         <img :src="image" height="100px" width="100px"/>
-        <img :src="hoverImage" height="100px" width="100px" :class="isHovering ? 'fadeInImage' : 'fadeOutImage'"/>
+        <img :src="hoverImage" height="100px" width="100px" :class="imageClass(isHovering)" :style="hovered ? 'display:block' : 'display:none'"/>
       </div>
       <VCardTitle>{{ title }}</VCardTitle>
       <VCardText>{{ text }}
