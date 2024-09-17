@@ -43,6 +43,7 @@ export function resetState() {
     store.firmware = null
     store.folder = ''
     store.targetType = null
+    store.version = null
     store.vendor = null
     store.radio = null
     store.target = null

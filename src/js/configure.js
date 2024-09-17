@@ -192,7 +192,7 @@ export class Configure {
         }
     }
 
-    static download = async (folder, deviceType, rxAsTxType, radioType, config, firmwareUrl, options) => {
+    static download = async (folder, version, deviceType, rxAsTxType, radioType, config, firmwareUrl, options) => {
         if (rxAsTxType) firmwareUrl = firmwareUrl.replace('_RX', '_TX')
         if (config.platform === 'stm32') {
             const entry = await this.#fetch_file(firmwareUrl, 0, (bin) => this.#configureSTM32(bin, deviceType, radioType, options))
@@ -205,8 +205,8 @@ export class Configure {
                 hardwareLayoutData = this.#bstrToUi8(JSON.stringify(config.custom_layout))
             } else if (config.layout_file) {
                 // get layout from version specific folder OR fall back to global folder
-                const hardwareLayoutFile = await this.#fetch_file(`${folder}/hardware/${deviceType}/${config.layout_file}`, 0)
-                    .catch(() => this.#fetch_file(`firmware/hardware/${deviceType}/${config.layout_file}`, 0))
+                const hardwareLayoutFile = await this.#fetch_file(`${folder}/${version}/hardware/${deviceType}/${config.layout_file}`, 0)
+                    .catch(() => this.#fetch_file(`${folder}/hardware/${deviceType}/${config.layout_file}`, 0))
                 let layout = JSON.parse(this.#ui8ToBstr(hardwareLayoutFile.data))
                 if (config.overlay) {
                     layout = {
@@ -237,8 +237,8 @@ export class Configure {
             let logoFile = {data: new Uint8Array(0), address: 0}
             if (config.logo_file) {
                 // get logo from version specific folder OR fall back to global folder
-                logoFile = await this.#fetch_file(`${folder}/hardware/logo/${config.logo_file}`, 0)
-                    .catch(() => this.#fetch_file(`firmware/hardware/logo/${config.logo_file}`, 0))
+                logoFile = await this.#fetch_file(`${folder}/${version}/hardware/logo/${config.logo_file}`, 0)
+                    .catch(() => this.#fetch_file(`${folder}/hardware/logo/${config.logo_file}`, 0))
             }
             files[files.length - 1].data = this.#appendArray(
                 files[files.length - 1].data,
