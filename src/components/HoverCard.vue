@@ -15,7 +15,7 @@ function imageClass(isHovering) {
 
 <template>
   <VHover v-slot:default="{ isHovering, props }">
-    <VCard v-bind="$attrs, props" :class="isHovering ? 'hover-card' : 'default-card'">
+    <VCard v-bind="$attrs, props" class='default-card' :class="{'hover-card' : isHovering}">
       <div class="parent">
         <img :src="image" height="100px" width="100px"/>
         <img :src="hoverImage" height="100px" width="100px" :class="imageClass(isHovering)" :style="hovered ? 'display:block' : 'display:none'"/>
@@ -38,7 +38,7 @@ function imageClass(isHovering) {
 }
 
 .fadeOutImage {
-  animation: fadeOut 1s forwards;
+  animation: fadeOut 600ms forwards;
   position: absolute;
 }
 
@@ -52,14 +52,14 @@ function imageClass(isHovering) {
 }
 
 .fadeInImage {
-  animation: fadeIn 1s forwards;
+  animation: fadeIn 600ms forwards;
   position: absolute;
 }
 
 .default-card {
   border-radius: 0.5rem;
   border: 1px solid #E8E8E8;
-  background-color: #F0F0F0;
+  background-color: #F8F8F8;
   transition: all ease-in 300ms;
   box-shadow: none;
   text-align: left;
@@ -67,14 +67,8 @@ function imageClass(isHovering) {
 }
 
 .hover-card {
-  border-radius: 0.5rem;
-  border: 1px solid #E8E8E8;
-  background-color: #F0F0F0;
   transform: scale(104%);
-  transition: all ease-in 300ms;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.16);
-  text-align: left;
-  padding: 0;
 }
 
 .v-card-title {
@@ -98,7 +92,7 @@ function imageClass(isHovering) {
 .parent {
   display: flex;
   justify-content: center;
-  background-color: #D7F4ED;
+  background-color: #F0F0F0;
   height: 140px;
   align-items: center;
 }

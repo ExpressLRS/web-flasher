@@ -119,8 +119,8 @@ async function connect() {
   }
 }
 
-function reset() {
-  closeDevice()
+async function reset() {
+  await closeDevice()
   resetState()
 }
 

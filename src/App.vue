@@ -58,10 +58,10 @@ function disableNext() {
       <VMain>
         <div class="section">
           <VFadeTransition mode="out-in" >
-            <VContainer max-width="1000px" v-if="!store.targetType" style="display: grid; gap: 40px;">
+            <VContainer max-width="1280px" v-if="!store.targetType" style="display: grid; gap: 40px;">
               <FirmwareSelect/>
             </VContainer>
-            <VContainer max-width="1000px" v-else>
+            <VContainer max-width="1280px" v-else>
               <div class="containerMain">
 
                 <VStepper v-model="store.currentStep" :items="['Hardware', 'Options', 'Flashing']" hideActions>
