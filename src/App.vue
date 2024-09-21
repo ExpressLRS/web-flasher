@@ -1,5 +1,4 @@
 <script setup>
-import {ref} from "vue";
 import {resetState, store} from './js/state';
 
 import FirmwareSelect from './pages/FirmwareSelect.vue';
@@ -13,9 +12,6 @@ import BackpackOptions from "./pages/BackpackOptions.vue";
 import Download from "./pages/Download.vue";
 import SerialFlash from "./pages/SerialFlash.vue";
 import STLinkFlash from "./pages/STLinkFlash.vue";
-
-let hasWebSerial = ref(navigator.serial ? true : false)
-let noWebSerial = ref(!hasWebSerial.value)
 
 function stepPrev() {
   if (store.currentStep === 1) {
@@ -60,7 +56,7 @@ function disableNext() {
         </div>
       </VAppBar>
       <VMain>
-        <div class="section" v-if="hasWebSerial">
+        <div class="section">
           <VFadeTransition mode="out-in" >
             <VContainer max-width="1280px" v-if="!store.targetType" style="display: grid; gap: 40px;">
               <FirmwareSelect/>
@@ -93,15 +89,6 @@ function disableNext() {
             </VContainer>
           </VFadeTransition>
         </div>
-        <VDialog width="auto" v-model="noWebSerial">
-          <VCard
-              max-width="400"
-              prepend-icon="mdi-error"
-              text="This application requires a Chromium based browser that has WebSerial support."
-              title="Browser Not Supported"
-          >
-          </VCard>
-        </VDialog>
       </VMain>
     </VLayout>
   </VApp>
