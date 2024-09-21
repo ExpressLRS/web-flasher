@@ -8,13 +8,9 @@
  *
  */
 
-import { Exception, Warning, UsbError } from './stlinkex.js';
-import { Stm32 } from './stm32.js';
-import {
-    hex_word as H32,
-    async_sleep,
-    async_timeout
-} from './util.js';
+import {Exception} from './stlinkex.js';
+import {Stm32} from './stm32.js';
+import {async_sleep, hex_word as H32} from './util.js';
 
 const FLASH_REG_BASE = 0x40023c00;
 const FLASH_KEYR_REG = FLASH_REG_BASE + 0x04;
@@ -231,13 +227,13 @@ class Flash {
         const end_time = (Date.now() + (wait_time * 1.5 * 1000));
         if (bargraph_msg) {
             this._dbg.bargraph_start(bargraph_msg, {
-                "value_min": Date.now()/1000.0,
-                "value_max": (Date.now()/1000.0 + wait_time)
+                "value_min": Date.now() / 1000.0,
+                "value_max": (Date.now() / 1000.0 + wait_time)
             });
         }
         while (Date.now() < end_time) {
             if (bargraph_msg) {
-                this._dbg.bargraph_update({"value": Date.now()/1000.0});
+                this._dbg.bargraph_update({"value": Date.now() / 1000.0});
             }
             let status = await this._stlink.get_debugreg32(FLASH_SR_REG);
             if (!(status & FLASH_SR_BUSY_BIT)) {
@@ -284,7 +280,7 @@ class Stm32FS extends Stm32 {
         await flash.lock();
     }
 
-    async flash_write(addr, data, { erase = false, verify = false, erase_sizes = null }) {
+    async flash_write(addr, data, {erase = false, verify = false, erase_sizes = null}) {
         let addr_str = (addr !== null) ? `0x${H32(addr)}` : 'None';
         this._dbg.debug(`Stm32FS.flash_write(${addr_str}, [data:${data.length}Bytes], erase=${erase}, verify=${verify}, erase_sizes=${erase_sizes})`);
         if (addr === null) {
@@ -337,4 +333,4 @@ class Stm32FS extends Stm32 {
     }
 }
 
-export { Stm32FS };
+export {Stm32FS};

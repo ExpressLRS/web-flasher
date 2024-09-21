@@ -8,10 +8,12 @@
  *
  */
 
-import { hex_octet } from './util.js';
+import {hex_octet} from './util.js';
 
-const Exception = class StlinkException extends Error {};
-const Warning = class StlinkWarning extends Error {};
+const Exception = class StlinkException extends Error {
+};
+const Warning = class StlinkWarning extends Error {
+};
 
 const UsbError = class StlinkUsbError extends Error {
     constructor(message, address, fatal = false) {
@@ -35,4 +37,4 @@ const UsbError = class StlinkUsbError extends Error {
     }
 };
 
-export { Exception, Warning, UsbError };
+export {Exception, Warning, UsbError};

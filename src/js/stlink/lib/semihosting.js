@@ -30,4 +30,4 @@ const opcodes = {
     SYS_TICKFREQ: 0x31,
 };
 
-export { opcodes };
+export {opcodes};

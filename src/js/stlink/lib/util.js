@@ -25,13 +25,13 @@ function hex_octet_array(arr) {
 }
 
 function async_sleep(seconds) {
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
         setTimeout(resolve, seconds * 1000);
     });
 }
 
 function async_timeout(seconds) {
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
         setTimeout(reject, seconds * 1000);
     });
 }

@@ -19,7 +19,7 @@ export default class Mutex {
 
         if (this.locked) {
             let promise = new Promise((resolve, reject) => {
-                this.queue.push({ "resolve": resolve, "reject": reject });
+                this.queue.push({"resolve": resolve, "reject": reject});
             });
             await promise;
         } else {
