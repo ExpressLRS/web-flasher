@@ -1,18 +1,16 @@
 import '@mdi/font/css/materialdesignicons.css'
 import 'vuetify/styles'
-import './main.css'
 
 import {createApp} from 'vue'
-import App from './App.vue'
 import {createVuetify} from 'vuetify'
-import * as components from 'vuetify/components'
-import * as directives from 'vuetify/directives'
 import * as vertical from 'vuetify/labs/VStepperVertical'
 import {VNumberInput} from 'vuetify/labs/VNumberInput'
 
+import './main.css'
+import App from './App.vue'
+
 const vuetify = createVuetify({
-    components: {...components, ...vertical, VNumberInput},
-    directives: directives,
+    components: {...vertical, VNumberInput},
     theme: {
         defaultTheme: 'light'
     },
