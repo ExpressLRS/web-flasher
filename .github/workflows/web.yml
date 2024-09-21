@@ -3,7 +3,7 @@ name: GitHub Pages
 on:
   push:
     branches:
-      - vue-rewrite  # Set a branch to deploy
+      - master  # Set a branch to deploy
   pull_request:
 
   # Allows you to run this workflow manually from the Actions tab
