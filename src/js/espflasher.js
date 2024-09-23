@@ -2,6 +2,7 @@ import {TransportEx} from './serialex.js'
 import {ESPLoader} from 'esptool-js'
 import {Passthrough} from './passthrough.js'
 import CryptoJS from 'crypto-js'
+import {WrongMCU} from "./error.js";
 
 export class ESPFlasher {
     constructor(device, type, method, config, options, firmwareUrl, term) {
@@ -89,8 +90,14 @@ export class ESPFlasher {
         await transport.disconnect()
 
         const chip = await this.esploader.main(mode)
-        console.log(`Settings done for :${chip}`)
-        return chip
+        if ((this.esploader.chip.CHIP_NAME === 'ESP8266' && this.config.platform !== 'esp8285') ||
+            (this.esploader.chip.CHIP_NAME === 'ESP32-C3' && this.config.platform !== 'esp32-c3') ||
+            (this.esploader.chip.CHIP_NAME === 'ESP32-S3' && this.config.platform !== 'esp32-s3') ||
+            (this.esploader.chip.CHIP_NAME === 'ESP32' && this.config.platform !== 'esp32')) {
+            throw new WrongMCU(`Wrong target selected, this device uses '${chip}' and the firmware is for '${this.config.platform}'`)
+        }
+        console.log(`Settings done for ${chip}`)
+        return this.esploader.chip.CHIP_NAME
     }
 
     flash = async (files, erase, progress) => {
