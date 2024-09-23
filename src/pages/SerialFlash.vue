@@ -4,7 +4,7 @@ import {resetState, store} from "../js/state.js";
 import {generateFirmware} from "../js/firmware.js";
 import {XmodemFlasher} from "../js/xmodem.js";
 import {ESPFlasher} from "../js/espflasher.js";
-import {MismatchError} from "../js/error.js";
+import {MismatchError, WrongMCU} from "../js/error.js";
 
 watchPostEffect(async (onCleanup) => {
   onCleanup(closeDevice)
@@ -111,6 +111,9 @@ async function connect() {
         term.writeln('Target mismatch, flashing cancelled')
         failed.value = true
         enableFlash.value = true
+      } else if (e instanceof WrongMCU) {
+        term.writeln(e.message)
+        failed.value = true
       } else {
         term.writeln('Failed to connect to device, restart device and try again')
         failed.value = true

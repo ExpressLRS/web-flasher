@@ -11,3 +11,6 @@ export class MismatchError extends Error {
 
 export class PassthroughError extends Error {
 }
+
+export class WrongMCU extends Error {
+}
