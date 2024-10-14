@@ -94,13 +94,16 @@ watchPostEffect(() => {
   targets.value = []
   let keepTarget = false
   if (store.version && hardware.value) {
+    const version = versions.value.find(x => x.value === store.version).title
     for (const [vk, v] of Object.entries(hardware.value)) {
       if (vk === store.vendor || store.vendor === null) {
         for (const [rk, r] of Object.entries(v)) {
           if (rk.startsWith(store.targetType) && (rk === store.radio || store.radio === null)) {
             for (const [ck, c] of Object.entries(r)) {
-              targets.value.push({title: c.product_name, value: {vendor: vk, radio: rk, target: ck, config: c}})
-              if (store.target && store.target.vendor === vk && store.target.radio === rk && store.target.target === ck) keepTarget = true
+              if (compareSemanticVersions(version, c.min_version) >= 0) {
+                targets.value.push({title: c.product_name, value: {vendor: vk, radio: rk, target: ck, config: c}})
+                if (store.target && store.target.vendor === vk && store.target.radio === rk && store.target.target === ck) keepTarget = true
+              }
             }
           }
         }

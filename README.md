@@ -20,7 +20,7 @@ npm run dev
 ```
 To build the distribution for stuffing on a web server
 ```
-npm run dist
+npm run build
 ```
 # Firmware
 To actually test the code you will need a firmware folder at the root of the project.
