@@ -1,3 +1,6 @@
+import {compareSemanticVersions} from "./version.js";
+import {store} from "./state.js";
+
 export class Configure {
     static #MAGIC = new Uint8Array([0xBE, 0xEF, 0xBA, 0xBE, 0xCA, 0xFE, 0xF0, 0x0D])
 
@@ -40,9 +43,11 @@ export class Configure {
         return pos
     }
 
-    static #patch_tx_params(binary, pos, options) {
+    static #patch_tx_params(binary, pos, options, version) {
         pos = this.#write32(binary, pos, options['tlm-report'])
-        pos = this.#write32(binary, pos, options['fan-runtime'])
+        if (compareSemanticVersions(store.version, '3.5') < 0) {
+            pos = this.#write32(binary, pos, options['fan-runtime'])
+        }
         let val = binary[pos]
         if (options['uart-inverted']) {
             val &= ~1
@@ -103,8 +108,16 @@ export class Configure {
         }
         pos += 7
 
+        if (compareSemanticVersions(store.version, '3.4') >= 0) {
+            pos = this.#write32(binary, pos, options['flash-discriminator'])
+        }
+
+        if (compareSemanticVersions(store.version, '3.5') >= 0) {
+            pos = this.#write32(binary, pos, options['fan-runtime'])
+        }
+
         if (deviceType === 'TX') { // TX target
-            pos = this.#patch_tx_params(binary, pos, options)
+            pos = this.#patch_tx_params(binary, pos, options, version)
             if (options.beeptype) { // Has a Buzzer
                 pos = this.#patch_buzzer(binary, pos, options)
             }
