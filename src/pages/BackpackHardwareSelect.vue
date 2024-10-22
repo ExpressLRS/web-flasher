@@ -57,6 +57,7 @@ watchPostEffect(() => {
         let hasTargets = v.hasOwnProperty(store.targetType);
         if (hasTargets && v.name) vendors.value.push({title: v.name, value: k})
       }
+      vendors.value.sort((a, b) => a.title.localeCompare(b.title))
     }).catch((_ignore) => {
     })
   }
@@ -74,6 +75,7 @@ watchEffect(() => {
         }
       }
     }
+    targets.value.sort((a, b) => a.title.localeCompare(b.title))
     if (targets.value.length === 1) {
       store.target = targets.value[0].value
       keepTarget = true

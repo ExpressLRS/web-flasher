@@ -60,6 +60,7 @@ watchPostEffect(() => {
         Object.keys(v).forEach(type => hasTargets |= type.startsWith(store.targetType))
         if (hasTargets && v.name) vendors.value.push({title: v.name, value: k})
       }
+      vendors.value.sort((a, b) => a.title.localeCompare(b.title))
     }).catch((_ignore) => {
     })
   }
@@ -110,6 +111,7 @@ watchPostEffect(() => {
       }
     }
   }
+  targets.value.sort((a, b) => a.title.localeCompare(b.title))
   if (!keepTarget) store.target = null
 })
 
