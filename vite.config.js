@@ -10,7 +10,6 @@ export default defineConfig({
     vue(),
     vuetify(),
     VitePWA({
-      registerType: 'autoUpdate',
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         runtimeCaching: [
@@ -51,7 +50,7 @@ export default defineConfig({
         name: 'ExpressLRS Web Flasher',
         short_name: 'ELRS Web Flasher',
         description: 'Web-hosted flasher for ExpressLRS version 3 firmware',
-        theme_color: '#5f8bf2',
+        theme_color: '#4a88ab',
         display_override: ['window-controls-overlay', 'standalone', 'browser'],
         icons: [
           {
