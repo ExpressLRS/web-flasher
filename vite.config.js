@@ -51,7 +51,7 @@ export default defineConfig({
         name: 'ExpressLRS Web Flasher',
         short_name: 'ELRS Web Flasher',
         description: 'Web-hosted flasher for ExpressLRS version 3 firmware',
-        theme_color: '#6a8e9c',
+        theme_color: '#5f8bf2',
         display_override: ['window-controls-overlay', 'standalone', 'browser'],
         icons: [
           {
