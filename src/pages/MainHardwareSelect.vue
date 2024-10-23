@@ -10,6 +10,7 @@ let versions = ref([]);
 let vendors = ref([]);
 let radios = ref([]);
 let targets = ref([]);
+let luaUrl = ref(null);
 
 watchPostEffect(() => {
   fetch(`./assets/${store.firmware}/index.json`).then(r => r.json()).then(r => {
@@ -113,6 +114,10 @@ watchPostEffect(() => {
   if (!keepTarget) store.target = null
 })
 
+watch(() => {
+  luaUrl = store.version ? `./assets/${store.firmware}/${store.version}/lua/elrsV3.lua` : null
+})
+
 watch(() => store.target, (v, _oldValue) => {
   if (v) {
     store.vendor = v.vendor
@@ -142,5 +147,8 @@ function flashType() {
     <VSelect :items="radios" v-model="store.radio" density="compact" label="Radio Frequency"
              :disabled="!store.vendor"/>
     <VAutocomplete :items="targets" v-model="store.target" density="compact" label="Hardware Target"/>
+    <a :href="luaUrl" download>
+      <VBtn :disabled="!luaUrl">Download ELRS Lua Script</VBtn>
+    </a>
   </VContainer>
 </template>
