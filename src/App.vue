@@ -13,6 +13,8 @@ import Download from "./pages/Download.vue";
 import SerialFlash from "./pages/SerialFlash.vue";
 import STLinkFlash from "./pages/STLinkFlash.vue";
 
+import ReloadPrompt from './components/ReloadPrompt.vue';
+
 function stepPrev() {
   if (store.currentStep === 1) {
     resetState()
@@ -36,6 +38,7 @@ function disableNext() {
 <template>
   <VApp>
     <VLayout>
+      <ReloadPrompt />
       <VAppBar height="320">
         <div class="logoContainer">
           <svg fill="#fff" viewBox="0 0 512 512" height="110" width="110">
