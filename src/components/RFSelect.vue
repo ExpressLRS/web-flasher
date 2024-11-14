@@ -15,7 +15,9 @@ const domains = [
   {value: 2, title: 'EU868'},
   {value: 3, title: 'IN866'},
   {value: 4, title: 'AU433'},
-  {value: 5, title: 'EU433'}
+  {value: 5, title: 'EU433'},
+  {value: 6, title: 'US433'},
+  {value: 7, title: 'US433-Wide'}
 ]
 
 function hasHighFrequency() {
