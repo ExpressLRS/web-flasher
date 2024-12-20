@@ -1,5 +1,5 @@
 import {TransportEx} from './serialex.js'
-import {ESPLoader} from 'esptool-js'
+import {CustomReset, ESPLoader} from 'esptool-js'
 import {Passthrough} from './passthrough.js'
 import CryptoJS from 'crypto-js'
 import {WrongMCU} from "./error.js";
@@ -54,7 +54,7 @@ export class ESPFlasher {
         if (this.method === 'uart') {
             if (this.type === 'RX' && !this.config.platform.startsWith('esp32')) {
                 await transport.connect(baudrate)
-                const ret = await this.esploader._connectAttempt(mode = 'no_reset')
+                const ret = await this.esploader._connectAttempt(mode = 'no_reset', new CustomReset(transport, 'W0'))
 
                 if (ret !== 'success') {
                     await transport.disconnect()
@@ -131,5 +131,9 @@ export class ESPFlasher {
                     })
                 }
             })
+    }
+
+    close = async () => {
+        await this.esploader.transport.disconnect()
     }
 }

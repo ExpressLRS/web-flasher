@@ -45,8 +45,8 @@ function updateVersions() {
   }
 }
 
-watch(() => firmware.value, updateVersions)
-watch(() => flashBranch.value, updateVersions)
+watch(firmware, updateVersions)
+watch(flashBranch, updateVersions)
 
 watchPostEffect(() => {
   if (store.version) {
@@ -116,7 +116,7 @@ watchPostEffect(() => {
   if (!keepTarget) store.target = null
 })
 
-watch(() => {
+watch([() => store.version, () => store.firmware], () => {
   luaUrl = store.version ? `./assets/${store.firmware}/${store.version}/lua/elrsV3.lua` : null
 })
 

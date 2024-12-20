@@ -43,8 +43,8 @@ function updateVersions() {
   }
 }
 
-watch(() => firmware.value, updateVersions)
-watch(() => flashBranch.value, updateVersions)
+watch(firmware, updateVersions)
+watch(flashBranch, updateVersions)
 
 watchPostEffect(() => {
   if (store.version) {
