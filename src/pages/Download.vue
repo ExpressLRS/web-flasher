@@ -31,7 +31,8 @@ async function downloadFirmware() {
     const bin = pako.gzip(files.firmwareFiles[files.firmwareFiles.length - 1].data)
     const data = new Blob([bin], {type: 'application/octet-stream'})
     FileSaver.saveAs(data, 'firmware.bin.gz')
-  } else if (store.target.config.upload_methods.includes('zip')) {
+  } else if (store.target.config.upload_methods.includes('zip') ||
+      (store.targetType === 'vrx' && store.vendor === 'hdzero-goggle')) { // or HDZero Goggles
     // create zip file
     const zipper = new zip.ZipWriter(new zip.BlobWriter("application/zip"), {bufferedWrite: true})
     await zipper.add('bootloader.bin', new Blob([files.firmwareFiles[0].data.buffer], {type: 'application/octet-stream'}).stream())
