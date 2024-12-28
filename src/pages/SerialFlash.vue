@@ -35,10 +35,12 @@ async function buildFirmware() {
   files.radioType = radioType
   files.txType = txType
   fullErase.value = false
+  allowErase.value = !(store.target.config.platform.startsWith('esp32') && store.options.flashMethod === 'betaflight')
 }
 
 let step = ref(1)
 let enableFlash = ref(false)
+let allowErase = ref(true)
 let fullErase = ref(false)
 let flashComplete = ref(false)
 let failed = ref(false)
@@ -181,7 +183,7 @@ async function flash() {
         </template>
         <VContainer v-if="failed || enableFlash">
           <br/>
-          <VRow v-if="enableFlash">
+          <VRow v-if="enableFlash && allowErase">
             <VCheckbox v-model="fullErase" label="Full chip erase"/>
           </VRow>
           <VRow>
