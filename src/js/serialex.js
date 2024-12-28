@@ -28,8 +28,8 @@ export class TransportEx extends Transport {
     read_line = async (timeout = 0) => {
         console.log('Read with timeout ' + timeout)
         let t
-        let packet = this.leftOver
-        this.leftOver = new Uint8Array(0)
+        let packet = this.buffer
+        this.buffer = new Uint8Array(0)
         const delimiters = this.delimiters
 
         function findDelimeter(packet) {
@@ -49,7 +49,7 @@ export class TransportEx extends Transport {
 
         let index = findDelimeter(packet)
         if (index === -1) {
-            const reader = this.device.readable.getReader()
+            const reader = this.reader
             try {
                 if (timeout > 0) {
                     t = setTimeout(function () {
@@ -59,22 +59,20 @@ export class TransportEx extends Transport {
                 do {
                     const {value, done} = await reader.read()
                     if (done) {
-                        reader.releaseLock()
-                        await this.device.close()
-                        await this.device.open({baudRate: this.baudrate})
+                        await this.disconnect()
+                        await this.connect(this.baudrate)
                         return ''
                     }
-                    packet = new Uint8Array(this._appendBuffer(packet.buffer, value.buffer))
+                    packet = this.appendArray(packet, value)
                     index = findDelimeter(packet)
                 } while (index === -1)
-                reader.releaseLock()
             } finally {
                 if (timeout > 0) {
                     clearTimeout(t)
                 }
             }
         }
-        this.leftOver = packet.slice(index)
+        this.buffer = packet.slice(index)
         packet = packet.slice(0, index)
         if (this.tracing) {
             console.log('Read bytes')
