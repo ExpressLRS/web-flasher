@@ -2,7 +2,7 @@ import {TransportEx} from './serialex.js'
 import {CustomReset, ESPLoader} from 'esptool-js'
 import {Passthrough} from './passthrough.js'
 import CryptoJS from 'crypto-js'
-import {WrongMCU} from "./error.js";
+import {MismatchError, WrongMCU} from "./error.js";
 
 export class ESPFlasher {
     constructor(device, type, method, config, options, firmwareUrl, term) {
@@ -50,41 +50,49 @@ export class ESPFlasher {
         })
         this.esploader.ESP_RAM_BLOCK = 0x0800 // we override otherwise flashing on BF will fail
 
+        let hasError
         const passthrough = new Passthrough(transport, this.term, this.config.firmware, baudrate)
-        if (this.method === 'uart') {
-            if (this.type === 'RX' && !this.config.platform.startsWith('esp32')) {
-                await transport.connect(baudrate)
-                const ret = await this.esploader._connectAttempt(mode = 'no_reset', new CustomReset(transport, 'W0'))
+        try {
+            if (this.method === 'uart') {
+                if (this.type === 'RX' && !this.config.platform.startsWith('esp32')) {
+                    await transport.connect(baudrate)
+                    const ret = await this.esploader._connectAttempt(mode = 'no_reset', new CustomReset(transport, 'W0'))
 
-                if (ret !== 'success') {
-                    await transport.disconnect()
-                    await transport.connect(420000)
-                    await passthrough.reset_to_bootloader()
+                    if (ret !== 'success') {
+                        await transport.disconnect()
+                        await transport.connect(420000)
+                        await passthrough.reset_to_bootloader()
+                    }
+                } else {
+                    await transport.connect(115200)
                 }
-            } else {
-                await transport.connect(115200)
+            } else if (this.method === 'betaflight') {
+                await transport.connect(baudrate)
+                await passthrough.betaflight()
+                await passthrough.reset_to_bootloader()
+            } else if (this.method === 'etx') {
+                await transport.connect(baudrate)
+                if (this.mainFirmware) {
+                    await passthrough.edgeTX()
+                } else {
+                    await passthrough.edgeTXBP()
+                }
+            } else if (this.method === 'passthru') {
+                await transport.connect(baudrate)
+                await transport.setDTR(false)
+                await transport.sleep(100)
+                await transport.setRTS(false)
+                await transport.sleep(5000)
+                await transport.setDTR(true)
+                await transport.sleep(200)
+                await transport.setDTR(false)
+                await transport.sleep(100)
             }
-        } else if (this.method === 'betaflight') {
-            await transport.connect(baudrate)
-            await passthrough.betaflight()
-            await passthrough.reset_to_bootloader()
-        } else if (this.method === 'etx') {
-            await transport.connect(baudrate)
-            if (this.mainFirmware) {
-                await passthrough.edgeTX()
-            } else {
-                await passthrough.edgeTXBP()
+        } catch(e) {
+            if (!(e instanceof MismatchError)) {
+                throw e
             }
-        } else if (this.method === 'passthru') {
-            await transport.connect(baudrate)
-            await transport.setDTR(false)
-            await transport.sleep(100)
-            await transport.setRTS(false)
-            await transport.sleep(5000)
-            await transport.setDTR(true)
-            await transport.sleep(200)
-            await transport.setDTR(false)
-            await transport.sleep(100)
+            hasError = e
         }
 
         await transport.disconnect()
@@ -97,6 +105,10 @@ export class ESPFlasher {
             throw new WrongMCU(`Wrong target selected, this device uses '${chip}' and the firmware is for '${this.config.platform}'`)
         }
         console.log(`Settings done for ${chip}`)
+
+        if (hasError) {
+            throw hasError
+        }
         return this.esploader.chip.CHIP_NAME
     }
 
@@ -124,10 +136,10 @@ export class ESPFlasher {
             .then(_ => {
                 progress(fileArray.length - 1, 100, 100)
                 if (this.config.platform.startsWith('esp32')) {
-                    return loader.hardReset().catch(() => {
+                    return loader.after('hard_reset').catch(() => {
                     })
                 } else {
-                    return loader.softReset().catch(() => {
+                    return loader.after('soft_reset').catch(() => {
                     })
                 }
             })

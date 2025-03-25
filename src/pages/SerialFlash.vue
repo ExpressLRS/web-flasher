@@ -144,6 +144,7 @@ async function reset() {
 }
 
 async function flash() {
+  failed.value = false
   step.value++
   try {
     progressText.value = ''

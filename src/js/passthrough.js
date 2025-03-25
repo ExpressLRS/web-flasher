@@ -146,7 +146,7 @@ export class Passthrough {
     betaflight = async () => {
         this.log('Initializing FC passthrough')
 
-        await this.transport.write_string('#\r\n')
+        await this.transport.write_string('#')
         this.transport.set_delimiters(['# ', 'CCC'])
         const line = await this.transport.read_line(200)
         if (line.indexOf('CCC') !== -1) {
@@ -202,7 +202,7 @@ export class Passthrough {
                 break
             }
             if (line.startsWith('serial')) {
-                const regexp = /serial (?<port>[0-9]+) (?<port_cfg>[0-9]+) /
+                const regexp = /serial (?<port>(UART)?[0-9]+) (?<port_cfg>[0-9]+) /
                 const config = line.match(regexp)
                 if (config && config.groups && config.groups.port && config.groups.port_cfg && (config.groups.port_cfg & 64) === 64) {
                     index = config.groups.port
@@ -236,15 +236,12 @@ export class Passthrough {
             await this.transport.write_array(Bootloader.get_init_seq('GHST'))
         } else {
             this.log('Using full duplex (CRSF)')
+            while (await this.transport.read_line(100) !== '') {}
             const train = new Uint8Array(32)
             train.fill(0x55)
             await this.transport.write_array(new Uint8Array([0x07, 0x07, 0x12, 0x20]))
             await this.transport.write_array(train)
             await this._sleep(200)
-            try {
-                await this.transport.rawRead(1)
-            } catch {
-            }
             await this.transport.write_array(Bootloader.get_init_seq('CRSF'))
             await this._sleep(200)
         }
