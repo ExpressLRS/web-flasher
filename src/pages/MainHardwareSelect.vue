@@ -102,7 +102,7 @@ watchPostEffect(() => {
         for (const [rk, r] of Object.entries(v)) {
           if (rk.startsWith(store.targetType) && (rk === store.radio || store.radio === null)) {
             for (const [ck, c] of Object.entries(r)) {
-              if (compareSemanticVersions(version, c.min_version) >= 0) {
+              if (flashBranch.value || compareSemanticVersions(version, c.min_version) >= 0) {
                 targets.value.push({title: c.product_name, value: {vendor: vk, radio: rk, target: ck, config: c}})
                 if (store.target && store.target.vendor === vk && store.target.radio === rk && store.target.target === ck) keepTarget = true
               }
