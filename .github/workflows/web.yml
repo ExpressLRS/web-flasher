@@ -34,10 +34,10 @@ jobs:
         run: npm install && npm run build
       - name: Setup Pages
         uses: actions/configure-pages@v5
-      - name: Configure page artifact
-        run: mv dist _site
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
 
   deploy:
     environment:
