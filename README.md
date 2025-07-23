@@ -6,7 +6,7 @@ Currently supported flashing methods are:
 - Betaflight passthrough
 - EdgeTX passthrough
 - STLink
-- Wifi - with mdns lookup and 2.5 upgrade via a locally running proxy
+- ~~Wifi - with mdns lookup and 2.5 upgrade via a locally running proxy~~
 
 # Developing and testing locally
 
