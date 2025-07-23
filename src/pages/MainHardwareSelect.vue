@@ -11,6 +11,21 @@ let vendors = ref([]);
 let radios = ref([]);
 let targets = ref([]);
 let luaUrl = ref(null);
+let hasUrlParams = ref(false);
+
+function setTargetFromParams() {
+  let urlParams = new URLSearchParams(window.location.search);
+  let target = urlParams.get('target');
+  if (target) {
+    hasUrlParams.value = true;
+    store.target = {
+      vendor: target.split('.')[0],
+      radio: target.split('.')[1],
+      target: target.split('.')[2],
+      config: {}
+    }
+  }
+}
 
 watchPostEffect(() => {
   fetch(`./assets/${store.firmware}/index.json`).then(r => r.json()).then(r => {
@@ -96,6 +111,7 @@ watchPostEffect(() => {
   targets.value = []
   let keepTarget = false
   if (store.version && hardware.value) {
+    setTargetFromParams()
     const version = versions.value.find(x => x.value === store.version).title
     for (const [vk, v] of Object.entries(hardware.value)) {
       if (vk === store.vendor || store.vendor === null) {
@@ -104,7 +120,10 @@ watchPostEffect(() => {
             for (const [ck, c] of Object.entries(r)) {
               if (flashBranch.value || compareSemanticVersions(version, c.min_version) >= 0) {
                 targets.value.push({title: c.product_name, value: {vendor: vk, radio: rk, target: ck, config: c}})
-                if (store.target && store.target.vendor === vk && store.target.radio === rk && store.target.target === ck) keepTarget = true
+                if (store.target && store.target.vendor === vk && store.target.radio === rk && store.target.target === ck) {
+                  store.target.config = c
+                  keepTarget = true
+                }
               }
             }
           }
@@ -145,10 +164,11 @@ function flashType() {
     <br>
     <VSelect :items="versions" v-model="store.version" density="compact" label="Firmware Version"/>
     <VSelect :items="vendors" v-model="store.vendor" density="compact" label="Hardware Vendor"
-             :disabled="!store.version"/>
+             :disabled="!store.version || hasUrlParams"/>
     <VSelect :items="radios" v-model="store.radio" density="compact" label="Radio Frequency"
-             :disabled="!store.vendor"/>
-    <VAutocomplete :items="targets" v-model="store.target" density="compact" label="Hardware Target"/>
+             :disabled="!store.vendor || hasUrlParams"/>
+    <VAutocomplete :items="targets" v-model="store.target" density="compact" label="Hardware Target"
+             :disabled="!store.version || hasUrlParams"/>
     <a :href="luaUrl" download>
       <VBtn :disabled="!luaUrl">Download ELRS Lua Script</VBtn>
     </a>

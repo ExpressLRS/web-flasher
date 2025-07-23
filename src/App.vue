@@ -33,6 +33,17 @@ function disableNext() {
   }
   return false
 }
+
+// Handle any query params
+let urlParams = new URLSearchParams(window.location.search);
+store.targetType = urlParams.get('type');
+if (store.targetType === "tx" || store.targetType === "rx")
+  store.firmware = 'firmware'
+else if (store.targetType)
+  store.firmware = 'backpack'
+
+store.options.flashMethod = urlParams.get('method');
+
 </script>
 
 <template>
