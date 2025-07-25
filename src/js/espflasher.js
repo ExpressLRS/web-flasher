@@ -34,6 +34,10 @@ export class ESPFlasher {
         } else if (this.method === 'uart' && this.config.platform.startsWith('esp32')) {
             initbaud = 115200
         }
+        if (this.config.baud) {
+            baudrate = this.config.baud
+            initbaud = this.config.baud
+        }
 
         const transport = new TransportEx(this.device, false)
         const terminal = {
