@@ -10,25 +10,25 @@
   },
   "dependencies": {
     "@mdi/font": "7.4.47",
-    "@zip.js/zip.js": "^2.7.68",
+    "@zip.js/zip.js": "^2.8.2",
     "bluejay-rtttl-parse": "^2.0.2",
     "crypto-js": "^4.2.0",
-    "esptool-js": "^0.5.6",
+    "esptool-js": "^0.5.7",
     "file-saver": "^2.0.5",
     "pako": "^2.1.0",
     "roboto-fontface": "*",
-    "vue": "^3.5.18",
-    "vuetify": "^3.9.2"
+    "vue": "^3.5.21",
+    "vuetify": "^3.10.2"
   },
   "devDependencies": {
     "@types/file-saver": "^2.0.7",
-    "@types/pako": "^2.0.3",
+    "@types/pako": "^2.0.4",
     "@types/w3c-web-serial": "^1.0.8",
-    "@vitejs/plugin-vue": "^6.0.0",
-    "sass": "1.89.2",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "sass": "1.92.1",
     "unplugin-fonts": "^1.4.0",
-    "unplugin-vue-components": "^28.8.0",
-    "vite-plugin-pwa": "^1.0.1",
-    "vite-plugin-vuetify": "^2.1.1"
+    "unplugin-vue-components": "^29.0.0",
+    "vite-plugin-pwa": "^1.0.3",
+    "vite-plugin-vuetify": "^2.1.2"
   }
 }
