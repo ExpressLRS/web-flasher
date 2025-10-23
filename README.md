@@ -8,6 +8,8 @@ Currently supported flashing methods are:
 - STLink
 - ~~Wifi - with mdns lookup and 2.5 upgrade via a locally running proxy~~
 
+Developed and maintained by **ExpressLRS LLC** and its passionate open source community, working together to advance reliable, high-performance radio control technology.
+
 # Developing and testing locally
 
 Checkout the git repository and run...
