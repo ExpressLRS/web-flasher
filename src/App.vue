@@ -61,7 +61,7 @@ store.options.flashMethod = urlParams.get('method');
         </div>
 
         <div class="header-main">
-          <h1>ExpressLRS</h1>
+          <h1>ExpressLRS&trade;</h1>
           <h2>WEB FLASHER</h2>
         </div>
 
