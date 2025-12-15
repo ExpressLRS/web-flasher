@@ -46,6 +46,7 @@ let flashComplete = ref(false)
 let failed = ref(false)
 let log = ref([])
 let newline = false
+let selectingSerial = ref(false)
 
 let noDevice = ref(false)
 let flasher;
@@ -79,6 +80,7 @@ async function closeDevice() {
 }
 
 async function connect() {
+  selectingSerial.value = true
   try {
     device = await navigator.serial.requestPort()
     device.ondisconnect = async (_p, _e) => {
@@ -88,6 +90,8 @@ async function connect() {
   } catch {
     await closeDevice()
     noDevice.value = true
+  } finally {
+    selectingSerial.value = false
   }
 
   if (device) {
@@ -174,7 +178,7 @@ async function flash() {
     <VStepperVertical v-model="step" :hide-actions="true" flat>
       <VStepperVerticalItem title="Connect to serial UART" value="1" :hide-actions="true" :complete="step > 1"
                             :color="step > 1 ? 'green' : 'blue'">
-        <VBtn @click="connect" color="primary">Connect</VBtn>
+        <VBtn @click="connect" color="primary" :disabled="selectingSerial">Connect</VBtn>
       </VStepperVerticalItem>
       <VStepperVerticalItem title="Enter flashing mode" value="2" :hide-actions="true" :complete="step > 2"
                             :color="step > 2 ? 'green' : (failed ? 'red' : 'blue')">

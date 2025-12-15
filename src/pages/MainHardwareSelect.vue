@@ -136,7 +136,14 @@ watchPostEffect(() => {
 })
 
 watch([() => store.version, () => store.firmware], () => {
-  luaUrl = store.version ? `./assets/${store.firmware}/${store.version}/lua/elrsV3.lua` : null
+  let file = 'elrs.lua'
+  versions.value.forEach(item => {
+    console.log(item)
+    if (item.value === store.version && item.title <= '4.0.0-RC1') {
+      file = 'elrsV3.lua'
+    }
+  })
+  luaUrl = store.version ? `./assets/${store.firmware}/${store.version}/lua/${file}` : null
 })
 
 watch(() => store.target, (v, _oldValue) => {
