@@ -9,7 +9,7 @@ defaults:
 jobs:
   doze:
     name: Windows build
-    runs-on: windows-2019
+    runs-on: windows-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -30,7 +30,7 @@ jobs:
 
   mac:
     name: MacOS build
-    runs-on: macos-13
+    runs-on: macos-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -48,7 +48,7 @@ jobs:
 
   linux:
     name: Linux build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
