@@ -1,10 +1,10 @@
 <script setup>
-import {watchEffect} from "vue";
+import {ref, watchEffect, nextTick} from "vue";
 import * as zip from "@zip.js/zip.js";
 import FileSaver from "file-saver";
-import { gzip } from "wasm-zopfli";
 import {store} from "../js/state.js";
 import {generateFirmware} from "../js/firmware.js";
+import CRC32 from "crc-32";
 
 watchEffect(buildFirmware)
 
@@ -14,6 +14,9 @@ const files = {
   firmwareUrl: '',
   options: {}
 }
+
+const isPreparing = ref(false)
+const preparingText = ref('Preparing your download… This may take a while.')
 
 async function buildFirmware() {
   if (store.currentStep === 3) {
@@ -26,53 +29,65 @@ async function buildFirmware() {
   }
 }
 
-function trimZopfliBuffer(returnedBuf, originalSize) {
-  // 1. Calculate the 4-byte ISIZE (Original length in Little Endian)
-  const isize = originalSize % 0x100000000;
-  const footer = new Uint8Array(4);
-  new DataView(footer.buffer).setUint32(0, isize, true);
+async function downloadFirmware() {
+  try {
+    isPreparing.value = true
+    // Let the overlay render before heavy work begins
+    await nextTick()
 
-  // 2. Search backwards from the end of the buffer
-  // We start searching from the end because the "garbage" is at the tail.
-  for (let i = returnedBuf.length - 4; i >= 0; i--) {
-    if (returnedBuf[i] === footer[0] &&
-        returnedBuf[i + 1] === footer[1] &&
-        returnedBuf[i + 2] === footer[2] &&
-        returnedBuf[i + 3] === footer[3]) {
+    if (store.target.config.platform === 'esp8285') {
+      const buf = files.firmwareFiles[files.firmwareFiles.length - 1].data
+      const { gzip } = await import('wasm-zopfli')
+      const raw = await gzip(buf)
+      // Zopfli may return a buffer with trailing bytes; trim to the exact GZIP end
+      const footer = buildGzipFooter(buf)
+      const sliced = sliceToGzipEnd(raw, footer)
 
-      // Found a potential match for the ISIZE.
-      // The GZIP ends exactly here (at i + 4).
-      return returnedBuf.slice(0, i + 4);
+      const data = new Blob([sliced], {type: 'application/octet-stream'})
+      FileSaver.saveAs(data, 'firmware.bin.gz')
+    } else if (store.target.config.upload_methods.includes('zip') ||
+        (store.targetType === 'vrx' && store.vendor === 'hdzero-goggle')) { // or HDZero Goggles
+      // create zip file
+      const zipper = new zip.ZipWriter(new zip.BlobWriter("application/zip"), {bufferedWrite: true})
+      await zipper.add('bootloader.bin', new Blob([files.firmwareFiles[0].data.buffer], {type: 'application/octet-stream'}).stream())
+      await zipper.add('partitions.bin', new Blob([files.firmwareFiles[1].data.buffer], {type: 'application/octet-stream'}).stream())
+      await zipper.add('boot_app0.bin', new Blob([files.firmwareFiles[2].data.buffer], {type: 'application/octet-stream'}).stream())
+      await zipper.add('firmware.bin', new Blob([files.firmwareFiles[3].data.buffer], {type: 'application/octet-stream'}).stream())
+      FileSaver.saveAs(await zipper.close(), 'firmware.zip')
+    } else {
+      const bin = files.firmwareFiles[files.firmwareFiles.length - 1].data.buffer
+      const data = new Blob([bin], {type: 'application/octet-stream'})
+      FileSaver.saveAs(data, 'firmware.bin')
     }
+  } catch (e) {
+    console.error('Failed: ', e)
+  } finally {
+    isPreparing.value = false
   }
-  return returnedBuf; // Fallback if not found
 }
 
-async function downloadFirmware() {
-  if (store.target.config.platform === 'esp8285') {
-    const buf = files.firmwareFiles[files.firmwareFiles.length - 1].data
-    try {
-      const raw = await gzip(buf)
-      const cleanData = trimZopfliBuffer(raw, buf.length);
-      const data = new Blob([cleanData], {type: 'application/octet-stream'})
-      FileSaver.saveAs(data, 'firmware.bin.gz')
-    } catch (e) {
-      console.error("Failed: ", e)
+// Compute the 8-byte GZIP footer for the original data: CRC32 (4 bytes LE) + ISIZE (4 bytes LE)
+function buildGzipFooter(data) {
+  const crc = CRC32.buf(data)
+  const isize = data.length
+  const out = new Uint8Array(8)
+  const v = new DataView(out.buffer)
+  v.setUint32(0, crc, true)
+  v.setUint32(4, isize, true)
+  return out
+}
+
+// Search backwards for the footer and slice the buffer to the exact gzip end
+function sliceToGzipEnd(gzipBuf, footer) {
+  const n = gzipBuf.length
+  const m = footer.length
+  outer: for (let i = n - m; i >= 0; i--) {
+    for (let j = 0; j < m; j++) {
+      if (gzipBuf[i + j] !== footer[j]) continue outer
     }
-  } else if (store.target.config.upload_methods.includes('zip') ||
-      (store.targetType === 'vrx' && store.vendor === 'hdzero-goggle')) { // or HDZero Goggles
-    // create zip file
-    const zipper = new zip.ZipWriter(new zip.BlobWriter("application/zip"), {bufferedWrite: true})
-    await zipper.add('bootloader.bin', new Blob([files.firmwareFiles[0].data.buffer], {type: 'application/octet-stream'}).stream())
-    await zipper.add('partitions.bin', new Blob([files.firmwareFiles[1].data.buffer], {type: 'application/octet-stream'}).stream())
-    await zipper.add('boot_app0.bin', new Blob([files.firmwareFiles[2].data.buffer], {type: 'application/octet-stream'}).stream())
-    await zipper.add('firmware.bin', new Blob([files.firmwareFiles[3].data.buffer], {type: 'application/octet-stream'}).stream())
-    FileSaver.saveAs(await zipper.close(), 'firmware.zip')
-  } else {
-    const bin = files.firmwareFiles[files.firmwareFiles.length - 1].data.buffer
-    const data = new Blob([bin], {type: 'application/octet-stream'})
-    FileSaver.saveAs(data, 'firmware.bin')
+    return gzipBuf.slice(0, i + m)
   }
+  return gzipBuf
 }
 </script>
 
@@ -97,4 +112,54 @@ async function downloadFirmware() {
     <br>
     <VBtn color="primary" @click="downloadFirmware()">Download</VBtn>
   </VContainer>
+  <VOverlay v-model="isPreparing" persistent scrim="rgba(0,0,0,0.75)" class="d-flex align-center justify-center">
+    <VCard class="overlay-card text-primary" elevation="12">
+      <div class="overlay-content">
+        <div class="loader" aria-label="Loading"></div>
+        <div class="preparing-text">{{ preparingText }}</div>
+      </div>
+    </VCard>
+  </VOverlay>
 </template>
+
+<style scoped>
+.overlay-card {
+  max-width: 420px;
+  width: calc(100% - 48px);
+  padding: 24px;
+  text-align: center;
+}
+
+.overlay-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* Content lives inside the card, so it doesn't need to fill the whole overlay */
+  gap: 16px;
+  text-align: center;
+}
+
+/* GIF-style dual ring spinner */
+.loader {
+  display: inline-block;
+  width: 64px;
+  height: 64px;
+}
+.loader:after {
+  content: " ";
+  display: block;
+  width: 48px;
+  height: 48px;
+  margin: 8px auto;
+  border-radius: 50%;
+  border: 6px solid currentColor;
+  border-color: currentColor transparent currentColor transparent;
+  animation: loader-dual-ring 1.2s linear infinite;
+}
+
+@keyframes loader-dual-ring {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>

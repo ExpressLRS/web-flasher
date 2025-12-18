@@ -13,6 +13,7 @@
     "@zip.js/zip.js": "^2.8.11",
     "bluejay-rtttl-parse": "^2.0.2",
     "crypto-js": "^4.2.0",
+    "crc-32": "^1.2.2",
     "esptool-js": "^0.5.7",
     "file-saver": "^2.0.5",
     "pako": "^2.1.0",
