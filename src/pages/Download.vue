@@ -2,7 +2,7 @@
 import {watchEffect} from "vue";
 import * as zip from "@zip.js/zip.js";
 import FileSaver from "file-saver";
-import pako from 'pako';
+import { gzip } from "wasm-zopfli";
 import {store} from "../js/state.js";
 import {generateFirmware} from "../js/firmware.js";
 
@@ -26,11 +26,39 @@ async function buildFirmware() {
   }
 }
 
+function trimZopfliBuffer(returnedBuf, originalSize) {
+  // 1. Calculate the 4-byte ISIZE (Original length in Little Endian)
+  const isize = originalSize % 0x100000000;
+  const footer = new Uint8Array(4);
+  new DataView(footer.buffer).setUint32(0, isize, true);
+
+  // 2. Search backwards from the end of the buffer
+  // We start searching from the end because the "garbage" is at the tail.
+  for (let i = returnedBuf.length - 4; i >= 0; i--) {
+    if (returnedBuf[i] === footer[0] &&
+        returnedBuf[i + 1] === footer[1] &&
+        returnedBuf[i + 2] === footer[2] &&
+        returnedBuf[i + 3] === footer[3]) {
+
+      // Found a potential match for the ISIZE.
+      // The GZIP ends exactly here (at i + 4).
+      return returnedBuf.slice(0, i + 4);
+    }
+  }
+  return returnedBuf; // Fallback if not found
+}
+
 async function downloadFirmware() {
   if (store.target.config.platform === 'esp8285') {
-    const bin = pako.gzip(files.firmwareFiles[files.firmwareFiles.length - 1].data)
-    const data = new Blob([bin], {type: 'application/octet-stream'})
-    FileSaver.saveAs(data, 'firmware.bin.gz')
+    const buf = files.firmwareFiles[files.firmwareFiles.length - 1].data
+    try {
+      const raw = await gzip(buf)
+      const cleanData = trimZopfliBuffer(raw, buf.length);
+      const data = new Blob([cleanData], {type: 'application/octet-stream'})
+      FileSaver.saveAs(data, 'firmware.bin.gz')
+    } catch (e) {
+      console.error("Failed: ", e)
+    }
   } else if (store.target.config.upload_methods.includes('zip') ||
       (store.targetType === 'vrx' && store.vendor === 'hdzero-goggle')) { // or HDZero Goggles
     // create zip file
