@@ -1,5 +1,5 @@
 <script setup>
-import {watchEffect} from "vue";
+import {ref, watchEffect} from "vue";
 import * as zip from "@zip.js/zip.js";
 import FileSaver from "file-saver";
 import pako from 'pako';
@@ -7,6 +7,8 @@ import {store} from "../js/state.js";
 import {generateFirmware} from "../js/firmware.js";
 
 watchEffect(buildFirmware)
+
+let zipped = ref(false)
 
 const files = {
   firmwareFiles: [],
@@ -23,6 +25,11 @@ async function buildFirmware() {
     files.firmwareUrl = firmwareUrl
     files.config = config
     files.options = options
+
+    if (store.target.config.upload_methods.includes('zip') ||
+        (store.targetType === 'vrx' && (store.vendor === 'hdzero-goggle' || store.vendor === 'hdzero-boxpro'))) { // or HDZero Goggles
+      zipped.value = true
+    }
   }
 }
 
@@ -31,8 +38,7 @@ async function downloadFirmware() {
     const bin = pako.gzip(files.firmwareFiles[files.firmwareFiles.length - 1].data)
     const data = new Blob([bin], {type: 'application/octet-stream'})
     FileSaver.saveAs(data, 'firmware.bin.gz')
-  } else if (store.target.config.upload_methods.includes('zip') ||
-      (store.targetType === 'vrx' && store.vendor === 'hdzero-goggle')) { // or HDZero Goggles
+  } else if (zipped.value) {
     // create zip file
     const zipper = new zip.ZipWriter(new zip.BlobWriter("application/zip"), {bufferedWrite: true})
     await zipper.add('bootloader.bin', new Blob([files.firmwareFiles[0].data.buffer], {type: 'application/octet-stream'}).stream())
@@ -62,7 +68,7 @@ async function downloadFirmware() {
       The firmware file <b>firmware.bin.gz</b> should be flashed as-is, do NOT decompress or unzip the file or you <i>will</i>
       receive an error.
     </VCardText>
-    <VCardText v-else-if="store.target.config.upload_methods.includes('zip')">
+    <VCardText v-else-if="zipped">
       The firmware files are contained in the <b>firmware.zip</b> file and should be extracted before being uploaded to
       the device for flashing.
     </VCardText>
