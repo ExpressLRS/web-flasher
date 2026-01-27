@@ -43,3 +43,6 @@ for HASH in `cat index.json | jq '.tags,.branches | values[]' | sed 's/"//g' | s
     cd ..
     rm firmware.zip
 done
+
+MASTER=`grep '"master"' index.json | sed 's/.*: "\([^"]*\)".*/\1/'`
+cp -r $MASTER/hardware .
