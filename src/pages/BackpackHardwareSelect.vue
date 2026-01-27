@@ -49,7 +49,7 @@ watch(flashBranch, updateVersions)
 watchPostEffect(() => {
   if (store.version) {
     store.folder = `./assets/${store.firmware}/${store.version}`
-    fetch(`./assets/${store.firmware}/${store.version}/hardware/targets.json`).then(r => r.json()).then(r => {
+    fetch(`./assets/${store.firmware}/hardware/targets.json`).then(r => r.json()).then(r => {
       hardware.value = r
       store.vendor = null
       vendors.value = []
