@@ -139,7 +139,7 @@ watch([() => store.version, () => store.firmware], () => {
   let file = 'elrs.lua'
   versions.value.forEach(item => {
     console.log(item)
-    if (item.value === store.version && item.title <= '4.0.0-RC1') {
+    if (item.value === store.version && item.title < '4.0.0') {
       file = 'elrsV3.lua'
     }
   })
