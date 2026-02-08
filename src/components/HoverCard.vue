@@ -1,100 +1,113 @@
 <script setup>
 import {VCard, VCardText, VCardTitle, VHover} from 'vuetify/components'
-import {ref} from "vue";
 
 defineProps(['image', 'hoverImage', 'title', 'text'])
-
-let hovered = ref(false)
-function imageClass(isHovering) {
-  if (isHovering) {
-    hovered = true
-  }
-  return isHovering ? 'fadeInImage' : 'fadeOutImage'
-}
 </script>
 
 <template>
   <VHover v-slot:default="{ isHovering, props }">
     <VCard v-bind="$attrs, props" class='default-card' :class="{'hover-card' : isHovering}">
-      <div class="parent">
-        <img :src="image" height="100px" width="100px"/>
-        <img :src="hoverImage" height="100px" width="100px" :class="imageClass(isHovering)" :style="hovered ? 'display:block' : 'display:none'"/>
+      <div class="option-card">
+        <div class="option-icon">
+          <img :src="image" height="56" width="56"/>
+        </div>
+        <div class="option-content">
+          <VCardTitle>{{ title }}</VCardTitle>
+          <VCardText>{{ text }}</VCardText>
+        </div>
       </div>
-      <VCardTitle>{{ title }}</VCardTitle>
-      <VCardText>{{ text }}
-      </VCardText>
     </VCard>
   </VHover>
 </template>
 
 <style scoped>
-@keyframes fadeOut {
-  0% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-
-.fadeOutImage {
-  animation: fadeOut 600ms forwards;
-  position: absolute;
-}
-
-@keyframes fadeIn {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
-.fadeInImage {
-  animation: fadeIn 600ms forwards;
-  position: absolute;
-}
-
 .default-card {
-  border-radius: 0.5rem;
-  border: 1px solid #E8E8E8;
-  background-color: #F8F8F8;
-  transition: all ease-in 300ms;
+  border-radius: 8px;
+  border: none;
+  background: #1f1f1f;
+  transition: background-color 200ms ease;
   box-shadow: none;
   text-align: left;
   padding: 0;
+  width: 100%;
+  height: 125px;
 }
 
 .hover-card {
-  transform: scale(104%);
-  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.16);
+  background: #303030;
+  box-shadow: none;
 }
 
-.v-card-title {
-  padding: 0 20px 0 20px;
-}
-
-.v-card-text {
-  padding: 0 20px 20px 20px;
-}
-
-.v-card-title {
-  margin: 1.5rem 0 0.25rem 0;
-  font-weight: 600;
-  color: #242527;
-}
-
-.v-card-text {
-  color: #656669
-}
-
-.parent {
+.option-card {
   display: flex;
-  justify-content: center;
-  background-color: #F0F0F0;
-  height: 140px;
   align-items: center;
+  gap: 16px;
+  padding: 16px;
+}
+
+.option-icon {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  flex: 0 0 56px;
+}
+
+.option-icon img {
+  width: 56px;
+  height: 56px;
+}
+
+.option-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 320px;
+  height: 85px;
+  justify-content: center;
+}
+
+.v-card-title {
+  padding: 0;
+  margin: 0;
+  font-weight: 600;
+  font-size: 16px;
+  color: #ffffff;
+}
+
+.v-card-text {
+  padding: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #9ca3af;
+}
+
+@media (max-width: 640px) {
+  .default-card {
+    height: auto;
+  }
+
+  .option-card {
+    gap: 12px;
+    padding: 16px;
+    align-items: center;
+  }
+
+  .option-icon {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+  }
+
+  .option-icon img {
+    width: 44px;
+    height: 44px;
+  }
+
+  .option-content {
+    width: 100%;
+    min-width: 0;
+    height: auto;
+  }
 }
 
 </style>

@@ -6,7 +6,6 @@ import {compareSemanticVersions} from '../js/version';
 defineProps(['vendorLabel'])
 
 let firmware = ref(null);
-let flashBranch = ref(false);
 let hardware = ref(null);
 let versions = ref([]);
 let vendors = ref([]);
@@ -23,43 +22,47 @@ function updateVersions() {
     hardware.value = null
     store.version = null
     versions.value = []
-    if (flashBranch.value) {
-      Object.entries(firmware.value.branches).forEach(([key, value]) => {
-        versions.value.push({title: key, value: value})
-        if (!store.version) store.version = value
-      })
-      Object.entries(firmware.value.tags).forEach(([key, value]) => {
-        if (key.indexOf('-') !== -1) versions.value.push({title: key, value: value})
-      })
-      versions.value = versions.value.sort((a, b) => a.title.localeCompare(b.title))
-    } else {
-      Object.keys(firmware.value.tags).sort(compareSemanticVersions).reverse().forEach((key) => {
-        if (key.indexOf('-') === -1 || flashBranch.value) {
-          versions.value.push({title: key, value: firmware.value.tags[key]})
-          if (!store.version) store.version = firmware.value.tags[key]
-        }
-      })
-    }
+    let first = true
+    Object.keys(firmware.value.tags).sort(compareSemanticVersions).reverse().forEach((key) => {
+      if (key.indexOf('-') === -1 || first) {
+        versions.value.push({title: key, value: firmware.value.tags[key]})
+        if (!store.version) store.version = firmware.value.tags[key]
+        first = false
+      }
+    })
   }
 }
 
 watch(firmware, updateVersions)
-watch(flashBranch, updateVersions)
 
 watchPostEffect(() => {
   if (store.version) {
     store.folder = `./assets/${store.firmware}/${store.version}`
-    fetch(`./assets/${store.firmware}/hardware/targets.json`).then(r => r.json()).then(r => {
-      hardware.value = r
-      store.vendor = null
-      vendors.value = []
-      for (const [k, v] of Object.entries(hardware.value)) {
-        let hasTargets = v.hasOwnProperty(store.targetType);
-        if (hasTargets && v.name) vendors.value.push({title: v.name, value: k})
+    const targetUrls = [
+      `./assets/${store.firmware}/${store.version}/hardware/targets.json`,
+      `./assets/${store.firmware}/backpack-${store.version}/hardware/targets.json`,
+      `./assets/${store.firmware}/hardware/targets.json`
+    ]
+    const loadTargets = async () => {
+      for (const url of targetUrls) {
+        try {
+          const response = await fetch(url)
+          if (!response.ok) throw new Error('Failed to load targets.json')
+          const data = await response.json()
+          hardware.value = data
+          store.vendor = null
+          vendors.value = []
+          for (const [k, v] of Object.entries(hardware.value)) {
+            let hasTargets = v.hasOwnProperty(store.targetType)
+            if (hasTargets && v.name) vendors.value.push({title: v.name, value: k})
+          }
+          vendors.value.sort((a, b) => a.title.localeCompare(b.title))
+          return
+        } catch (_ignore) {
+        }
       }
-      vendors.value.sort((a, b) => a.title.localeCompare(b.title))
-    }).catch((_ignore) => {
-    })
+    }
+    loadTargets()
   }
 })
 
@@ -91,16 +94,9 @@ watch(() => store.target, (v, _oldValue) => {
   }
 })
 
-function flashType() {
-  return flashBranch.value ? 'Branches' : 'Releases'
-}
 </script>
 
 <template>
-  <VRow justify="end">
-    <VSwitch v-model="flashBranch" :label="flashType()" color="secondary"/>
-  </VRow>
-
   <VContainer max-width="600px">
     <template v-if="store.targetType==='txbp'">
       <VCardTitle>Transmitter Hardware Selection</VCardTitle>

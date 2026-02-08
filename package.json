@@ -1,8 +1,17 @@
 {
-  "name": "flasher2",
+  "name": "titanlrs-web-flasher",
   "private": true,
   "version": "2.0.0",
   "type": "module",
+  "description": "Web-hosted flasher for TitanLRS firmware (ExpressLRS fork for Titan Dynamics)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Titan-Dynamics/web-flasher.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Titan-Dynamics/web-flasher/issues"
+  },
+  "homepage": "https://github.com/Titan-Dynamics/web-flasher#readme",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

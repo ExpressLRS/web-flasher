@@ -40,16 +40,16 @@ export default defineConfig({
       },
       // These files will always be available offline
       includeAssets: [
-        'favicon.ico',
+        'favicon.webp',
         'apple-touch-icon.png',
         'mask-icon.svg',
         'assets/{firmware,backpack}/index.json',
         'assets/{firmware,backpack}/**/targets.json',
       ],
       manifest: {
-        name: 'ExpressLRS Web Flasher',
-        short_name: 'ELRS Web Flasher',
-        description: 'Web-hosted flasher for ExpressLRS version 3 firmware',
+        name: 'TitanLRS Web Flasher',
+        short_name: 'TitanLRS Flasher',
+        description: 'Web-hosted flasher for TitanLRS firmware - ExpressLRS for Titan Dynamics',
         theme_color: '#4a88ab',
         display_override: ['window-controls-overlay', 'standalone', 'browser'],
         icons: [

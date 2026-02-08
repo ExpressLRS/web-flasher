@@ -1,34 +1,81 @@
-# ExpressLRS Web Flasher
+# TitanLRS Web Flasher
 
-This is a fully web-based flasher for ExpressLRS 3.x
-Currently supported flashing methods are:
+Web-hosted flasher for TitanLRS firmware (ExpressLRS fork for Titan Dynamics).
+
+Based on the [ExpressLRS Web Flasher](https://github.com/ExpressLRS/web-flasher).
+
+## Supported Flashing Methods
+
 - UART (Receivers do not need to be in bootloader mode)
 - Betaflight passthrough
 - EdgeTX passthrough
-- STLink
-- ~~Wifi - with mdns lookup and 2.5 upgrade via a locally running proxy~~
 
-Developed and maintained by **ExpressLRS LLC** and its passionate open source community, working together to advance reliable, high-performance radio control technology.
+## Developing and Testing Locally
 
-# Developing and testing locally
+### 1. Download Firmware
 
-Checkout the git repository and run...
+Download TitanLRS firmware from GitHub Releases:
+
+```bash
+./get_artifacts.sh
 ```
+
+To download a specific version (used for both firmware and backpack), pass it as an argument:
+
+```bash
+./get_artifacts.sh <version>
+```
+
+Available firmware versions: https://github.com/Titan-Dynamics/TitanLRS/releases
+Available backpack versions: https://github.com/Titan-Dynamics/TitanLRS-Backpack/releases
+
+### 2. Install Dependencies
+
+```bash
 npm install
 ```
-To start a development web server...
-```
+
+### 3. Start Development Server
+
+```bash
 npm run dev
 ```
-To build the distribution for stuffing on a web server
-```
+
+The development server will start (typically at http://localhost:5173).
+
+### 4. Build for Production
+
+```bash
 npm run build
 ```
-# Firmware
-To actually test the code you will need a firmware folder at the root of the project.
-The firmware folder, with all it's accoutrement's can be downloaded from the ExpressLRS artifact repository by
-executing the `get_artifacts.sh` command. This will download all the release artifacts and put all the versions
-into the `index.js` file for testing locally.
-When committing you changes, you will note that there is a comment above where the versions were placed in the
-`index.js` file telling you not to commit changes to that line. So it is very important to revert the changes
-to the `versions` line before committing you changes.
+
+The built files will be in the `dist/` directory.
+
+## Firmware Structure
+
+The `get_artifacts.sh` script downloads firmware from TitanLRS GitHub Releases and creates the following structure:
+
+```
+public/assets/
+├── firmware/
+│   ├── index.json           # Version index
+│   ├── {VERSION}/           # e.g., 4.0.0-TD
+│   │   ├── FCC/            # FCC region firmware
+│   │   ├── LBT/            # LBT region firmware
+│   │   └── hardware/
+│   └── hardware/
+│       └── targets.json
+└── backpack/
+    └── index.json
+```
+
+## Repository Information
+
+- **Web Flasher Fork**: https://github.com/Titan-Dynamics/web-flasher
+- **Firmware Source**: https://github.com/Titan-Dynamics/TitanLRS/releases
+- **Backpack Source**: https://github.com/Titan-Dynamics/TitanLRS-Backpack/releases
+- **Upstream**: https://github.com/ExpressLRS/web-flasher
+
+## License
+
+Developed by the ExpressLRS community. Adapted for TitanLRS by Titan Dynamics.

@@ -175,7 +175,7 @@ export class STLink {
             }
 
             const addr = parseInt(this.config.stlink.offset, 16)
-            this.log('Flash ExpressLRS')
+            this.log('Flash TitanLRS')
             try {
                 await this.stlink.halt()
                 await this.stlink.flash(this.target.flash_start + addr, binary[0].data)

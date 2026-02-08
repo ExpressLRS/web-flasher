@@ -1,24 +1,127 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+:root {
+    --td-primary: #FA8423;
+    --td-border: #FA8423;
+    --td-bg: #0A0A0A;
+    --td-card-bg: #1F1F1F;
+    --td-option-bg: #1F1F1F;
+    --td-text: #FFFFFF;
+    --td-text-muted: #9CA3AF;
+    --td-text-dark: #111827;
+    --td-border-light: #E5E7EB;
+}
+
+html, body, #app {
+    height: auto;
+    min-height: 100%;
+    overflow-y: scroll;
+}
+
+body {
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--td-bg);
+    color: var(--td-text);
+    margin: 0;
+    overflow-y: auto;
+}
+
+.v-application,
+.v-application__wrap {
+    min-height: 100vh;
+    height: auto;
+    overflow-x: hidden;
+    overflow-y: visible;
+}
+
+.td-main {
+    padding: 48px 0 80px 0;
+}
+
+.v-application {
+    background: var(--td-bg);
+}
+
 .containerMain {
-    z-index: 9999;
-    border: 1px solid #E8E8E8;
-    background-color: #fff;
-    padding: 40px;
-    border-radius: 0.75rem;
-    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.16);
+    z-index: 10;
+    border: 2px solid var(--td-border);
+    background: transparent;
+    padding: 32px;
+    border-radius: 12px;
+    box-shadow: none;
 }
 
 .containerHeader {
-    margin-bottom: 40px;
-    text-align: center;
+    margin-bottom: 24px;
+    text-align: left;
+}
+
+.containerMain .v-card-title {
+    padding: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--td-text);
+    letter-spacing: 0.02em;
+}
+
+.containerMain .v-card-subtitle {
+    padding: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--td-text-muted);
+}
+
+.containerMain .v-card-text {
+    font-size: 13px;
+    color: var(--td-text-muted);
 }
 
 .section {
-    margin-top: -80px;
+    margin-top: 0;
     display: flex;
     flex-direction: column;
-    gap: 40px;
+    gap: 48px;
     position: relative;
-    z-index: 1200;
+    z-index: 20;
+}
+
+.v-field {
+    border-radius: 8px;
+}
+
+.v-field__input,
+.v-label,
+.v-select__selection {
+    color: var(--td-text) !important;
+}
+
+.v-field__outline {
+    color: #3a3a3a !important;
+}
+
+.v-field--focused .v-field__outline {
+    color: var(--td-primary) !important;
+}
+
+.v-btn {
+    text-transform: none !important;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.v-stepper {
+    background: transparent !important;
+}
+
+.v-stepper-window {
+    padding: 24px;
+    margin: 0 !important;
+}
+
+@media (max-width: 960px) {
+    .containerMain {
+        padding: 24px;
+    }
 }
 
 @media (max-width: 640px) {
@@ -26,7 +129,12 @@
         padding: 20px;
     }
 
+    .td-main {
+        padding: 4px 0 48px 0;
+    }
+
     .section {
-        margin-top: -60px;
+        margin-top: 0;
+        gap: 10px;
     }
 }
