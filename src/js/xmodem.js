@@ -2,6 +2,8 @@ import {TransportEx} from './serialex.js'
 import {Bootloader, Passthrough} from './passthrough.js'
 import {MismatchError, PassthroughError} from "./error.js";
 
+const XMODEM_FLASHER_LOG_PREFIX = '[XmodemFlasher]'
+
 const log = {
     info: function () {
     }, warn: function () {
@@ -232,6 +234,10 @@ export class XmodemFlasher {
     }
 
     connect = async () => {
+        console.info(`${XMODEM_FLASHER_LOG_PREFIX} connect:start`, {
+            firmware: this.config.firmware,
+            platform: this.config.platform
+        })
         if (this.config.firmware.startsWith('GHOST')) {
             this.init_seq1 = Bootloader.get_init_seq('GHST')
         } else {
@@ -242,10 +248,12 @@ export class XmodemFlasher {
         await this.transport.connect(420000)
         this.passthrough = new Passthrough(this.transport, this.terminal, this.config.firmware, 420000)
         await this.startBootloader()
+        console.info(`${XMODEM_FLASHER_LOG_PREFIX} connect:ready`)
         return 'XModem Flasher'
     }
 
     startBootloader = async (force = false) => {
+        console.info(`${XMODEM_FLASHER_LOG_PREFIX} bootloader:start`, {force})
         this.transport.set_delimiters(['CCC'])
         const data = await this.transport.read_line(2000)
         let gotBootloader = data.endsWith('CCC')
@@ -262,6 +270,7 @@ export class XmodemFlasher {
                 while (!gotBootloader) {
                     currAttempt++
                     if (currAttempt > 10) {
+                        console.error(`${XMODEM_FLASHER_LOG_PREFIX} bootloader:failed`, {attempts: currAttempt})
                         throw new Error('Failed to enter bootloader mode in a reasonable time')
                     }
                     this.log(`[${currAttempt}] retry...`)
@@ -298,6 +307,10 @@ export class XmodemFlasher {
 
                             if (line.trim() !== flashTarget && !force) {
                                 this.log(`Wrong target selected your RX is '${line.trim()}', trying to flash '${flashTarget}'`)
+                                console.warn(`${XMODEM_FLASHER_LOG_PREFIX} bootloader:mismatch`, {
+                                    detected: line.trim(),
+                                    expected: flashTarget
+                                })
                                 throw new MismatchError()
                             } else if (flashTarget !== '') {
                                 this.log(`Verified RX target '${flashTarget}'`)
@@ -311,16 +324,26 @@ export class XmodemFlasher {
                 const data = await this.transport.read_line(15000)
                 if (data.indexOf('CCC') === -1) {
                     this.log('[FAILED] Unable to communicate with bootloader...')
+                    console.error(`${XMODEM_FLASHER_LOG_PREFIX} bootloader:sync-failed`)
                     throw new PassthroughError()
                 }
                 this.log('Sync OK')
             }
         }
+        console.info(`${XMODEM_FLASHER_LOG_PREFIX} bootloader:ready`)
     }
 
     flash = async (binary, force = false, progress) => {
+        console.info(`${XMODEM_FLASHER_LOG_PREFIX} flash:start`, {
+            bytes: binary[0]?.data?.length ?? 0,
+            force
+        })
         await this.startBootloader(true);
         this.log('Beginning flash...')
         return this.xmodem.send(binary[0].data, progress)
+            .then((result) => {
+                console.info(`${XMODEM_FLASHER_LOG_PREFIX} flash:complete`)
+                return result
+            })
     }
 }

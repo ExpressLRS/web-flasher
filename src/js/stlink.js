@@ -1,6 +1,8 @@
 import * as libstlink from './stlink/lib/package.js'
 import WebStlink from './stlink/webstlink.js'
 
+const STLINK_LOG_PREFIX = '[STLink]'
+
 export class STLink {
     constructor(term) {
         this.term = term
@@ -126,12 +128,17 @@ export class STLink {
 
     on_disconnect = () => {
         this.info('Device disconnected')
+        console.warn(`${STLINK_LOG_PREFIX} disconnect`)
 
         this.stlink = null
         this.device = null
     }
 
     connect = async (config, handler) => {
+        console.info(`${STLINK_LOG_PREFIX} connect:start`, {
+            firmware: config?.firmware,
+            platform: config?.platform
+        })
         this.config = config
         if (this.stlink !== null) {
             await this.stlink.detach()
@@ -149,16 +156,23 @@ export class STLink {
             this.stlink = nextStlink
             this.device = device
         } catch (err) {
+            console.error(`${STLINK_LOG_PREFIX} connect:failed`, err)
             this.error(err)
             throw err
         }
         if (this.stlink !== null) {
             await this.on_successful_attach(this.stlink, this.device)
+            console.info(`${STLINK_LOG_PREFIX} connect:ready`)
         }
     }
 
     // PK pass in bootloader binary if we want to flash that!
     flash = async (binary, bootloader, progressCallback) => {
+        console.info(`${STLINK_LOG_PREFIX} flash:start`, {
+            fileCount: binary.length,
+            hasBootloader: !!bootloader,
+            offset: this.config?.stlink?.offset
+        })
         this.progressCallback = progressCallback
         if (this.stlink !== null && this.stlink.connected) {
             this.fileNumber = 0
@@ -180,14 +194,18 @@ export class STLink {
                 await this.stlink.halt()
                 await this.stlink.flash(this.target.flash_start + addr, binary[0].data)
             } catch (err) {
+                console.error(`${STLINK_LOG_PREFIX} flash:failed`, err)
                 this.error(err)
                 throw err
             }
+            console.info(`${STLINK_LOG_PREFIX} flash:complete`)
         }
     }
 
     close = async () => {
+        console.debug(`${STLINK_LOG_PREFIX} close:start`)
         this.stlink.detach()
         this.stlink = null
+        console.debug(`${STLINK_LOG_PREFIX} close:complete`)
     }
 }

@@ -10,6 +10,8 @@ let hardware = ref(null);
 let versions = ref([]);
 let vendors = ref([]);
 let targets = ref([]);
+let fetchFailed = ref(false)
+let fetchFailedMessage = ref('')
 
 watchPostEffect(() => {
   fetch(`./assets/${store.firmware}/index.json`).then(r => r.json()).then(r => {
@@ -44,6 +46,7 @@ watchPostEffect(() => {
       `./assets/${store.firmware}/hardware/targets.json`
     ]
     const loadTargets = async () => {
+      let loaded = false
       for (const url of targetUrls) {
         try {
           const response = await fetch(url)
@@ -57,9 +60,14 @@ watchPostEffect(() => {
             if (hasTargets && v.name) vendors.value.push({title: v.name, value: k})
           }
           vendors.value.sort((a, b) => a.title.localeCompare(b.title))
+          loaded = true
           return
         } catch (_ignore) {
         }
+      }
+      if (!loaded) {
+        fetchFailedMessage.value = 'Failed to fetch targets for Backpack hardware.'
+        fetchFailed.value = true
       }
     }
     loadTargets()
@@ -118,5 +126,14 @@ watch(() => store.target, (v, _oldValue) => {
     <VSelect :items="versions" v-model="store.version" label="Firmware Version"/>
     <VSelect :items="vendors" v-model="store.vendor" :label="vendorLabel" :disabled="!store.version"/>
     <VAutocomplete :items="targets" v-model="store.target" label="Hardware Target" :disabled="!store.vendor"/>
+
+    <VSnackbar v-model="fetchFailed" vertical color="red-darken-3" content-class="td-error-snackbar">
+      <div class="text-subtitle-1 pb-2">Targets Fetch Failed</div>
+
+      <p>{{ fetchFailedMessage }}</p>
+      <template v-slot:actions>
+        <VBtn variant="text" color="white" @click="fetchFailed = false">✕</VBtn>
+      </template>
+    </VSnackbar>
   </VContainer>
 </template>

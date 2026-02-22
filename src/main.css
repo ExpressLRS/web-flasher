@@ -138,3 +138,15 @@ body {
         gap: 10px;
     }
 }
+
+.td-error-snackbar {
+    width: min(560px, calc(100vw - 16px)) !important;
+    max-width: min(560px, calc(100vw - 16px)) !important;
+}
+
+.td-error-snackbar p {
+    margin: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}

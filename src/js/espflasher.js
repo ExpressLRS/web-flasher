@@ -4,6 +4,8 @@ import {Passthrough} from './passthrough.js'
 import CryptoJS from 'crypto-js'
 import {MismatchError, WrongMCU} from "./error.js";
 
+const ESP_FLASHER_LOG_PREFIX = '[ESPFlasher]'
+
 export class ESPFlasher {
     constructor(device, type, method, config, options, firmwareUrl, term) {
         this.device = device
@@ -17,6 +19,12 @@ export class ESPFlasher {
     }
 
     connect = async () => {
+        console.info(`${ESP_FLASHER_LOG_PREFIX} connect:start`, {
+            method: this.method,
+            deviceType: this.type,
+            platform: this.config.platform,
+            firmware: this.config.firmware
+        })
         let mode = 'default_reset'
         let baudrate = 460800
         let initbaud
@@ -38,6 +46,7 @@ export class ESPFlasher {
             baudrate = this.config.baud
             initbaud = this.config.baud
         }
+        console.debug(`${ESP_FLASHER_LOG_PREFIX} connect:serial-config`, {mode, baudrate, initbaud})
 
         const transport = new TransportEx(this.device, false)
         const terminal = {
@@ -94,8 +103,10 @@ export class ESPFlasher {
             }
         } catch(e) {
             if (!(e instanceof MismatchError)) {
+                console.error(`${ESP_FLASHER_LOG_PREFIX} connect:passthrough-failed`, e)
                 throw e
             }
+            console.warn(`${ESP_FLASHER_LOG_PREFIX} connect:mismatch`, {error: e?.message})
             hasError = e
         }
 
@@ -106,9 +117,13 @@ export class ESPFlasher {
             (this.esploader.chip.CHIP_NAME === 'ESP32-C3' && this.config.platform !== 'esp32-c3') ||
             (this.esploader.chip.CHIP_NAME === 'ESP32-S3' && this.config.platform !== 'esp32-s3') ||
             (this.esploader.chip.CHIP_NAME === 'ESP32' && this.config.platform !== 'esp32')) {
+            console.error(`${ESP_FLASHER_LOG_PREFIX} connect:wrong-mcu`, {
+                detected: this.esploader.chip.CHIP_NAME,
+                expected: this.config.platform
+            })
             throw new WrongMCU(`Wrong target selected, this device uses '${chip}' and the firmware is for '${this.config.platform}'`)
         }
-        console.log(`Settings done for ${chip}`)
+        console.info(`${ESP_FLASHER_LOG_PREFIX} connect:ready`, {chip})
 
         if (hasError) {
             throw hasError
@@ -117,6 +132,12 @@ export class ESPFlasher {
     }
 
     flash = async (files, erase, progress) => {
+        console.info(`${ESP_FLASHER_LOG_PREFIX} flash:start`, {
+            fileCount: files.length,
+            erase,
+            method: this.method,
+            platform: this.config.platform
+        })
         const loader = this.esploader
         if (this.method === 'etx' || this.method === 'betaflight') {
             loader.FLASH_WRITE_SIZE = 0x0800
@@ -139,17 +160,26 @@ export class ESPFlasher {
         })
             .then(_ => {
                 progress(fileArray.length - 1, 100, 100)
+                console.info(`${ESP_FLASHER_LOG_PREFIX} flash:write-complete`, {fileCount: fileArray.length})
                 if (this.config.platform.startsWith('esp32')) {
-                    return loader.after('hard_reset').catch(() => {
+                    return loader.after('hard_reset').catch((error) => {
+                        console.warn(`${ESP_FLASHER_LOG_PREFIX} flash:hard-reset-failed`, {error: error?.message ?? error})
                     })
                 } else {
-                    return loader.after('soft_reset').catch(() => {
+                    return loader.after('soft_reset').catch((error) => {
+                        console.warn(`${ESP_FLASHER_LOG_PREFIX} flash:soft-reset-failed`, {error: error?.message ?? error})
                     })
                 }
+            })
+            .then((result) => {
+                console.info(`${ESP_FLASHER_LOG_PREFIX} flash:complete`)
+                return result
             })
     }
 
     close = async () => {
+        console.debug(`${ESP_FLASHER_LOG_PREFIX} close:start`)
         await this.esploader.transport.disconnect()
+        console.debug(`${ESP_FLASHER_LOG_PREFIX} close:complete`)
     }
 }

@@ -1,5 +1,8 @@
 import {compareSemanticVersions} from "./version.js";
 import {store} from "./state.js";
+import {fetchHardwareFile} from "./targets.js";
+
+const CONFIGURE_LOG_PREFIX = '[Configure]'
 
 export class Configure {
     static #MAGIC = new Uint8Array([0xBE, 0xEF, 0xBA, 0xBE, 0xCA, 0xFE, 0xF0, 0x0D])
@@ -136,12 +139,19 @@ export class Configure {
     }
 
     static #fetch_file = async (file, address, transform = (e) => e) => {
-        const response = this.#checkStatus(await fetch(file))
-        const blob = await response.blob()
-        const arrayBuffer = await blob.arrayBuffer()
-        const dataArray = new Uint8Array(arrayBuffer)
-        const data = transform(dataArray)
-        return {data, address}
+        console.debug(`${CONFIGURE_LOG_PREFIX} fetch:start`, {file, address})
+        try {
+            const response = this.#checkStatus(await fetch(file))
+            const blob = await response.blob()
+            const arrayBuffer = await blob.arrayBuffer()
+            const dataArray = new Uint8Array(arrayBuffer)
+            const data = transform(dataArray)
+            console.info(`${CONFIGURE_LOG_PREFIX} fetch:success`, {file, address, bytes: data.length})
+            return {data, address}
+        } catch (error) {
+            console.error(`${CONFIGURE_LOG_PREFIX} fetch:error`, {file, address, error: error?.message ?? error})
+            throw error
+        }
     }
 
     static #findFirmwareEnd = (binary, config) => {
@@ -206,20 +216,43 @@ export class Configure {
     }
 
     static download = async (folder, version, deviceType, rxAsTxType, radioType, config, firmwareUrl, options) => {
+        console.info(`${CONFIGURE_LOG_PREFIX} download:start`, {
+            folder,
+            version,
+            deviceType,
+            platform: config.platform,
+            firmwareUrl
+        })
         if (rxAsTxType) firmwareUrl = firmwareUrl.replace('_RX', '_TX')
         if (config.platform === 'stm32') {
+            console.info(`${CONFIGURE_LOG_PREFIX} download:stm32`, {firmwareUrl, radioType})
             const entry = await this.#fetch_file(firmwareUrl, 0, (bin) => this.#configureSTM32(bin, deviceType, radioType, options))
+            console.info(`${CONFIGURE_LOG_PREFIX} download:complete`, {files: 1})
             return [entry]
         } else {
             const list = []
 
             let hardwareLayoutData
             if (config.custom_layout) {
+                console.info(`${CONFIGURE_LOG_PREFIX} layout:custom`, {bytes: JSON.stringify(config.custom_layout).length})
                 hardwareLayoutData = this.#bstrToUi8(JSON.stringify(config.custom_layout))
             } else if (config.layout_file) {
-                // get layout from version specific folder OR fall back to global folder
-                const hardwareLayoutFile = await this.#fetch_file(`${folder}/${version}/hardware/${deviceType}/${config.layout_file}`, 0)
-                    .catch(() => this.#fetch_file(`${folder}/hardware/${deviceType}/${config.layout_file}`, 0))
+                let hardwareLayoutFile
+                if (deviceType === 'TX' || deviceType === 'RX') {
+                    // TX/RX layouts are resolved only from GitHub targets repos
+                    hardwareLayoutFile = await (async () => {
+                        console.info(`${CONFIGURE_LOG_PREFIX} layout:github:start`, {path: `${deviceType}/${config.layout_file}`})
+                        const resp = await fetchHardwareFile(`${deviceType}/${config.layout_file}`)
+                        const buf = await resp.arrayBuffer()
+                        console.info(`${CONFIGURE_LOG_PREFIX} layout:github:success`, {path: `${deviceType}/${config.layout_file}`, bytes: buf.byteLength})
+                        return {data: new Uint8Array(buf), address: 0}
+                    })()
+                } else {
+                    // backpack and other device types keep existing local lookup flow
+                    console.info(`${CONFIGURE_LOG_PREFIX} layout:local:start`, {path: `${folder}/${version}/hardware/${deviceType}/${config.layout_file}`})
+                    hardwareLayoutFile = await this.#fetch_file(`${folder}/${version}/hardware/${deviceType}/${config.layout_file}`, 0)
+                        .catch(() => this.#fetch_file(`${folder}/hardware/${deviceType}/${config.layout_file}`, 0))
+                }
                 let layout = JSON.parse(this.#ui8ToBstr(hardwareLayoutFile.data))
                 if (config.overlay) {
                     layout = {
@@ -229,7 +262,9 @@ export class Configure {
                 }
                 if (rxAsTxType === 'external') layout['serial_rx'] = layout['serial_tx']
                 hardwareLayoutData = this.#bstrToUi8(JSON.stringify(layout))
+                console.info(`${CONFIGURE_LOG_PREFIX} layout:resolved`, {bytes: hardwareLayoutData.length})
             } else {
+                console.info(`${CONFIGURE_LOG_PREFIX} layout:none`)
                 hardwareLayoutData = new Uint8Array(0)
             }
 
@@ -246,12 +281,33 @@ export class Configure {
                 list.push(this.#fetch_file(firmwareUrl, 0x0, (bin) => Configure.#configureESP(deviceType, bin, config, options)))
             }
 
+            console.info(`${CONFIGURE_LOG_PREFIX} firmwareFiles:fetching`, {count: list.length})
             const files = await Promise.all(list)
+            console.info(`${CONFIGURE_LOG_PREFIX} firmwareFiles:fetched`, {count: files.length})
             let logoFile = {data: new Uint8Array(0), address: 0}
             if (config.logo_file) {
-                // get logo from version specific folder OR fall back to global folder
-                logoFile = await this.#fetch_file(`${folder}/${version}/hardware/logo/${config.logo_file}`, 0)
-                    .catch(() => this.#fetch_file(`${folder}/hardware/logo/${config.logo_file}`, 0))
+                if (deviceType === 'TX' || deviceType === 'RX') {
+                    // TX/RX logos are resolved only from GitHub targets repos
+                    logoFile = await (async () => {
+                        console.info(`${CONFIGURE_LOG_PREFIX} logo:github:start`, {path: `logo/${config.logo_file}`})
+                        const resp = await fetchHardwareFile(`logo/${config.logo_file}`)
+                        const buf = await resp.arrayBuffer()
+                        console.info(`${CONFIGURE_LOG_PREFIX} logo:github:success`, {path: `logo/${config.logo_file}`, bytes: buf.byteLength})
+                        return {data: new Uint8Array(buf), address: 0}
+                    })().catch((error) => {
+                        console.warn(`${CONFIGURE_LOG_PREFIX} logo:github:missing`, {path: `logo/${config.logo_file}`, error: error?.message ?? error})
+                        return {data: new Uint8Array(0), address: 0}
+                    })
+                } else {
+                    // backpack and other device types keep existing local lookup flow
+                    console.info(`${CONFIGURE_LOG_PREFIX} logo:local:start`, {path: `${folder}/${version}/hardware/logo/${config.logo_file}`})
+                    logoFile = await this.#fetch_file(`${folder}/${version}/hardware/logo/${config.logo_file}`, 0)
+                        .catch(() => this.#fetch_file(`${folder}/hardware/logo/${config.logo_file}`, 0))
+                        .catch((error) => {
+                            console.warn(`${CONFIGURE_LOG_PREFIX} logo:local:missing`, {path: config.logo_file, error: error?.message ?? error})
+                            return {data: new Uint8Array(0), address: 0}
+                        })
+                }
             }
             files[files.length - 1].data = this.#appendArray(
                 files[files.length - 1].data,
@@ -259,6 +315,12 @@ export class Configure {
                 (new Uint8Array(2048 - hardwareLayoutData.length)).fill(0),
                 logoFile.data
             )
+            console.info(`${CONFIGURE_LOG_PREFIX} download:complete`, {
+                files: files.length,
+                finalMainFileBytes: files[files.length - 1].data.length,
+                layoutBytes: hardwareLayoutData.length,
+                logoBytes: logoFile.data.length
+            })
             return files
         }
     }

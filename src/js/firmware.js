@@ -1,7 +1,15 @@
 import {store} from "./state.js";
 import {Configure} from "./configure.js";
 
+const FIRMWARE_LOG_PREFIX = '[Firmware]'
+
 const getSettings = async (deviceType) => {
+    console.info(`${FIRMWARE_LOG_PREFIX} getSettings:start`, {
+        deviceType,
+        firmwareType: store.firmware,
+        target: store.target?.target,
+        platform: store.target?.config?.platform
+    })
     const options = {
         'flash-discriminator': Math.floor(Math.random() * ((2 ** 31) - 2) + 1)
     }
@@ -51,10 +59,21 @@ const getSettings = async (deviceType) => {
         firmwareUrl = `./assets/backpack/${store.version}/${store.target.config.firmware}/firmware.bin`
     }
     let config = store.target.config
+    console.info(`${FIRMWARE_LOG_PREFIX} getSettings:complete`, {
+        firmwareUrl,
+        optionKeys: Object.keys(options),
+        platform: config.platform
+    })
     return {config, firmwareUrl, options}
 }
 
 export async function generateFirmware() {
+    console.info(`${FIRMWARE_LOG_PREFIX} generate:start`, {
+        currentStep: store.currentStep,
+        firmwareType: store.firmware,
+        targetType: store.targetType,
+        version: store.version
+    })
     let deviceType = store.targetType
     let radioType = null
     let txType = null
@@ -65,8 +84,14 @@ export async function generateFirmware() {
         if (store.targetType === 'rx' && store.options.rx.rxAsTx)
             txType = store.options.rx.rxAsTxType ? 'external' : 'internal'
     }
+    console.debug(`${FIRMWARE_LOG_PREFIX} generate:resolvedTypes`, {deviceType, radioType, txType})
     const {config, firmwareUrl, options} = await getSettings(deviceType)
     const firmwareFiles = await Configure.download(store.folder, store.version, deviceType, txType, radioType, config, firmwareUrl, options)
+    console.info(`${FIRMWARE_LOG_PREFIX} generate:complete`, {
+        fileCount: firmwareFiles.length,
+        firmwareUrl,
+        platform: config.platform
+    })
     return [
         firmwareFiles,
         {config, firmwareUrl, options, deviceType, radioType, txType}

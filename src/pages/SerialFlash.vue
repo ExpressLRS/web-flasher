@@ -6,11 +6,15 @@ import {XmodemFlasher} from "../js/xmodem.js";
 import {ESPFlasher} from "../js/espflasher.js";
 import {MismatchError, WrongMCU} from "../js/error.js";
 
+const SERIAL_FLASH_LOG_PREFIX = '[SerialFlash]'
+
 watchPostEffect(async (onCleanup) => {
   onCleanup(closeDevice)
   if (store.currentStep === 3) {
-    await buildFirmware()
-    await connect()
+    const ok = await buildFirmware()
+    if (ok) {
+      await connect()
+    }
   }
 })
 
@@ -25,17 +29,36 @@ const files = {
 }
 
 async function buildFirmware() {
-  const [binary, {config, firmwareUrl, options, deviceType, radioType, txType}] = await generateFirmware()
+  console.info(`${SERIAL_FLASH_LOG_PREFIX} buildFirmware:start`, {
+    target: store.target?.target,
+    platform: store.target?.config?.platform,
+    version: store.version
+  })
+  try {
+    const [binary, {config, firmwareUrl, options, deviceType, radioType, txType}] = await generateFirmware()
 
-  files.firmwareFiles = binary
-  files.firmwareUrl = firmwareUrl
-  files.config = config
-  files.options = options
-  files.deviceType = deviceType
-  files.radioType = radioType
-  files.txType = txType
-  fullErase.value = false
-  allowErase.value = !(store.target.config.platform.startsWith('esp32') && store.options.flashMethod === 'betaflight')
+    files.firmwareFiles = binary
+    files.firmwareUrl = firmwareUrl
+    files.config = config
+    files.options = options
+    files.deviceType = deviceType
+    files.radioType = radioType
+    files.txType = txType
+    fullErase.value = false
+    allowErase.value = !(store.target.config.platform.startsWith('esp32') && store.options.flashMethod === 'betaflight')
+    console.info(`${SERIAL_FLASH_LOG_PREFIX} buildFirmware:complete`, {
+      fileCount: binary.length,
+      firmwareUrl,
+      deviceType,
+      flashMethod: store.options.flashMethod
+    })
+    return true
+  } catch (error) {
+    console.error(`${SERIAL_FLASH_LOG_PREFIX} buildFirmware:failed`, error)
+    fetchFailedMessage.value = `Failed to fetch firmware files: ${error?.message ?? error}`
+    fetchFailed.value = true
+    return false
+  }
 }
 
 let step = ref(1)
@@ -49,6 +72,8 @@ let newline = false
 let selectingSerial = ref(false)
 
 let noDevice = ref(false)
+let fetchFailed = ref(false)
+let fetchFailedMessage = ref('')
 let flasher;
 let device = null;
 
@@ -56,6 +81,7 @@ let progress = ref(0)
 let progressText = ref('')
 
 async function closeDevice() {
+  console.debug(`${SERIAL_FLASH_LOG_PREFIX} closeDevice:start`)
   if (flasher) {
     try {
       await flasher.close()
@@ -77,17 +103,20 @@ async function closeDevice() {
   step.value = 1
   log.value = []
   progress.value = 0
+  console.debug(`${SERIAL_FLASH_LOG_PREFIX} closeDevice:complete`)
 }
 
 async function connect() {
+  console.info(`${SERIAL_FLASH_LOG_PREFIX} connect:start`, {flashMethod: store.options.flashMethod})
   selectingSerial.value = true
   try {
     device = await navigator.serial.requestPort()
     device.ondisconnect = async (_p, _e) => {
-      console.log("disconnected")
+      console.warn(`${SERIAL_FLASH_LOG_PREFIX} device:disconnected`)
       await closeDevice()
     }
   } catch {
+    console.warn(`${SERIAL_FLASH_LOG_PREFIX} connect:no-device-selected`)
     await closeDevice()
     noDevice.value = true
   } finally {
@@ -120,16 +149,22 @@ async function connect() {
     try {
       await flasher.connect()
       enableFlash.value = true
+      console.info(`${SERIAL_FLASH_LOG_PREFIX} connect:ready`, {
+        platform: store.target?.config?.platform,
+        deviceType: files.deviceType
+      })
     } catch (e) {
       if (e instanceof MismatchError) {
         term.writeln('Target mismatch, flashing cancelled')
         failed.value = true
         enableFlash.value = true
+        console.warn(`${SERIAL_FLASH_LOG_PREFIX} connect:mismatch`, {error: e?.message})
       } else if (e instanceof WrongMCU) {
         term.writeln(e.message)
         failed.value = true
+        console.warn(`${SERIAL_FLASH_LOG_PREFIX} connect:wrong-mcu`, {error: e?.message})
       } else {
-        console.log(e)
+        console.error(`${SERIAL_FLASH_LOG_PREFIX} connect:failed`, e)
         term.writeln('Failed to connect to device, restart device and try again')
         failed.value = true
       }
@@ -148,21 +183,37 @@ async function reset() {
 }
 
 async function flash() {
+  console.info(`${SERIAL_FLASH_LOG_PREFIX} flash:start`, {
+    fullErase: fullErase.value,
+    fileCount: files.firmwareFiles.length,
+    platform: files.config?.platform
+  })
   failed.value = false
   step.value++
+  let lastProgressBucket = -1
   try {
     progressText.value = ''
     await flasher.flash(files.firmwareFiles, fullErase.value, (fileIndex, written, total) => {
       progressText.value = (fileIndex + 1) + ' of ' + (files.firmwareFiles.length)
       progress.value = Math.round(written / total * 100)
+      const progressBucket = Math.floor(progress.value / 10)
+      if (progressBucket > lastProgressBucket || progress.value === 100) {
+        lastProgressBucket = progressBucket
+        console.info(`${SERIAL_FLASH_LOG_PREFIX} flash:progress`, {
+          fileIndex: fileIndex + 1,
+          totalFiles: files.firmwareFiles.length,
+          progress: progress.value
+        })
+      }
     })
     await flasher.close()
     flasher = null
     device = null
     flashComplete.value = true
     step.value++
+    console.info(`${SERIAL_FLASH_LOG_PREFIX} flash:complete`)
   } catch (e) {
-    console.log(e)
+    console.error(`${SERIAL_FLASH_LOG_PREFIX} flash:failed`, e)
     failed.value = true
   }
 }
@@ -238,10 +289,22 @@ async function flash() {
       </VStepperVerticalItem>
     </VStepperVertical>
 
-    <VSnackbar v-model="noDevice" vertical>
+    <VSnackbar v-model="noDevice" vertical color="red-darken-3" content-class="td-error-snackbar">
       <div class="text-subtitle-1 pb-2">No Device Selected</div>
 
       <p>A serial device must be selected to perform flashing.</p>
+      <template v-slot:actions>
+        <VBtn variant="text" color="white" @click="noDevice = false">✕</VBtn>
+      </template>
+    </VSnackbar>
+
+    <VSnackbar v-model="fetchFailed" vertical color="red-darken-3" content-class="td-error-snackbar">
+      <div class="text-subtitle-1 pb-2">Firmware Fetch Failed</div>
+
+      <p>{{ fetchFailedMessage }}</p>
+      <template v-slot:actions>
+        <VBtn variant="text" color="white" @click="fetchFailed = false">✕</VBtn>
+      </template>
     </VSnackbar>
   </VContainer>
 </template>

@@ -4,6 +4,8 @@ import {resetState, store} from "../js/state.js";
 import {generateFirmware} from "../js/firmware.js";
 import {STLink} from "../js/stlink.js";
 
+const STLINK_FLASH_LOG_PREFIX = '[STLinkFlash]'
+
 let term = {
   write: (e) => {
     if (newline) {
@@ -22,8 +24,10 @@ let term = {
 watchPostEffect(async (onCleanup) => {
   onCleanup(closeDevice)
   if (store.currentStep === 3) {
-    await buildFirmware()
-    await connect()
+    const ok = await buildFirmware()
+    if (ok) {
+      await connect()
+    }
   }
 })
 
@@ -38,15 +42,33 @@ const files = {
 }
 
 async function buildFirmware() {
-  const [binary, {config, firmwareUrl, options, deviceType, radioType, txType}] = await generateFirmware()
+  console.info(`${STLINK_FLASH_LOG_PREFIX} buildFirmware:start`, {
+    target: store.target?.target,
+    platform: store.target?.config?.platform,
+    version: store.version
+  })
+  try {
+    const [binary, {config, firmwareUrl, options, deviceType, radioType, txType}] = await generateFirmware()
 
-  files.firmwareFiles = binary
-  files.firmwareUrl = firmwareUrl
-  files.config = config
-  files.options = options
-  files.deviceType = deviceType
-  files.radioType = radioType
-  files.txType = txType
+    files.firmwareFiles = binary
+    files.firmwareUrl = firmwareUrl
+    files.config = config
+    files.options = options
+    files.deviceType = deviceType
+    files.radioType = radioType
+    files.txType = txType
+    console.info(`${STLINK_FLASH_LOG_PREFIX} buildFirmware:complete`, {
+      fileCount: binary.length,
+      firmwareUrl,
+      deviceType
+    })
+    return true
+  } catch (error) {
+    console.error(`${STLINK_FLASH_LOG_PREFIX} buildFirmware:failed`, error)
+    fetchFailedMessage.value = `Failed to fetch firmware files: ${error?.message ?? error}`
+    fetchFailed.value = true
+    return false
+  }
 }
 
 let step = ref(1)
@@ -57,12 +79,15 @@ let log = ref([])
 let newline = false
 
 let noDevice = ref(false)
+let fetchFailed = ref(false)
+let fetchFailedMessage = ref('')
 let device = null;
 
 let progress = ref(0)
 let progressText = ref('')
 
 async function closeDevice() {
+  console.debug(`${STLINK_FLASH_LOG_PREFIX} closeDevice:start`)
   if (device != null) {
     try {
       await device.close()
@@ -76,9 +101,11 @@ async function closeDevice() {
   step.value = 1
   log.value = []
   progress.value = 0
+  console.debug(`${STLINK_FLASH_LOG_PREFIX} closeDevice:complete`)
 }
 
 async function connect() {
+  console.info(`${STLINK_FLASH_LOG_PREFIX} connect:start`)
   try {
     if (device) await closeDevice()
     device = new STLink(term)
@@ -86,7 +113,7 @@ async function connect() {
       await closeDevice()
     })
   } catch (e) {
-    console.log(e)
+    console.error(`${STLINK_FLASH_LOG_PREFIX} connect:failed`, e)
     term.writeln('Failed to connect to device, restart device and try again')
     failed.value = true
     noDevice.value = true
@@ -95,6 +122,7 @@ async function connect() {
 
   step.value++
   enableFlash.value = true
+  console.info(`${STLINK_FLASH_LOG_PREFIX} connect:ready`)
 }
 
 function reset() {
@@ -103,17 +131,31 @@ function reset() {
 }
 
 async function flash() {
+  console.info(`${STLINK_FLASH_LOG_PREFIX} flash:start`, {fileCount: files.firmwareFiles.length})
   step.value++
+  let lastProgressBucket = -1
   try {
     await device.flash(files.firmwareFiles, undefined, (fileIndex, written, total, msg) => {
       progressText.value = (fileIndex + 1) + ' of ' + (files.firmwareFiles.length) + ' (' + msg + ')'
       progress.value = Math.round(written / total * 100)
+      const progressBucket = Math.floor(progress.value / 10)
+      if (progressBucket > lastProgressBucket || progress.value === 100) {
+        lastProgressBucket = progressBucket
+        console.info(`${STLINK_FLASH_LOG_PREFIX} flash:progress`, {
+          fileIndex: fileIndex + 1,
+          totalFiles: files.firmwareFiles.length,
+          progress: progress.value,
+          message: msg
+        })
+      }
     })
     await device.close()
     device = null
     flashComplete.value = true
     step.value++
+    console.info(`${STLINK_FLASH_LOG_PREFIX} flash:complete`)
   } catch (e) {
+    console.error(`${STLINK_FLASH_LOG_PREFIX} flash:failed`, e)
     failed.value = true
   }
 }
@@ -174,10 +216,22 @@ async function flash() {
       </VStepperVerticalItem>
     </VStepperVertical>
 
-    <VSnackbar v-model="noDevice" vertical>
+    <VSnackbar v-model="noDevice" vertical color="red-darken-3" content-class="td-error-snackbar">
       <div class="text-subtitle-1 pb-2">No Device Selected</div>
 
       <p>A serial device must be selected to perform flashing.</p>
+      <template v-slot:actions>
+        <VBtn variant="text" color="white" @click="noDevice = false">✕</VBtn>
+      </template>
+    </VSnackbar>
+
+    <VSnackbar v-model="fetchFailed" vertical color="red-darken-3" content-class="td-error-snackbar">
+      <div class="text-subtitle-1 pb-2">Firmware Fetch Failed</div>
+
+      <p>{{ fetchFailedMessage }}</p>
+      <template v-slot:actions>
+        <VBtn variant="text" color="white" @click="fetchFailed = false">✕</VBtn>
+      </template>
     </VSnackbar>
   </VContainer>
 </template>

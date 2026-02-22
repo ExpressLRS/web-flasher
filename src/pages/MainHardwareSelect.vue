@@ -2,6 +2,7 @@
 import {ref, watch, watchPostEffect} from 'vue';
 import {store} from '../js/state';
 import {compareSemanticVersions} from '../js/version';
+import {fetchTargets, repoNameFromUrl} from '../js/targets';
 
 let firmware = ref(null);
 let hardware = ref(null);
@@ -10,6 +11,8 @@ let vendors = ref([]);
 let radios = ref([]);
 let targets = ref([]);
 let hasUrlParams = ref(false);
+let fetchFailed = ref(false);
+let fetchFailedMessage = ref('');
 
 function setTargetFromParams() {
   let urlParams = new URLSearchParams(window.location.search);
@@ -49,22 +52,38 @@ function updateVersions() {
 
 watch(firmware, updateVersions)
 
-watchPostEffect(() => {
+function buildVendorList(hardwareData) {
+  const list = []
+  for (const [k, v] of Object.entries(hardwareData)) {
+    let hasTargets = false
+    Object.keys(v).forEach(type => hasTargets |= type.startsWith(store.targetType))
+    if (hasTargets && v.name) list.push({title: v.name, value: k})
+  }
+  list.sort((a, b) => a.title.localeCompare(b.title))
+  return list
+}
+
+watchPostEffect(async () => {
   if (store.version) {
     store.folder = `./assets/${store.firmware}`
 
-    fetch(`./assets/${store.firmware}/hardware/targets.json`).then(r => r.json()).then(r => {
-      hardware.value = r
+    const result = await fetchTargets()
+    if (result.errors.length > 0) {
+      const repos = result.errors.map(e => repoNameFromUrl(e.url)).join(', ')
+      fetchFailedMessage.value = `Failed to fetch targets from ${repos}`
+      fetchFailed.value = true
+    }
+    if (result.targets) {
+      hardware.value = result.targets
+      store.vendor = null
+      vendors.value = buildVendorList(result.targets)
+    } else {
+      hardware.value = null
       store.vendor = null
       vendors.value = []
-      for (const [k, v] of Object.entries(hardware.value)) {
-        let hasTargets = false;
-        Object.keys(v).forEach(type => hasTargets |= type.startsWith(store.targetType))
-        if (hasTargets && v.name) vendors.value.push({title: v.name, value: k})
-      }
-      vendors.value.sort((a, b) => a.title.localeCompare(b.title))
-    }).catch((_ignore) => {
-    })
+      fetchFailedMessage.value = 'Failed to fetch targets from all configured sources.'
+      fetchFailed.value = true
+    }
   }
 })
 
@@ -145,5 +164,14 @@ watch(() => store.target, (v, _oldValue) => {
              :disabled="!store.vendor || hasUrlParams"/>
     <VAutocomplete :items="targets" v-model="store.target" density="compact" label="Hardware Target"
              :disabled="!store.version || hasUrlParams"/>
+
+    <VSnackbar v-model="fetchFailed" vertical color="red-darken-3" content-class="td-error-snackbar">
+      <div class="text-subtitle-1 pb-2">Targets Fetch Failed</div>
+
+      <p>{{ fetchFailedMessage }}</p>
+      <template v-slot:actions>
+        <VBtn variant="text" color="white" @click="fetchFailed = false">✕</VBtn>
+      </template>
+    </VSnackbar>
   </VContainer>
 </template>
