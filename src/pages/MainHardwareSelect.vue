@@ -11,20 +11,30 @@ let vendors = ref([]);
 let radios = ref([]);
 let targets = ref([]);
 let hasUrlParams = ref(false);
+let urlTargetResolved = ref(false);
 let fetchFailed = ref(false);
 let fetchFailedMessage = ref('');
 
 function setTargetFromParams() {
+  if (urlTargetResolved.value) return;
   let urlParams = new URLSearchParams(window.location.search);
   let target = urlParams.get('target');
   if (target) {
-    hasUrlParams.value = true;
-    store.target = {
-      vendor: target.split('.')[0],
-      radio: target.split('.')[1],
-      target: target.split('.')[2],
-      config: {}
+    const [vendor, radio, targetName] = target.split('.');
+    const targetConfig = hardware.value?.[vendor]?.[radio]?.[targetName];
+    if (targetConfig) {
+      hasUrlParams.value = true;
+      store.target = {
+        vendor,
+        radio,
+        target: targetName,
+        config: targetConfig
+      }
+    } else {
+      hasUrlParams.value = false;
+      console.warn('[hardware] Ignoring invalid target URL parameter', {target});
     }
+    urlTargetResolved.value = true;
   }
 }
 
