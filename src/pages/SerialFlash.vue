@@ -233,10 +233,11 @@ async function flash() {
       </VStepperVerticalItem>
       <VStepperVerticalItem title="Enter flashing mode" value="2" :hide-actions="true" :complete="step > 2"
                             :color="step > 2 ? 'green' : (failed ? 'red' : 'blue')">
-        <template v-for="line in log">
-          <VLabel>{{ line }}</VLabel>
-          <br/>
-        </template>
+        <div class="td-flash-log-wrap">
+          <template v-for="line in log">
+            <div class="td-flash-log-line">{{ line }}</div>
+          </template>
+        </div>
         <VContainer v-if="failed || enableFlash">
           <br/>
           <VRow v-if="enableFlash && allowErase">
