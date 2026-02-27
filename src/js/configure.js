@@ -218,8 +218,10 @@ export class Configure {
                 hardwareLayoutData = this.#bstrToUi8(JSON.stringify(config.custom_layout))
             } else if (config.layout_file) {
                 // get layout from version specific folder OR fall back to global folder
-                const hardwareLayoutFile = await this.#fetch_file(`${folder}/${version}/hardware/${deviceType}/${config.layout_file}`, 0)
-                    .catch(() => this.#fetch_file(`${folder}/hardware/${deviceType}/${config.layout_file}`, 0))
+                // const hardwareLayoutFile = await this.#fetch_file(`${folder}/${version}/hardware/${deviceType}/${config.layout_file}`, 0)
+                //     .catch(() => this.#fetch_file(`${folder}/hardware/${deviceType}/${config.layout_file}`, 0))
+                // Always use latest hardware files
+                const hardwareLayoutFile = await this.#fetch_file(`${folder}/hardware/${deviceType}/${config.layout_file}`, 0)
                 let layout = JSON.parse(this.#ui8ToBstr(hardwareLayoutFile.data))
                 if (config.overlay) {
                     layout = {
