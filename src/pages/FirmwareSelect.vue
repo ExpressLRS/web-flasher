@@ -18,7 +18,7 @@ function setFirmware(firmware, targetType) {
       <VCardTitle>Main RC Firmware</VCardTitle>
       <VCardSubtitle>Controlled or controlling... we got you covered!</VCardSubtitle>
     </div>
-    <VRow>
+    <VRow class="tile-row">
       <VCol md="6">
         <HoverCard min-height="100%" @click="setFirmware('firmware', 'tx')"
                     image="transmitter_6275858.png" hover-image="transmitter_6276574.png"
@@ -39,7 +39,7 @@ function setFirmware(firmware, targetType) {
       <VCardTitle>Backpack Firmware</VCardTitle>
       <VCardSubtitle>Wireless control of <i>all</i> the things!</VCardSubtitle>
     </div>
-    <VRow>
+    <VRow class="tile-row">
       <VCol md="3">
         <HoverCard min-height="100%" @click="setFirmware('backpack', 'txbp')"
                     image="backpack_723137.png" hover-image="backpack_723278.png"
@@ -73,6 +73,14 @@ function setFirmware(firmware, targetType) {
 </template>
 
 <style scoped>
+.tile-row {
+  margin: -12px;
+}
+
+.tile-row :deep(.v-col) {
+  padding: 12px;
+}
+
 .v-card-title {
   padding: 0;
   font-size: 1.5rem;
