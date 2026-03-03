@@ -18,6 +18,7 @@
     "pako": "^2.1.0",
     "roboto-fontface": "*",
     "vue": "^3.5.27",
+    "vue-localstorage": "^0.6.2",
     "vuetify": "^3.11.7"
   },
   "devDependencies": {
