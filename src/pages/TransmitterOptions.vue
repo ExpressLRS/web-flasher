@@ -109,7 +109,7 @@ function clearSettings() {
         </VExpansionPanel>
       </VExpansionPanels>
       
-      <VBtn color="error" variant="outlined" @click="clearSettings" class="mt-4">
+      <VBtn color="error" variant="outlined" size="small" @click="clearSettings" class="mt-4">
         Clear Settings
       </VBtn>
     </VForm>
