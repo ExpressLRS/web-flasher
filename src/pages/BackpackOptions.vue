@@ -83,7 +83,7 @@ function clearSettings() {
       <FlashMethodSelect v-model="store.options.flashMethod" :methods="store.target?.config?.upload_methods"/>
 
       <VBtn color="error" variant="outlined" size="small" @click="clearSettings" class="mt-4">
-        Clear Settings
+        Clear Stored Settings
       </VBtn>
     </VForm>
   </VContainer>
