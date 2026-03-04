@@ -6,6 +6,7 @@ export const store = reactive({
     folder: '',
     targetType: null,
     version: null,
+    versionLabel: null,  // display version e.g. "3.5.3" (store.version is the hash/path)
     vendor: null,
     vendor_name: '',
     radio: null,
@@ -44,6 +45,7 @@ export function resetState() {
     store.folder = ''
     store.targetType = null
     store.version = null
+    store.versionLabel = null
     store.vendor = null
     store.radio = null
     store.target = null

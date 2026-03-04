@@ -46,6 +46,11 @@ function updateVersions() {
 watch(firmware, updateVersions)
 watch(flashBranch, updateVersions)
 
+watch([() => store.version, versions], () => {
+  const item = versions.value.find(x => x.value === store.version)
+  store.versionLabel = item ? item.title : null
+}, { immediate: true })
+
 watchPostEffect(() => {
   if (store.version) {
     store.folder = `./assets/${store.firmware}/${store.version}`
