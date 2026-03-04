@@ -1,14 +1,22 @@
 <script setup>
-import {ref, watchEffect} from "vue";
+import {computed, ref, watchEffect} from "vue";
 import * as zip from "@zip.js/zip.js";
 import FileSaver from "file-saver";
 import pako from 'pako';
 import {store} from "../js/state.js";
 import {generateFirmware} from "../js/firmware.js";
+import {getDownloadFilename} from "../js/downloadFilename.js";
 
 watchEffect(buildFirmware)
 
 let zipped = ref(false)
+
+const downloadFilename = computed(() => {
+  if (!store.target?.config) return 'firmware.bin.gz'
+  if (store.target.config.platform === 'esp8285') return getDownloadFilename('.bin.gz')
+  if (zipped.value) return getDownloadFilename('.zip')
+  return getDownloadFilename('.bin')
+})
 
 const files = {
   firmwareFiles: [],
@@ -37,7 +45,7 @@ async function downloadFirmware() {
   if (store.target.config.platform === 'esp8285') {
     const bin = pako.gzip(files.firmwareFiles[files.firmwareFiles.length - 1].data)
     const data = new Blob([bin], {type: 'application/octet-stream'})
-    FileSaver.saveAs(data, 'firmware.bin.gz')
+    FileSaver.saveAs(data, getDownloadFilename('.bin.gz'))
   } else if (zipped.value) {
     // create zip file
     const zipper = new zip.ZipWriter(new zip.BlobWriter("application/zip"), {bufferedWrite: true})
@@ -45,11 +53,11 @@ async function downloadFirmware() {
     await zipper.add('partitions.bin', new Blob([files.firmwareFiles[1].data.buffer], {type: 'application/octet-stream'}).stream())
     await zipper.add('boot_app0.bin', new Blob([files.firmwareFiles[2].data.buffer], {type: 'application/octet-stream'}).stream())
     await zipper.add('firmware.bin', new Blob([files.firmwareFiles[3].data.buffer], {type: 'application/octet-stream'}).stream())
-    FileSaver.saveAs(await zipper.close(), 'firmware.zip')
+    FileSaver.saveAs(await zipper.close(), getDownloadFilename('.zip'))
   } else {
     const bin = files.firmwareFiles[files.firmwareFiles.length - 1].data.buffer
     const data = new Blob([bin], {type: 'application/octet-stream'})
-    FileSaver.saveAs(data, 'firmware.bin')
+    FileSaver.saveAs(data, getDownloadFilename('.bin'))
   }
 }
 </script>
@@ -61,15 +69,15 @@ async function downloadFirmware() {
       the specified options.
       <br/>
       To flash the firmware file to your device, put it into WiFi mode and connect to it via the browser
-      then upload the <b>firmware.bin{{ store.target.config.platform === 'esp8285' ? '.gz' : '' }}</b> file on the
+      then upload the <b>{{ downloadFilename }}</b> file on the
       <b>Update</b> tab.
     </VCardText>
     <VCardText v-if="store.target.config.platform === 'esp8285'">
-      The firmware file <b>firmware.bin.gz</b> should be flashed as-is, do NOT decompress or unzip the file or you <i>will</i>
+      The firmware file <b>{{ downloadFilename }}</b> should be flashed as-is, do NOT decompress or unzip the file or you <i>will</i>
       receive an error.
     </VCardText>
     <VCardText v-else-if="zipped">
-      The firmware files are contained in the <b>firmware.zip</b> file and should be extracted before being uploaded to
+      The firmware files are contained in the <b>{{ downloadFilename }}</b> file and should be extracted before being uploaded to
       the device for flashing.
     </VCardText>
     <br>
