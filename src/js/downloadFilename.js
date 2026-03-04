@@ -1,14 +1,16 @@
 import { store } from './state.js'
 
 /**
- * Normalize version for filename (e.g. "v3.5.3" or path segment).
- * Replaces path separators and ensures v-prefix when version looks numeric.
+ * Version for filename: use display version (e.g. "3.5.3") not the hash in store.version.
+ * Ensures v-prefix for semantic versions.
  */
-function normalizeVersion(version) {
-  if (!version) return 'unknown'
-  const s = String(version).replace(/\//g, '-').trim()
-  if (/^\d/.test(s)) return 'v' + s
-  return s
+function normalizeVersion() {
+  const label = store.versionLabel
+  if (label) {
+    const s = String(label).trim()
+    return /^v\d/.test(s) ? s : s ? 'v' + s : 'unknown'
+  }
+  return 'unknown'
 }
 
 /**
@@ -38,19 +40,28 @@ function getConfigLabel() {
   return 'default'
 }
 
+/** 
+ * Dotted path into targets.json: vendor.radio.target (firmware) or vendor.target (backpack). 
+ */
+function getTargetDottedPath() {
+  const t = store.target
+  if (!t) return ''
+  if (store.firmware === 'backpack') {
+    return [t.vendor, t.target].filter(Boolean).join('.')
+  }
+  return [t.vendor, t.radio, t.target].filter(Boolean).join('.')
+}
+
 /**
  * @param {string} ext - File extension including leading dot if desired, e.g. '.bin.gz' or 'zip'
  * @returns {string} Filename for the download
  */
 export function getDownloadFilename(ext = '.bin.gz') {
-  const version = normalizeVersion(store.version)
-  const target = sanitize(store.target?.config?.firmware) || 'target'
+  const version = normalizeVersion()
+  const target = sanitize(getTargetDottedPath()) || 'target'
   const region = store.firmware === 'backpack' ? '' : (sanitize(store.options.region) || 'FCC')
   const configLabel = getConfigLabel()
 
-  const base = ['ELRS', version, target].filter(Boolean).join('-')
-  const suffix = [region, configLabel].filter(Boolean).join('-')
-  const name = suffix ? `${base}-${suffix}` : base
-
+  const name = ['ELRS', version, target, region, configLabel].filter(Boolean).join('-')
   return name + ext
 }
