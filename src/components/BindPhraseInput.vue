@@ -39,8 +39,14 @@ watch(() => model.value, (newVal) => {
 }, { immediate: true })
 
 watch(() => props.bindPhraseText, (newVal) => {
-  if (newVal && !bindPhrase.value) {
-    bindPhrase.value = newVal
+  if (newVal) {
+    if (!bindPhrase.value) {
+      bindPhrase.value = newVal
+      generateUID()
+    }
+  } else {
+    // Parent cleared bind phrase (e.g. "Clear Stored Settings")
+    bindPhrase.value = null
     generateUID()
   }
 }, { immediate: true })
