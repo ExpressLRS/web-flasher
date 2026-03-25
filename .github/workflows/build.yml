@@ -12,10 +12,12 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Add msbuild to PATH
-        uses: ilammy/msvc-dev-cmd@v1
+        uses: TheMrMilchmann/setup-msvc-dev@v4
+        with:
+          arch: x64
 
       - name: Compile a release
         run: |
@@ -23,7 +25,7 @@ jobs:
           cl proxy.c mdns.c -link ws2_32.lib iphlpapi.lib -out:epoxy-win.exe
 
       - name: upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: upload-doze
           path: mdns-proxy/epoxy-win.exe
@@ -33,7 +35,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Compile a release
         run: |
@@ -41,7 +43,7 @@ jobs:
           cc -o epoxy-mac proxy.c mdns.c
 
       - name: upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: upload-mac
           path: mdns-proxy/epoxy-mac
@@ -51,7 +53,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Compile a release
         run: |
@@ -59,7 +61,7 @@ jobs:
           cc -o epoxy-lin proxy.c mdns.c
 
       - name: upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: upload-linux
           path: mdns-proxy/epoxy-lin
@@ -69,7 +71,7 @@ jobs:
     needs: [doze, mac, linux]
     steps:
       - name: Merge Artifacts
-        uses: actions/upload-artifact/merge@v4
+        uses: actions/upload-artifact/merge@v7
         with:
           name: uploads
           pattern: upload-*
