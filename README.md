@@ -1,6 +1,6 @@
 # ExpressLRS Web Flasher
 
-This is a fully web-based flasher for ExpressLRS 3.x
+This is a fully web-based flasher for ExpressLRS 3.x and greater
 Currently supported flashing methods are:
 - UART (Receivers do not need to be in bootloader mode)
 - Betaflight passthrough
