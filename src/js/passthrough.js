@@ -92,7 +92,7 @@ export class Passthrough {
 
     sendExpect = async (send, expect, delay) => {
         await this.transport.write_string(send)
-        const line = await this.transport.read_line(100)
+        const line = await this.transport.read_line(1000)
 
         if (line.indexOf(expect) === -1) {
             this.log('Failed passthrough initialisation')
@@ -127,7 +127,7 @@ export class Passthrough {
         this.log('Initializing EdgeTX passthrough')
 
         this.transport.set_delimiters(['> '])
-        await this.sendExpect('set pulses 0\n', 'set: ', 500)
+        await this.sendExpect('set pulses 0\n', 'set: ', 0)
         await this.sendExpect('set rfmod 0 power off\n', 'set: ', 500)
         await this.sendExpect('set rfmod 0 bootpin 1\n', 'set: ', 100)
         await this.sendExpect('set rfmod 0 power on\n', 'set: ', 100)
