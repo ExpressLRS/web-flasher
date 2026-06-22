@@ -13,7 +13,7 @@
     "@zip.js/zip.js": "^2.8.26",
     "bluejay-rtttl-parse": "^2.0.2",
     "crypto-js": "^4.2.0",
-    "esptool-js": "^0.5.7",
+    "esptool-js": "^0.6.0",
     "file-saver": "^2.0.5",
     "pako": "^2.1.0",
     "roboto-fontface": "*",

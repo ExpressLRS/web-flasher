@@ -125,7 +125,7 @@ export class ESPFlasher {
             }
         }
 
-        const fileArray = files.map(v => ({data: loader.ui8ToBstr(v.data), address: v.address}))
+        const fileArray = files.map(v => ({data: v.data, address: v.address}))
         loader.IS_STUB = true
         return loader.writeFlash({
             fileArray,
@@ -135,7 +135,10 @@ export class ESPFlasher {
             eraseAll: erase,
             compress: true,
             reportProgress: progress,
-            calculateMD5Hash: (image) => CryptoJS.MD5(CryptoJS.enc.Latin1.parse(image))
+            calculateMD5Hash: (image) => {
+                const latin1String = Array.from(image, (byte) => String.fromCharCode(byte)).join("");
+                return CryptoJS.MD5(CryptoJS.enc.Latin1.parse(latin1String)).toString();
+            }
         })
             .then(_ => {
                 progress(fileArray.length - 1, 100, 100)
