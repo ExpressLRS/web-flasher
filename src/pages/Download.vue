@@ -2,7 +2,7 @@
 import {computed, ref, watchEffect} from "vue";
 import * as zip from "@zip.js/zip.js";
 import FileSaver from "file-saver";
-import pako from 'pako';
+import { gzip } from 'pako';
 import {store} from "../js/state.js";
 import {generateFirmware} from "../js/firmware.js";
 import {getDownloadFilename} from "../js/downloadFilename.js";
@@ -43,7 +43,7 @@ async function buildFirmware() {
 
 async function downloadFirmware() {
   if (store.target.config.platform === 'esp8285') {
-    const bin = pako.gzip(files.firmwareFiles[files.firmwareFiles.length - 1].data)
+    const bin = gzip(files.firmwareFiles[files.firmwareFiles.length - 1].data)
     const data = new Blob([bin], {type: 'application/octet-stream'})
     FileSaver.saveAs(data, getDownloadFilename('.bin.gz'))
   } else if (zipped.value) {
