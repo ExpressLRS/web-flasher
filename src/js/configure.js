@@ -229,7 +229,14 @@ export class Configure {
                         ...config.overlay
                     }
                 }
-                if (rxAsTxType === 'external') layout['serial_rx'] = layout['serial_tx']
+                if (rxAsTxType) {
+                    if (rxAsTxType === 'external') layout['serial_rx'] = layout['serial_tx']
+                    if (layout['led']) {
+                        layout['led_red'] = layout['led']
+                        layout['led'] = -1
+                    }
+                }
+
                 hardwareLayoutData = this.#bstrToUi8(JSON.stringify(layout))
             } else {
                 hardwareLayoutData = new Uint8Array(0)

@@ -63,7 +63,7 @@ export async function generateFirmware() {
         radioType = store.radio.endsWith('_900') ? 'sx127x' : (store.radio.endsWith('_2400') ? 'sx128x' : 'lr1121')
         txType = undefined
         if (store.targetType === 'rx' && store.options.rx.rxAsTx)
-            txType = store.options.rx.rxAsTxType ? 'external' : 'internal'
+            txType = store.options.rx.rxAsTxType === '1' ? 'external' : 'internal'
     }
     const {config, firmwareUrl, options} = await getSettings(deviceType)
     const firmwareFiles = await Configure.download(store.folder, store.version, deviceType, txType, radioType, config, firmwareUrl, options)
