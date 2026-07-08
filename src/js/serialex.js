@@ -56,15 +56,40 @@ export class TransportEx extends Transport {
             if (!reader) {
                 throw new Error('Serial reader unavailable')
             }
+            let timedOut = false
             try {
                 if (timeout > 0) {
-                    t = setTimeout(function () {
-                        reader.cancel()
+                    t = setTimeout(() => {
+                        timedOut = true
+                        void reader.cancel().catch(() => {
+                        })
                     }, timeout)
                 }
                 do {
-                    const {value, done} = await reader.read()
+                    let result
+                    try {
+                        result = await reader.read()
+                    } catch (e) {
+                        if (timedOut) {
+                            try {
+                                reader.releaseLock()
+                            } catch {
+                            }
+                            this.reader = undefined
+                            return ''
+                        }
+                        throw e
+                    }
+                    const {value, done} = result
                     if (done) {
+                        if (timedOut) {
+                            try {
+                                reader.releaseLock()
+                            } catch {
+                            }
+                            this.reader = undefined
+                            return ''
+                        }
                         await this.disconnect()
                         await this.connect(this.baudrate)
                         return ''
