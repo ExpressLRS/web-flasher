@@ -49,7 +49,13 @@ export class TransportEx extends Transport {
 
         let index = findDelimeter(packet)
         if (index === -1) {
+            if (!this.reader && this.device?.readable) {
+                this.reader = this.device.readable.getReader()
+            }
             const reader = this.reader
+            if (!reader) {
+                throw new Error('Serial reader unavailable')
+            }
             try {
                 if (timeout > 0) {
                     t = setTimeout(function () {
