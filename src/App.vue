@@ -143,6 +143,7 @@ store.options.flashMethod = urlParams.get('method');
   font-size: clamp(3rem, 5vw, 4rem);
   color: #fff;
   font-weight: 600;
+  margin: 0;
 }
 
 .header-main h2 {
@@ -150,6 +151,7 @@ store.options.flashMethod = urlParams.get('method');
   color: #fff;
   letter-spacing: 1.075rem;
   font-weight: 200;
+  margin: 0;
 }
 
 @media (max-width: 640px) {
