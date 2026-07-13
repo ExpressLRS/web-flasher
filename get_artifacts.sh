@@ -10,7 +10,10 @@ rm -rf firmware backpack
 mkdir -p firmware
 cd firmware
 curl -L -o index.json https://artifactory.expresslrs.org/ExpressLRS/index.json
-for HASH in `cat index.json | jq '.tags,.branches | values[]' | sed 's/"//g' | sort -ru` ; do
+LATEST_RC_TAG=$(jq -r '.tags | keys[] | select(test("-RC[0-9]+$"))' index.json | sort -V | tail -n1)
+jq --arg latest_rc "$LATEST_RC_TAG" '.tags |= with_entries(select((.key | test("-RC[0-9]+$") | not) or .key == $latest_rc))' index.json > index.filtered.json
+mv index.filtered.json index.json
+for HASH in `cat index.json | jq '.tags,.branches | values[]' | sed 's/\"//g' | sort -ru` ; do
     curl -L -o firmware.zip "https://artifactory.expresslrs.org/ExpressLRS/$HASH/firmware.zip"
     mkdir $HASH
     cd $HASH
