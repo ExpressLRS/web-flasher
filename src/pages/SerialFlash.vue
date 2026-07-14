@@ -27,15 +27,20 @@ const files = {
 async function buildFirmware() {
   const [binary, {config, firmwareUrl, options, deviceType, radioType, txType}] = await generateFirmware()
 
-  files.firmwareFiles = binary
+  if (store.target.config.platform.startsWith('esp32') && store.options.flashMethod === 'betaflight') {
+    files.firmwareFiles = binary.slice(-1)
+    allowErase.value = false
+  } else {
+    files.firmwareFiles = binary
+    allowErase.value = true
+  }
+  fullErase.value = false
   files.firmwareUrl = firmwareUrl
   files.config = config
   files.options = options
   files.deviceType = deviceType
   files.radioType = radioType
   files.txType = txType
-  fullErase.value = false
-  allowErase.value = !(store.target.config.platform.startsWith('esp32') && store.options.flashMethod === 'betaflight')
 }
 
 let step = ref(1)
