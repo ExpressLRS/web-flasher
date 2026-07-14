@@ -52,6 +52,9 @@ export class ESPFlasher {
             terminal,
             romBaudrate: initbaud === undefined ? baudrate : initbaud
         })
+        // esptool-js 0.6.0 regression: constructor currently ignores options.romBaudrate
+        this.esploader.romBaudrate = initbaud === undefined ? baudrate : initbaud
+        this.esploader.baudrate = baudrate
         this.esploader.ESP_RAM_BLOCK = 0x0800 // we override otherwise flashing on BF will fail
 
         let hasError
