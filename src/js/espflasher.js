@@ -1,5 +1,6 @@
 import {TransportEx} from './serialex.js'
 import {CustomReset, ESPLoader} from 'esptool-js'
+import {sleep} from 'esptool-js/lib/util.js'
 import {Passthrough} from './passthrough.js'
 import CryptoJS from 'crypto-js'
 import {MismatchError, WrongMCU} from "./error.js";
@@ -87,13 +88,13 @@ export class ESPFlasher {
             } else if (this.method === 'passthru') {
                 await transport.connect(baudrate)
                 await transport.setDTR(false)
-                await transport.sleep(100)
+                await sleep(100)
                 await transport.setRTS(false)
-                await transport.sleep(5000)
+                await sleep(5000)
                 await transport.setDTR(true)
-                await transport.sleep(200)
+                await sleep(200)
                 await transport.setDTR(false)
-                await transport.sleep(100)
+                await sleep(100)
             }
         } catch(e) {
             if (!(e instanceof MismatchError)) {
